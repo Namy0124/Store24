@@ -336,6 +336,7 @@ button { cursor: pointer; }
 @media (max-width: 720px) { .pos-main { grid-template-columns: 1fr; } }
 .pos-left, .pos-right { display: flex; flex-direction: column; gap: 10px; min-width: 0; }
 .pos-right { background: var(--panel-soft); border: 1.5px solid var(--line); border-radius: 14px; padding: 12px; }
+.shelfwant { position: sticky; top: 0; z-index: 2; margin-bottom: 8px; }
 .want { background: color-mix(in srgb, var(--signal) 20%, var(--panel)); border: 1.5px solid var(--signal); border-radius: 12px; padding: 8px 12px; }
 .pos-list { border: 1.5px solid var(--line); border-radius: 14px; overflow: hidden; background: var(--panel); }
 .pos-th { display: flex; justify-content: space-between; padding: 8px 12px; background: var(--panel-soft); font-size: 12.5px; color: var(--muted); }
@@ -579,7 +580,7 @@ img { -webkit-user-drag: none; user-drag: none; }
         <textarea id="saveCode" rows="3" hidden spellcheck="false" placeholder="存檔碼貼在這裡,再按一次「匯入存檔碼」"></textarea><div class="sub" id="saveMsg"></div></div>
       <div class="controls" id="controls"></div>
       <p class="legal">配件品牌、商品與人物都是虛構的遊戲設定。手機型號使用真實型號。</p>
-      <p class="legal" id="verLine" style="margin-top:2px;opacity:.7">版本 v158 · 2026-10-17</p>
+      <p class="legal" id="verLine" style="margin-top:2px;opacity:.7">版本 v159 · 2026-10-17</p>
     </div>
   </div>
 
@@ -1049,11 +1050,13 @@ document.addEventListener('click', (e) => {
 document.addEventListener('input', (e) => {
   if (e.target && e.target.id === 'shelfSearch') { shelf.q = e.target.value; renderShelfGrid(); }
 });
+let shelfWantFn = null;   // set by the game: what the customer at the counter is asking for
 function openShelf(catId) {
   const cat = catById[catId];
   shelf.cat = catId; shelf.q = ''; shelf.groups = buildGroups(catId);
   $('#shelfTitle').innerHTML = '<span class="dot" style="background:' + cat.css + '"></span>' + esc(cat.name) + (cat.kind === 'wall' ? '陳列牆' : '花車') + ' <span class="sub">共 ' + shelf.groups.length + ' 款</span>';
-  $('#shelfBody').innerHTML = '<label class="field shelfq" for="shelfSearch"><span class="sr">查詢商品</span><input id="shelfSearch" type="search" placeholder="查詢:品名、品牌、型號、顏色" autocomplete="off"></label><div id="shelfGrid"></div><p class="sheet-foot">客人來了之後,在這裡選出客人要的商品。先選型號,再選款式或顏色。</p>';
+  let want = ''; try { want = shelfWantFn ? shelfWantFn() : ''; } catch (e) { want = ''; }
+  $('#shelfBody').innerHTML = (want ? '<div class="want shelfwant"><span class="co-l">客人要找</span><div>' + want + '</div></div>' : '') + '<label class="field shelfq" for="shelfSearch"><span class="sr">查詢商品</span><input id="shelfSearch" type="search" placeholder="查詢:品名、品牌、型號、顏色" autocomplete="off"></label><div id="shelfGrid"></div><p class="sheet-foot">客人來了之後,在這裡選出客人要的商品。先選型號,再選款式或顏色。</p>';
   renderShelfGrid();
   $('#shelf').hidden = false;
   state.modal = 'shelf';
@@ -2271,6 +2274,7 @@ function startScene() {
     if (it.p.cat === 'film') { const alt = pool.filter((p) => p.cat === 'film' && lens(p) !== lens(it.p)); if (alt.length) pool = alt.concat(pool.filter((p) => p.cat !== 'film')); }
     return pool.length ? makeItem(pickOne(pool)) : null;
   }
+  shelfWantFn = () => { const c = G.cust; if (!c || c.flow !== 'ask' || !(c.st === 'asking' || c.st === 'ready')) return ''; const w = wantedIdx(c); return w.length ? w.map((i) => esc(itemText(c.items[i]))).join('、') : ''; };
   const wantedIdx = (c) => { const r = [], n = c.upfront ? c.items.length : (c.askIdx || 0) + 1; for (let i = 0; i < n; i++) if (c.got.indexOf(i) < 0) r.push(i); return r; };
   const sameItem = (a, b) => a.p.id === b.p.id && a.picks.length === b.picks.length && a.picks.every((v, i) => v === b.picks[i]);
 
