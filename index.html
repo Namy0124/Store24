@@ -508,6 +508,14 @@ img { -webkit-user-drag: none; user-drag: none; }
   .carry span { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .hud-bottom .interact { max-width: 38vw; }
 }
+/* landscape phones: the tutorial / small pop-up windows become a compact card on the left so the shop stays visible */
+@media (orientation: landscape) and (max-height: 520px) {
+  #tutSheet { background: transparent; align-items: flex-end; justify-content: flex-start; padding: 0 0 8px max(10px, env(safe-area-inset-left, 0px)); }
+  #tutSheet .sheet-box { width: min(46vw, 380px); max-height: 62%; border-radius: 16px; box-shadow: 0 6px 24px rgba(10, 40, 45, .4); }
+  #tutSheet .sheet-head { padding-top: 8px; padding-bottom: 4px; } #tutSheet .sheet-head h2 { font-size: 15px; }
+  #tutSheet .sheet-body { padding-top: 4px; padding-bottom: 10px; font-size: 12.5px; line-height: 1.4; overflow-y: auto; }
+  #tutSheet .sheet-body p { margin: 0 0 6px; } #tutSheet .btn { min-height: 34px; padding: 5px 14px; font-size: 13px; }
+}
 </style>
 
 <div id="app">
@@ -3865,7 +3873,7 @@ function startScene() {
   const tutEl = $('#tutSheet');
   function tutShow() {
     G.tutPause = true; state.modal = 'tut'; tutEl.hidden = false;
-    $('#tutBody').innerHTML = '<p>客人正在自己逛、自己挑貨。這時候可以按 <b>👋 招呼語</b>,店員會隨機說一句「你好,要找什麼都可以問呦」之類的話。</p><p class="sub">靠近的客人聽到之後,有機會直接走到你面前問你要找什麼,你就能馬上幫他找貨。沒被招呼的客人也會買東西,只是要等他自己挑好、自己到收銀台。</p><div class="btn-row"><button class="btn primary" type="button" id="tutGreetBtn">👋 試試看,打招呼</button></div>';
+    $('#tutBody').innerHTML = '<p>客人在逛的時候,按 <b>👋 招呼語</b> 打招呼,他可能會走過來問你要找什麼。</p><div class="btn-row"><button class="btn primary" type="button" id="tutGreetBtn">👋 打招呼</button></div>';
     $('#tutGreetBtn').addEventListener('click', tutGreet);
   }
   function tutGreet() {
