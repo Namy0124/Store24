@@ -526,6 +526,7 @@ img { -webkit-user-drag: none; user-drag: none; }
 @keyframes tipPulse { 50% { box-shadow: 0 0 0 9px rgba(255, 183, 3, .12); } }
 @keyframes tipBob { to { transform: translateY(6px); } }
 #tipCard { position: fixed; left: 50%; bottom: max(14px, env(safe-area-inset-bottom, 0px)); transform: translateX(-50%); width: min(420px, calc(100vw - 28px)); background: #fff; color: #17323a; border-radius: 16px; padding: 12px 16px 12px; box-shadow: 0 8px 30px rgba(10, 40, 45, .45); }
+#tipCard .btn { background: #EEF3F3; color: #17323A; border: 1px solid #C5D3D4; box-shadow: none; } #tipCard .btn.primary { background: #0B7A85; color: #fff; border-color: #0B7A85; }
 #tipCard.top { bottom: auto; top: max(14px, env(safe-area-inset-top, 0px)); }
 .tip-n { font-size: 11px; color: #6a8a90; } .tip-t { font-weight: 800; font-size: 16px; margin: 2px 0 4px; } .tip-b { font-size: 14px; line-height: 1.5; }
 .tip-btns { display: flex; justify-content: space-between; gap: 8px; margin-top: 10px; }
@@ -582,7 +583,7 @@ img { -webkit-user-drag: none; user-drag: none; }
         <textarea id="saveCode" rows="3" hidden spellcheck="false" placeholder="存檔碼貼在這裡,再按一次「匯入存檔碼」"></textarea><div class="sub" id="saveMsg"></div></div>
       <div class="controls" id="controls"></div>
       <p class="legal">配件品牌、商品與人物都是虛構的遊戲設定。手機型號使用真實型號。</p>
-      <p class="legal" id="verLine" style="margin-top:2px;opacity:.7">版本 v166 · 2026-10-17</p>
+      <p class="legal" id="verLine" style="margin-top:2px;opacity:.7">版本 v167 · 2026-10-17</p>
     </div>
   </div>
 
