@@ -556,6 +556,11 @@ img { -webkit-user-drag: none; user-drag: none; }
   #rsDock .sheet-head { background: transparent; border-radius: 0; margin: 0; box-shadow: none; }
   #rsDock .rs-hint { background: none; padding: 0; display: block; box-shadow: none; }
 }
+/* portrait phones: the checkout window reaches up to the front edge of the counter (the camera is shifted to match) */
+@media (max-width: 720px) and (orientation: portrait) {
+  #checkout .sheet-box { height: 62.5%; max-height: none; }
+  #checkout.min .sheet-box { height: auto; }
+}
 </style>
 
 <div id="app">
@@ -605,7 +610,7 @@ img { -webkit-user-drag: none; user-drag: none; }
         <textarea id="saveCode" rows="3" hidden spellcheck="false" placeholder="存檔碼貼在這裡,再按一次「匯入存檔碼」"></textarea><div class="sub" id="saveMsg"></div></div>
       <div class="controls" id="controls"></div>
       <p class="legal">配件品牌、商品與人物都是虛構的遊戲設定。手機型號使用真實型號。</p>
-      <p class="legal" id="verLine" style="margin-top:2px;opacity:.7">版本 v186 · 2026-10-17</p>
+      <p class="legal" id="verLine" style="margin-top:2px;opacity:.7">版本 v187 · 2026-10-17</p>
     </div>
   </div>
 
@@ -2246,7 +2251,7 @@ function startScene() {
       camera.position.lerp(PP, k);
       lx += (LL.x - lx) * k; ly += (LL.y - ly) * k; lz += (LL.z - lz) * k;
       camera.fov = 40 + ((side ? Math.max(45, Math.min(92, 2 * Math.atan(Math.tan(29 * Math.PI / 180) / Math.max(0.5, (W - fp.dockW) / H)) * 180 / Math.PI)) : fpFov()) - 40) * k;
-      camera.setViewOffset(W, H, side ? fp.dockW * 0.5 * k : 0, side ? 0 : fp.dockH * 0.5 * k, W, H); camera.updateProjectionMatrix(); fp.on = true;
+      camera.setViewOffset(W, H, side ? fp.dockW * 0.5 * k : 0, side ? 0 : fp.dockH * (fp.mode === 'cart' ? 0.5 : 0.363) * k, W, H);   // portrait checkout: the window's top edge sits right on the counter's front edge camera.updateProjectionMatrix(); fp.on = true;
     } else if (fp.on) { camera.clearViewOffset(); camera.fov = 40; camera.updateProjectionMatrix(); fp.on = false; }
     camera.lookAt(lx, ly, lz);
     player.visible = fp.t < 0.5;
