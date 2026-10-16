@@ -610,7 +610,7 @@ img { -webkit-user-drag: none; user-drag: none; }
         <textarea id="saveCode" rows="3" hidden spellcheck="false" placeholder="存檔碼貼在這裡,再按一次「匯入存檔碼」"></textarea><div class="sub" id="saveMsg"></div></div>
       <div class="controls" id="controls"></div>
       <p class="legal">配件品牌、商品與人物都是虛構的遊戲設定。手機型號使用真實型號。</p>
-      <p class="legal" id="verLine" style="margin-top:2px;opacity:.7">版本 v189 · 2026-10-17</p>
+      <p class="legal" id="verLine" style="margin-top:2px;opacity:.7">版本 v191 · 2026-10-17</p>
     </div>
   </div>
 
@@ -758,6 +758,7 @@ img { -webkit-user-drag: none; user-drag: none; }
   </div>
   <div id="bubble" class="bubble" hidden></div>
   <div id="bubble2" class="bubble" hidden></div>
+  <div id="bubble3" class="bubble" hidden></div>
   <div id="bubbleP" class="bubble" hidden></div>
   <div id="bubbleM" class="bubble" hidden></div>
   <div id="toast" role="status"></div>
@@ -2264,7 +2265,7 @@ function startScene() {
   const fmtN = (n) => 'NT$ ' + Number(n).toLocaleString('en-US');
   const pickOne = (a) => a[Math.floor(Math.random() * a.length)];
   const QX = 5.4, QZ = 3.5;
-  const G = { started: false, gt: 0, nextAt: 0, cust: null, crowd: [], nextBrowse: 12, target: 20, hand: [], co: null, shop: null, tool: null, dayNo: 0, zone: 0, lastMin: -1, dust: {}, stats: { revenue: 0, count: 0, moneyDiff: 0, moneyNet: 0, invErr: 0, browsers: 0, reviews: [] } };
+  const G = { started: false, gt: 0, nextAt: 0, cust: null, crowd: [], pend: [], line: [], exit: [], nextBrowse: 12, target: 20, hand: [], co: null, shop: null, tool: null, dayNo: 0, zone: 0, lastMin: -1, dust: {}, stats: { revenue: 0, count: 0, moneyDiff: 0, moneyNet: 0, invErr: 0, browsers: 0, reviews: [] } };
   const SAY = {
     ask: ['你好,請問有{item}嗎?', '不好意思,我想找{item}。', '老闆,{item}放哪裡呀?', '嗨~我要買{item},可以幫我拿一下嗎?', '請問你們有賣{item}嗎?我要這個。'],
     self: ['麻煩幫我結帳。', '結帳,謝謝!', '這些一起算。', '可以結帳了嗎?'],
@@ -2380,17 +2381,40 @@ function startScene() {
     return cand[0].b;
   }
   const expo = (m) => -Math.log(1 - Math.random()) * m;
+  /* several customers can be in the shop: one at the counter, the rest still shopping (pend) or lined up behind (line) */
+  const primaryCount = () => (G.cust && G.cust.st !== 'leaving' ? 1 : 0) + G.pend.length + G.line.length;
+  const LINE_MAX = 3;
+  function dropQ(c) { let i = G.pend.indexOf(c); if (i >= 0) G.pend.splice(i, 1); i = G.line.indexOf(c); if (i >= 0) { G.line.splice(i, 1); layoutLine(); } }
+  function layoutLine() {
+    G.line.forEach((c, i) => {
+      if (c.spot === i) return; c.spot = i;
+      goTo(c, QX - 1.05 * (i + 1), QZ + (i % 2 ? 0.25 : -0.1), (cc) => { face(cc, 9, QZ); });
+    });
+  }
+  function joinLine(c) {
+    const i = G.pend.indexOf(c); if (i >= 0) G.pend.splice(i, 1);
+    c.pend = false; c.st = 'queued'; c.readyAt = G.gt; c.spot = -1; c.say = pickOne(['我排一下。', '前面還有人,我等等。', '好,我先排隊。']); G.line.push(c); layoutLine();
+  }
+  function promote(c) {
+    const i = G.line.indexOf(c); if (i >= 0) G.line.splice(i, 1);
+    G.cust = c; G.co = null; c.st = 'walkIn'; c.say = ''; layoutLine();
+    goTo(c, QX, QZ, (cc) => {
+      face(cc, 9, QZ); SFX.ding(); cc.st = cc.flow === 'ask' ? 'asking' : 'ready';
+      cc.say = cc.flow === 'ask' ? (cc.askIdx ? pickOne(SAY.ask).replace('{item}', itemText(cc.items[cc.askIdx])) : (cc.lineTxt || askLine(cc))) : pickOne(SAY.self);
+      renderOrder();
+    });
+  }
   function spawnCustomer() {
     if (!db.products.length) { G.nextAt = G.gt + 8; return; }
     G.nextAt = Math.max(G.nextAt, G.gt - 30) + Math.max(6, expo(gapAvg()));
-    { const nth = G.nSp = (G.nSp || 0) + 1; if (G.vipPlan && G.vipPlan.length && nth >= G.vipPlan[0]) { G.vipPlan.shift(); spawnVip(); return; } }
+    { const nth = G.nSp = (G.nSp || 0) + 1; if (G.vipPlan && G.vipPlan.length && nth >= G.vipPlan[0] && primaryCount() === 0) { G.vipPlan.shift(); spawnVip(); return; } }
     const pr = buildPerson(); pr.g.position.set(0, 0, 5.9); pr.g.rotation.y = Math.PI; scene.add(pr.g); SFX.chime();
     const r = G.tutorial && !G.tutSelf ? 0.5 : Math.random() * (G.tutorial ? 0.65 : 1); if (G.tutorial) G.tutSelf = true;
     const kind = r < 0.35 ? 'ask' : r < 0.65 ? 'self' : 'look';
     const c = { g: pr.g, parts: pr.parts, flow: kind === 'self' ? 'self' : 'ask', look: kind === 'look', callout: kind === 'look' && Math.random() < 0.5, st: 'walkIn', path: [], then: null, walkT: 0, say: '', items: [], stops: [], t: 0, readyAt: 0, yaw: Math.PI, nag: false, askIdx: 0, got: [], upfront: false, ignored: false };
     const bk = pickBasket(c.flow); c.items = bk.items; c.upfront = bk.upfront;
     if (c.flow === 'self') fixSelfStock(c);
-    G.cust = c; G.co = null;
+    if (primaryCount() > 0 && !G.tutorial) { c.pend = true; G.pend.push(c); } else { G.cust = c; G.co = null; }
     if (c.flow === 'self' || c.look) {
       c.stops = c.items.map((i) => i.p.cat).filter((v, i, a) => a.indexOf(v) === i);
       if (c.look && Math.random() < 0.3) { const extra = pickOne(CATS).id; if (c.stops.indexOf(extra) < 0) c.stops.unshift(extra); }
@@ -2416,7 +2440,7 @@ function startScene() {
       const st = sh.stands[0];
       goTo(c, st.x, st.z, () => { c.st = 'browse'; c.t = c.look ? 3 + Math.random() * 3 : 2.2; c.say = shelfSay(cat) || (c.look ? pickOne(SAY.look) : '挑選中…'); face(c, sh.cx, sh.cz); c.lastShelf = sh;
         { const f = SHELF_F[cat]; if (!c.look && f !== undefined && (f <= 0.04 || (f < 0.3 && Math.random() < 0.25))) { c.nope = (c.nope || []).concat(cat); if (f <= 0.04 && c.say === '挑選中…') c.say = pickOne(EMPTY_SAY); } } });
-    } else if (c.look && c.callout && c.lastShelf) {
+    } else if (c.look && c.callout && c.lastShelf && !c.pend) {
       c.toCounter = true; c.st = 'calling'; c.callAt = G.gt; c.say = pickOne(SAY.call); face(c, c.lastShelf.cx, c.lastShelf.cz); addCallable(c);
       toast('有客人在叫你,走過去回應');
     } else if (c.flow === 'self' && !c.look && c.nope && c.nope.length) {
@@ -2509,6 +2533,8 @@ function startScene() {
     }
   }
   function atCounter(c) {
+    if (G.cust && G.cust !== c && G.cust.st !== 'leaving' && c.flow !== 'vip') { if (G.line.length < LINE_MAX || G.line.indexOf(c) >= 0) { joinLine(c); return; } }
+    if (G.cust !== c) { dropQ(c); G.cust = c; G.co = null; }
     face(c, 9, QZ); SFX.ding();
     if (c.flow === 'vip') { c.st = 'vip'; c.readyAt = G.gt; c.say = ''; vipOpen(c); return; }
     c.st = c.flow === 'ask' ? 'asking' : 'ready';
@@ -2524,13 +2550,17 @@ function startScene() {
     add(0.07, 0.05, -0.17, 1.52, 0, 0xE8665A); add(0.07, 0.05, 0.17, 1.52, 0, 0xE8665A);   // flushed cheeks
   }
   function leave(c, mad) {
-    c.st = 'leaving'; c.say = mad ? c.say : pickOne(SAY.thanks);
-    goTo(c, 0, 5.9, () => { SFX.chime(); scene.remove(c.g); if (G.cust === c) G.cust = null; G.nextAt = Math.max(G.nextAt, G.gt + 4); updateBubble(); renderOrder(); });
+    c.st = 'leaving'; c.em = ''; c.say = mad ? c.say : pickOne(SAY.thanks); dropQ(c); if (G.exit.indexOf(c) < 0) G.exit.push(c);
+    goTo(c, 0, 5.9, () => { SFX.chime(); scene.remove(c.g); { const xi = G.exit.indexOf(c); if (xi >= 0) G.exit.splice(xi, 1); } if (G.cust === c) G.cust = null; G.nextAt = Math.max(G.nextAt, G.gt + 4); updateBubble(); renderOrder(); });
     renderOrder();
   }
   function updateCust(dt) {
-    if (G.cust) stepCust(G.cust, dt);
+    if (G.cust && G.exit.indexOf(G.cust) < 0) stepCust(G.cust, dt);
+    G.exit.slice().forEach((c) => stepCust(c, dt));
+    G.pend.slice().forEach((c) => stepCust(c, dt));
+    G.line.slice().forEach((c) => stepCust(c, dt));
     G.crowd.forEach((c) => stepCust(c, dt));
+    if ((!G.cust || G.cust.st === 'leaving') && G.line.length && !G.line[0].path.length) promote(G.line[0]);
   }
   function stepCust(c, dt) {
     let moving = false;
@@ -2542,17 +2572,19 @@ function startScene() {
     if (!(c.path && c.path.length) && c.then) { const f = c.then; c.then = null; f(c); }
     if (c.st === 'browse') { c.t -= dt; if (c.t <= 0) { c.say = ''; c.st = 'walkIn'; if (c.browser) browseNext(c); else selfNext(c); } }
     if (c.st === 'calling' && G.gt - c.callAt > 40 * (1 + 0.4 * moodLv())) { removeCallable(c); c.ignored = true; c.st = 'walkIn'; c.say = '算了,我去櫃檯問。'; goTo(c, QX, QZ, atCounter); }
-    if ((c.st === 'asking' || c.st === 'ready') && !G.tutorial && c.flow !== 'vip') {   // the longer they wait the angrier they get (opening the checkout does not stop the clock)
-      const w = (G.gt - c.readyAt) / (1 + 0.3 * moodLv()), cw = G.co;
+    if ((c.st === 'asking' || c.st === 'ready' || c.st === 'queued') && !G.tutorial && c.flow !== 'vip') {   // the longer they wait the angrier they get (opening the checkout does not stop the clock)
+      const w = (G.gt - c.readyAt) / (1 + 0.3 * moodLv()), cw = c === G.cust ? G.co : null;
+      c.em = w > 220 ? '🤬' : w > 140 ? '😠' : w > 60 ? '😒' : '';
       if (w > 60 && !c.grumble) { c.grumble = true; c.say = pickOne(SAY.grumble); }
       if (w > 140) angryFace(c);
       if (w > 280 && (!cw || w > 420 || ((cw.step === 'scan' || cw.step === 'pay') && cw.recv == null))) {
         if (cw) { G.co = null; closeCheckout(); }
+        if (c !== G.cust) toast('排隊的客人等太久,生氣地走掉了');
         angryFace(c); c.say = pickOne(SAY.mad); G.stats.lost = (G.stats.lost || 0) + 1; G.stats.reviews.push({ stars: 0, text: '等太久了,直接走出大門。' });
-        toast('客人等太久,生氣地走掉了'); G.hand = []; renderCarry(); SFX.buzz && SFX.buzz(); leave(c, true); return;
+        if (c === G.cust) { toast('客人等太久,生氣地走掉了'); G.hand = []; renderCarry(); } SFX.buzz && SFX.buzz(); leave(c, true); return;
       }
     }
-    if (c.st === 'asking' && !c.nag && !G.co && G.gt - c.readyAt > 55 * (1 + 0.4 * moodLv())) { c.nag = true; c.say = pickOne(SAY.impatient); }
+    if (c.st === 'asking' && c === G.cust && !c.nag && !G.co && G.gt - c.readyAt > 55 * (1 + 0.4 * moodLv())) { c.nag = true; c.say = pickOne(SAY.impatient); }
     if (moving) c.walkT += dt * 9;
     { const ph = Math.floor(c.walkT / Math.PI); if (moving && ph !== c.stepPh) { c.stepPh = ph; const dd = Math.hypot(c.g.position.x - player.position.x, c.g.position.z - player.position.z); SFX.step(0.5 / (1 + dd * 0.4)); } }
     const sw = moving ? Math.sin(c.walkT) * 0.7 : 0;
@@ -2564,18 +2596,19 @@ function startScene() {
   const bubbleEl = $('#bubble'), bv = new T.Vector3();
   let bubbleTxt = '';
   function placeBubble(el, c) {
-    if (!c || !c.say) { if (!el.hidden) el.hidden = true; el._t = ''; return; }
+    if (!c || (!c.say && !c.em)) { if (!el.hidden) el.hidden = true; el._t = ''; return; }
+    const shown = (c.say || '') + (c.em || '');
     try {
       bv.set(c.g.position.x, 2.2, c.g.position.z).project(camera);
       if (!(bv.z < 1)) { el.hidden = true; return; }
-      if (el._t !== c.say) { el._t = c.say; el.textContent = c.say; if (c.voicedTxt !== c.say) { c.voicedTxt = c.say; if (!c.vp) c.vp = c === MG || c === DL ? 0.62 : c.g === player ? 1.15 : 0.8 + Math.random() * 1.0; SFX.voice(c.say, c.vp, c.g === player ? 0.9 : Math.max(0.15, 1 - Math.hypot(c.g.position.x - player.position.x, c.g.position.z - player.position.z) * 0.06)); } }
+      if (el._t !== shown) { el._t = shown; el.textContent = shown; if (c.say && c.voicedTxt !== c.say) { c.voicedTxt = c.say; if (!c.vp) c.vp = c === MG || c === DL ? 0.62 : c.g === player ? 1.15 : 0.8 + Math.random() * 1.0; SFX.voice(c.say, c.vp, c.g === player ? 0.9 : Math.max(0.15, 1 - Math.hypot(c.g.position.x - player.position.x, c.g.position.z - player.position.z) * 0.06)); } }
       el.hidden = false;
       el.style.transform = 'translate(' + ((bv.x * 0.5 + 0.5) * W) + 'px,' + ((-bv.y * 0.5 + 0.5) * H) + 'px) translate(-50%,-100%)';
     } catch (e) { el.hidden = true; }
   }
   function updateBubble() {
     placeBubble(bubbleEl, G.cust);
-    placeBubble($('#bubble2'), G.crowd.find((x) => x.say && x.st === 'browse'));
+    { const oth = G.crowd.concat(G.pend, G.line, G.exit).filter((x) => (x.say || x.em) && (x.st === 'browse' || x.st === 'queued' || x.st === 'leaving')); placeBubble($('#bubble2'), oth[0]); placeBubble($('#bubble3'), oth[1]); }
     placeBubble($('#bubbleM'), MG && MG.say ? MG : DL && DL.say ? DL : null);
     placeBubble($('#bubbleP'), playerSay && G.gt < playerSay.until ? playerSay : null);
   }
@@ -3025,7 +3058,7 @@ function startScene() {
       CART_ORDER.forEach((c) => { if (!CARTS[c].placed) cartDrop(CARTS[c]); });
       shopAct(byId.door); return;
     }
-    if (k === 'cust') { if (!s.door) { toast('先開店(可按「一鍵開好店」)'); return; } if (G.cust) { toast('櫃檯已經有客人了'); return; } G.nextAt = 0; spawnCustomer(); return; }
+    if (k === 'cust') { if (!s.door) { toast('先開店(可按「一鍵開好店」)'); return; } if (primaryCount() >= 3) { toast('店裡客人已經夠多了'); return; } G.nextAt = 0; spawnCustomer(); return; }
     if (k === 'wait') {
       const c = G.cust; if (!c || !(c.st === 'asking' || c.st === 'ready')) { toast('櫃檯沒有等著的客人'); return; }
       c.readyAt -= 120; toast('客人已等了約 ' + Math.round(G.gt - c.readyAt) + ' 秒'); return;
@@ -4089,7 +4122,7 @@ function startScene() {
     stepTweens(dt);
     stepShop(dt); phoneStep(dt);
     const sh = G.shop, open = sh.door && cartsPlaced() === 6 && !sh.countStarted && !sh.done;
-    if (open && !G.cust && G.gt >= G.nextAt) spawnCustomer();
+    if (open && G.gt >= G.nextAt) { if (primaryCount() < (G.tutorial ? 1 : 3)) spawnCustomer(); else G.nextAt = G.gt + 5; }
     if (open && G.gt >= G.nextBrowse) { if (G.crowd.length < 2 && db.products.length) spawnBrowser(); G.nextBrowse = G.gt + 50 + Math.random() * 60; }
     updateCust(dt);
     updateBubble();
@@ -4632,7 +4665,7 @@ function startScene() {
   }
   function lockDoor() {
     const s = G.shop, miss = [];
-    if (!s.posClosed) miss.push('POS 還沒日結'); if (s.light) miss.push('燈還沒關'); if (s.ac) miss.push('冷氣還沒關'); if (cartsPlaced() > 0) miss.push('花車還沒收'); if (!s.signed) miss.push('每日店務表還沒簽名'); if (G.cust || G.crowd.length) miss.push('店裡還有客人');
+    if (!s.posClosed) miss.push('POS 還沒日結'); if (s.light) miss.push('燈還沒關'); if (s.ac) miss.push('冷氣還沒關'); if (cartsPlaced() > 0) miss.push('花車還沒收'); if (!s.signed) miss.push('每日店務表還沒簽名'); if (G.cust || G.crowd.length || G.pend.length || G.line.length || G.exit.length) miss.push('店裡還有客人');
     if (miss.length) { toast('還不能鎖門:' + miss.join('、')); return; }
     s.done = true; FX.doorTarget = 0; SFX.doorGlass(false); renderTodo(); endDay();
   }
@@ -4669,7 +4702,7 @@ function startScene() {
   dayBody.addEventListener('click', (e) => { if (e.target.closest('[data-day]')) { dayEl.hidden = true; state.modal = null; newDay(); } else if (e.target.closest('[data-dex]')) dexOpen(); });
   function newDay() {
     if (G.cust) scene.remove(G.cust.g);
-    G.cust = null; G.crowd.forEach((c) => scene.remove(c.g)); G.crowd = []; removeCallable();
+    G.cust = null; G.crowd.concat(G.pend, G.line, G.exit).forEach((c) => scene.remove(c.g)); G.crowd = []; G.pend = []; G.line = []; G.exit = []; removeCallable();
     if (MG) { scene.remove(MG.g); MG = null; }
     G.co = null; G.hand = []; renderCarry(); closeCheckout(); closeClose();
     if (G.dayNo === 0 && SAVE.days > 0 && SAVE.dust) { G.dayNo = SAVE.days; G.dust = Object.assign({}, SAVE.dust); G.zone = Math.min(SAVE.zone, ZONES.length - 1); G.pendingMgr = SAVE.mgrId; }
@@ -4808,7 +4841,7 @@ function startScene() {
     if (s.mgrAt > 0 && G.gt >= s.mgrAt && s.door && !isClosing()) { s.mgrAt = -1; if (!MG && (dirtyZones().length >= 2 || ZONES.some((z) => (G.dust[z.id] || 0) >= 40))) startMgr(); }
     if (isClosing() && !s.closingNoted) {
       s.closingNoted = true; toast('21:30 了,準備閉店:' + (s.signed ? '' : '(店務表還沒簽)') + '收花車 → 點錢對帳 → POS 日結 → 關冷氣 → 關燈 → 鎖門');
-      G.crowd.forEach((c) => { c.stops = []; if (c.st === 'browse') c.t = 0; });
+      G.crowd.concat(G.pend).forEach((c) => { c.stops = []; if (c.st === 'browse') c.t = 0; });
       renderTodo(); refreshVerbs();
     }
     const mk = Math.floor(clockMin()); if (mk !== G.lastMin) { G.lastMin = mk; renderStat(); renderTodo(); }
