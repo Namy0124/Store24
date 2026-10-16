@@ -583,7 +583,7 @@ img { -webkit-user-drag: none; user-drag: none; }
         <textarea id="saveCode" rows="3" hidden spellcheck="false" placeholder="存檔碼貼在這裡,再按一次「匯入存檔碼」"></textarea><div class="sub" id="saveMsg"></div></div>
       <div class="controls" id="controls"></div>
       <p class="legal">配件品牌、商品與人物都是虛構的遊戲設定。手機型號使用真實型號。</p>
-      <p class="legal" id="verLine" style="margin-top:2px;opacity:.7">版本 v167 · 2026-10-17</p>
+      <p class="legal" id="verLine" style="margin-top:2px;opacity:.7">版本 v168 · 2026-10-17</p>
     </div>
   </div>
 
@@ -3403,7 +3403,7 @@ function startScene() {
       },
       dull() { tone({ f: 160, f2: 110, d: 0.1, v: 0.1, a: 0.003 }); noise({ type: 'lowpass', f: 300, d: 0.07, v: 0.05, a: 0.003 }); },
       ding() { tone({ f: 2093, d: 0.9, v: 0.14, a: 0.002 }); tone({ f: 4186, d: 0.4, v: 0.03, a: 0.002 }); },
-      sweep() { for (let k = 0; k < 3; k++) { const up = k % 2; noise({ type: 'bandpass', f: up ? 2200 : 3200, f2: up ? 3200 : 2200, q: 0.5, d: 0.36, a: 0.15, v: 0.1, at: k * 0.3 }); noise({ type: 'highpass', f: 4500, d: 0.36, a: 0.15, v: 0.04, at: k * 0.3 }); } },
+      sweep() { for (let k = 0; k < 3; k++) { const up = k % 2; noise({ type: 'bandpass', f: up ? 1400 : 2200, f2: up ? 2200 : 1400, q: 0.9, d: 0.36, a: 0.15, v: 0.042, at: k * 0.3 }); noise({ type: 'highpass', f: 3800, d: 0.36, a: 0.15, v: 0.008, at: k * 0.3 });   // softer, so it does not clip against the compressor } },
       dust() { for (let k = 0; k < 2; k++) noise({ type: 'bandpass', f: 4200, f2: 3000, q: 0.5, d: 0.34, a: 0.12, v: 0.07, at: k * 0.28 }); },
       scribble(dur) { for (let k = 0; k < Math.floor(dur / 0.07); k++) noise({ f: 2500 + Math.random() * 2000, q: 1.5, d: 0.05, v: 0.08, at: k * 0.07 }); }
     };
