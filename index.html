@@ -588,7 +588,7 @@ img { -webkit-user-drag: none; user-drag: none; }
         <textarea id="saveCode" rows="3" hidden spellcheck="false" placeholder="存檔碼貼在這裡,再按一次「匯入存檔碼」"></textarea><div class="sub" id="saveMsg"></div></div>
       <div class="controls" id="controls"></div>
       <p class="legal">配件品牌、商品與人物都是虛構的遊戲設定。手機型號使用真實型號。</p>
-      <p class="legal" id="verLine" style="margin-top:2px;opacity:.7">版本 v178 · 2026-10-17</p>
+      <p class="legal" id="verLine" style="margin-top:2px;opacity:.7">版本 v179 · 2026-10-17</p>
     </div>
   </div>
 
@@ -3837,11 +3837,17 @@ function startScene() {
     toast('完成!客人評價 ' + '★'.repeat(stars) + '☆'.repeat(5 - stars) + moodTip());
     leave(c);
   }
-  /* calculator keys react the moment the finger lands (a tap that slides a little never becomes a 'click', which felt like a dead key) */
-  let keyAt = 0; const KEYS = { k: 1, kb: 1, kc: 1 };
+  /* calculator keys fire when the finger lifts (tolerating a small slide), but never when the finger was dragging to scroll the panel */
+  let keyAt = 0, kdown = null; const KEYS = { k: 1, kb: 1, kc: 1 };
   coBody.addEventListener('pointerdown', (e) => {
-    const b = e.target.closest && e.target.closest('[data-co]'); if (!b || !KEYS[b.dataset.co] || (e.pointerType === 'mouse' && e.button !== 0)) return;
-    e.preventDefault(); keyAt = performance.now(); coAct(b.dataset.co, b.dataset);
+    const b = e.target.closest && e.target.closest('[data-co]'); kdown = b && KEYS[b.dataset.co] && !(e.pointerType === 'mouse' && e.button !== 0) ? { b: b, x: e.clientX, y: e.clientY } : null;
+  });
+  coBody.addEventListener('pointercancel', () => { kdown = null; });
+  coBody.addEventListener('pointerup', (e) => {
+    const d = kdown; kdown = null; if (!d) return;
+    const b = e.target.closest && e.target.closest('[data-co]');
+    if (b !== d.b || Math.hypot(e.clientX - d.x, e.clientY - d.y) > 12) return;   // moved: it was a scroll or a slip, not a press
+    keyAt = performance.now(); coAct(b.dataset.co, b.dataset);
   });
   coBody.addEventListener('click', (e) => {
     const b = e.target.closest('[data-co]'); if (!b) return;
