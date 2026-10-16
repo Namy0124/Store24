@@ -588,7 +588,7 @@ img { -webkit-user-drag: none; user-drag: none; }
         <textarea id="saveCode" rows="3" hidden spellcheck="false" placeholder="存檔碼貼在這裡,再按一次「匯入存檔碼」"></textarea><div class="sub" id="saveMsg"></div></div>
       <div class="controls" id="controls"></div>
       <p class="legal">配件品牌、商品與人物都是虛構的遊戲設定。手機型號使用真實型號。</p>
-      <p class="legal" id="verLine" style="margin-top:2px;opacity:.7">版本 v176 · 2026-10-17</p>
+      <p class="legal" id="verLine" style="margin-top:2px;opacity:.7">版本 v177 · 2026-10-17</p>
     </div>
   </div>
 
@@ -4031,7 +4031,9 @@ function startScene() {
     } else if (state.modal) tipCard.classList.add('top');
   }
   function tipShow(key) {
-    if (SAVE.tipsOff || (SAVE.tips && SAVE.tips[key]) || TP || !TIPS[key]) return;
+    if (SAVE.tipsOff || (SAVE.tips && SAVE.tips[key]) || !TIPS[key]) return;
+    if (TP && TP.key === 'greet' && key !== 'greet') tipEnd();   // a greeting hint still on screen gives way to the real work
+    if (TP) return;
     SAVE.tips = SAVE.tips || {}; SAVE.tips[key] = 1; saveGame();
     TP = { key: key, i: 0, run: 0 }; G.tutPause = true; tipEl.hidden = false; tipRender();
   }
