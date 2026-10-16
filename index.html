@@ -336,6 +336,7 @@ button { cursor: pointer; }
 @media (max-width: 720px) { .pos-main { grid-template-columns: 1fr; } }
 .pos-left, .pos-right { display: flex; flex-direction: column; gap: 10px; min-width: 0; }
 .pos-right { background: var(--panel-soft); border: 1.5px solid var(--line); border-radius: 14px; padding: 12px; }
+.shelfwant .wg { margin-top: 4px; } .shelfwant .wl { font-size: 14px; line-height: 1.4; } .shelfwant { max-height: 34vh; overflow-y: auto; }
 .shelfwant { position: sticky; top: 0; z-index: 2; margin-bottom: 8px; }
 .want { background: color-mix(in srgb, var(--signal) 20%, var(--panel)); border: 1.5px solid var(--signal); border-radius: 12px; padding: 8px 12px; }
 .pos-list { border: 1.5px solid var(--line); border-radius: 14px; overflow: hidden; background: var(--panel); }
@@ -580,7 +581,7 @@ img { -webkit-user-drag: none; user-drag: none; }
         <textarea id="saveCode" rows="3" hidden spellcheck="false" placeholder="存檔碼貼在這裡,再按一次「匯入存檔碼」"></textarea><div class="sub" id="saveMsg"></div></div>
       <div class="controls" id="controls"></div>
       <p class="legal">配件品牌、商品與人物都是虛構的遊戲設定。手機型號使用真實型號。</p>
-      <p class="legal" id="verLine" style="margin-top:2px;opacity:.7">版本 v159 · 2026-10-17</p>
+      <p class="legal" id="verLine" style="margin-top:2px;opacity:.7">版本 v160 · 2026-10-17</p>
     </div>
   </div>
 
@@ -2274,7 +2275,9 @@ function startScene() {
     if (it.p.cat === 'film') { const alt = pool.filter((p) => p.cat === 'film' && lens(p) !== lens(it.p)); if (alt.length) pool = alt.concat(pool.filter((p) => p.cat !== 'film')); }
     return pool.length ? makeItem(pickOne(pool)) : null;
   }
-  shelfWantFn = () => { const c = G.cust; if (!c || c.flow !== 'ask' || !(c.st === 'asking' || c.st === 'ready')) return ''; const w = wantedIdx(c); return w.length ? w.map((i) => esc(itemText(c.items[i]))).join('、') : ''; };
+  shelfWantFn = () => { const c = G.cust; if (!c || c.flow !== 'ask' || !(c.st === 'asking' || c.st === 'ready')) return ''; const w = wantedIdx(c); if (!w.length) return '';
+    const by = {}; w.forEach((i) => { const k = c.items[i].p.cat; (by[k] = by[k] || []).push(i); });   // same category together, one line per item
+    return CATS.filter((ct) => by[ct.id]).map((ct) => '<div class="wg"><b>' + esc(ct.name) + '</b>' + by[ct.id].map((i) => '<div class="wl">・' + esc(itemText(c.items[i])) + '</div>').join('') + '</div>').join(''); };
   const wantedIdx = (c) => { const r = [], n = c.upfront ? c.items.length : (c.askIdx || 0) + 1; for (let i = 0; i < n; i++) if (c.got.indexOf(i) < 0) r.push(i); return r; };
   const sameItem = (a, b) => a.p.id === b.p.id && a.picks.length === b.picks.length && a.picks.every((v, i) => v === b.picks[i]);
 
