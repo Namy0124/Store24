@@ -157,6 +157,7 @@ button { cursor: pointer; }
 .pm { background: #fff; border-radius: 12px; padding: 8px 10px; box-shadow: 0 1px 2px rgba(0,0,0,.12); font-size: 13px; line-height: 1.45; }
 .pm .pf { display: flex; justify-content: space-between; font-size: 11.5px; color: #6B7A80; } .pm .pf b { color: #0B7A82; }
 .pm.co { border-left: 4px solid #F2B200; } .pm.sys { background: #FDECEA; }
+.pm { color: #1B2A30; } .pm .btn, .pm-head .btn { background: #EDF3F2; color: #1B2A30; border-color: #9AA5A8; }
 .pm .rp { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 6px; } .pm .you { margin-top: 4px; text-align: right; color: #0B7A82; }
 .pc-btns { display: flex; gap: 10px; }
 .savebox { display: flex; flex-direction: column; gap: 8px; background: var(--panel-soft); border-radius: 14px; padding: 10px 12px; }
@@ -463,6 +464,36 @@ img { -webkit-user-drag: none; user-drag: none; }
   .music { width: min(420px, 52vw); left: auto; right: calc(max(12px, env(safe-area-inset-right, 0px)) + 52px); transform: none; bottom: 8px; max-height: 86%; }
   .music.closed { transform: translateX(140%); }
 }
+/* landscape phones, checkout panel: squeeze every step into the half-screen panel so nothing scrolls */
+@media (orientation: landscape) and (max-height: 640px) {
+  .pos-head { display: none; }
+  .steps { margin: 0 0 4px; } .steps li { padding: 2px 6px; font-size: 11.5px; }
+  .cmsg { padding: 3px 8px; font-size: 11.5px; line-height: 1.3; margin-bottom: 4px; border-radius: 8px; }
+  .pos-main { grid-template-columns: minmax(0, .72fr) minmax(0, 1.4fr); gap: 6px; }
+  .pos-left, .pos-right { gap: 4px; } .pos-right { padding: 6px 8px; }
+  .pos-th { padding: 2px 6px; font-size: 11px; } .pos-line { padding: 3px 6px; font-size: 12px; } .pos-line .pn { font-size: 12px; } .pos-total { padding: 4px 6px; font-size: 13px; } .pos-total b { font-size: 15px; }
+  .want { padding: 4px 8px; font-size: 12px; }
+  .pos-right .co-l { display: none; }
+  .pos-right .sub, .pos-right > p { display: none; }
+  .cash-row { margin: 0; min-height: 0; gap: 4px; } .cash-row .cash { padding: 3px 8px; font-size: 12px; }
+  .kp-disp { font-size: 18px; min-height: 30px; padding: 2px 8px; }
+  .keypad { grid-template-columns: repeat(6, 1fr); gap: 4px; } .keypad .btn { min-height: 34px; font-size: 15px; padding: 0; }
+  .co-sum { gap: 4px; } .co-sum div { padding: 4px 8px; flex-direction: row; align-items: baseline; justify-content: space-between; gap: 4px; } .co-sum b, .co-given b { font-size: 16px; } .co-sum span { font-size: 11px; }
+  .co-given { margin: 0; padding: 4px 8px; } .co-given span { font-size: 12px; }
+  .dn-grid { grid-template-columns: repeat(4, 1fr); gap: 4px; } .dn, .dn.c50, .dn.c10, .dn.c5, .dn.c1 { min-height: 0; height: 32px; aspect-ratio: auto; font-size: 13px; padding: 2px; border-radius: 8px; }
+  .dn-took { margin: 0; min-height: 24px; gap: 4px; } .dn-took .co-l { display: inline; font-size: 11px; }
+  .co-card { margin-bottom: 4px !important; padding: 4px 8px; font-size: 12.5px; } .co-card .co-l { display: block; }
+  .recpt { padding: 4px 8px; font-size: 12px; } .recpt .bc { font-size: 15px; }
+  .btn-row { gap: 4px; margin-top: 0 !important; } .btn-row .btn { flex: 1 1 64px; min-height: 32px; padding: 4px 6px; font-size: 12.5px; }
+  .pos-right > .btn-row:last-child, .pos-left > .btn-row:last-child { padding: 2px 0 0; box-shadow: none; position: static; }
+}
+@media (orientation: landscape) and (max-height: 400px) {
+  .steps { display: none; }
+  .dn, .dn.c50, .dn.c10, .dn.c5, .dn.c1 { height: 28px; }
+  .co-sum div { padding: 2px 8px; } .co-given { padding: 2px 8px; } .keypad .btn { min-height: 30px; } .kp-disp { min-height: 26px; font-size: 16px; }
+  .btn-row .btn { min-height: 28px; padding: 3px 6px; }
+}
+@media (orientation: landscape) and (max-height: 640px) { .pos-left .pos-list { max-height: calc(100vh - 140px); overflow-y: auto; } }
 </style>
 
 <div id="app">
@@ -3838,7 +3869,7 @@ function startScene() {
   const dustName = (id) => (ZONES.find((z) => z.id === id) || {}).name || id;
   const DIRT_SPOTS = [[-3.4, -0.6], [0.6, -0.6], [4.6, -0.6], [-3.4, 3.0], [0.6, 3.4], [-7.0, -0.6], [4.6, 4.2], [-7.0, 4.0]];
   const zoneLeft = () => (G.dust[ZONES[G.zone].id] || 0);   // today's area is finished when its dust is gone
-  const freshShop = () => ({ brushes: 0, zoneBrush: 0, mgrAt: 90 + Math.random() * 380, mgr: null, door: false, light: false, ac: false, pos: false, swept: 0, zoneDone: false, signed: false, countStarted: false, counted: false, posClosed: false, done: false, closingNoted: false, drawer: FLOAT_CASH, step: 'count', keyed: '', msg: '', count: null, countFor: -1, acctDiff: 0, attempts: 0, recounts: 0, msgs: [], msgSeq: 0, nextMsgAt: 60 + Math.random() * 80, nextCallAt: 200 + Math.random() * 200, missed: 0, answered: 0, caught: 0 });
+  const freshShop = () => ({ brushes: 0, zoneBrush: 0, mgrAt: 90 + Math.random() * 380, mgr: null, door: false, light: false, ac: false, pos: false, swept: 0, zoneDone: false, signed: false, countStarted: false, counted: false, posClosed: false, done: false, closingNoted: false, drawer: FLOAT_CASH, step: 'count', keyed: '', msg: '', count: null, countFor: -1, acctDiff: 0, attempts: 0, recounts: 0, msgs: [], msgSeq: 0, nextMsgAt: 160 + Math.random() * 160, nextCallAt: 200 + Math.random() * 200, missed: 0, answered: 0, caught: 0 });
   const clockMin = () => (G.gt <= BIZ_SEC ? CLOSE_MIN * G.gt / BIZ_SEC : CLOSE_MIN + (G.gt - BIZ_SEC) / 4);
   const isClosing = () => G.gt >= BIZ_SEC;
   function fmtClock(m) { const t = 11 * 60 + Math.floor(m); return String(Math.floor(t / 60) % 24).padStart(2, '0') + ':' + String(t % 60).padStart(2, '0'); }
@@ -4734,7 +4765,6 @@ function startScene() {
     { l: [['琪琪', '這個月業績目標又調高了'], ['阿凱', '客人就那麼多,是要我去街上拉客嗎'], ['小美', '目標是總部訂的,店裡也沒辦法'], ['阿豪', '達不到又要寫檢討,煩死']], r: ['我也很有壓力', '盡力就好'], f: ['琪琪', '嗯,盡力就好,不要太逼自己'] },
     { l: [['小美', '排班表每次都臨時改,我昨天才知道週日要上班'], ['阿凱', '我上次是前一天晚上才收到通知'], ['阿豪', '一個月前就該排好了吧'], ['琪琪', '跟副理說過了,他說「會反應」']], r: ['確實該早點排', '我再跟他講'], f: ['小美', '謝啦,有你幫我說話比較有力'] },
     { l: [['阿凱', 'POS 今天結帳好卡,掃一個條碼要等兩秒'], ['琪琪', '客人排隊的時候最尷尬'], ['阿豪', '我已經回報系統組了'], ['小美', '他們通常會說「請重開機」']] },
-    { l: [['阿豪', '總部又要我們寫「客訴紀錄單」,每次都要寫三份'], ['小美', '同樣的內容寫三次'], ['琪琪', '有電子版的話就好了'], ['阿凱', '會有的啦,明年吧']] },
   ];
   /* 公司大群: head office / regional / warehouse posting work items (transfers, recalls, stock counts, promos). Short, official, often asking for an ack */
   const CO_THREADS = [
@@ -4764,9 +4794,9 @@ function startScene() {
   }
   function grpStep() {
     const s = G.shop; if (!s || !s.door || s.done) return;
-    if (!s.grpQ) { s.grpQ = []; s.grpAt = G.gt + 25 + Math.random() * 60; s.coAt = G.gt + 120 + Math.random() * 120; }
-    if (!s.grpQ.length && G.gt >= s.grpAt) s.grpAt = grpEnqueue(s, pickOne(GRP_THREADS), 'staff') + 70 + Math.random() * 120;
-    else if (!s.grpQ.length && G.gt >= s.coAt) s.coAt = grpEnqueue(s, pickOne(CO_THREADS), 'co') + 200 + Math.random() * 220;
+    if (!s.grpQ) { s.grpQ = []; s.grpAt = G.gt + 150 + Math.random() * 150; s.coAt = G.gt + 300 + Math.random() * 250; }
+    if (!s.grpQ.length && G.gt >= s.grpAt) s.grpAt = grpEnqueue(s, pickOne(GRP_THREADS), 'staff') + 330 + Math.random() * 320;
+    else if (!s.grpQ.length && G.gt >= s.coAt) s.coAt = grpEnqueue(s, pickOne(CO_THREADS), 'co') + 480 + Math.random() * 400;
     while (s.grpQ.length && s.grpQ[0].at <= G.gt) { const q = s.grpQ.shift(); addMsg({ from: GRP_NAME[q.g || 'staff'], text: q.who + ':' + q.text, replies: q.r, f: q.f, quiet: q.quiet, co: q.g === 'co', ack: q.g === 'co' }); }
   }
   function renderInbox() {
@@ -4867,7 +4897,7 @@ function startScene() {
     const s = G.shop; if (!s) return;
     if (PH.open) { phTick(); phWhere(); }
     if (s.door && !isClosing() && !s.done) {
-      if (G.gt >= s.nextMsgAt) { deliverMsg(); s.nextMsgAt = G.gt + 90 + Math.random() * 150; }
+      if (G.gt >= s.nextMsgAt) { deliverMsg(); s.nextMsgAt = G.gt + 320 + Math.random() * 320; }
     }
     grpStep();
     if (PH.ring && !PH.ring.answered) {
