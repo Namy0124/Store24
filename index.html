@@ -546,6 +546,16 @@ img { -webkit-user-drag: none; user-drag: none; }
 #jumpMenu { max-height: 78vh; overflow-y: auto; }
 /* music is switched off for now (the code stays so it can come back) */
 #btnMusic, #music { display: none !important; }
+/* restock: the tray is a basket floating at the bottom of the screen, the shop stays visible behind it */
+#rsDock .sheet-box { background: transparent; box-shadow: none; }
+#rsDock .sheet-head { background: var(--panel); border-radius: 999px; margin: 0 12px 6px; box-shadow: var(--shadow); }
+#rsDock .sheet-body { padding-top: 0; padding-bottom: 10px; }
+#rsDock .rs-hint { background: var(--panel); border-radius: 12px; padding: 6px 10px; margin-bottom: 6px; display: inline-block; box-shadow: var(--shadow); }
+@media (orientation: landscape) and (max-height: 640px) {
+  #rsDock .sheet-box { background: var(--panel); box-shadow: -8px 0 28px rgba(10, 40, 45, .35); }
+  #rsDock .sheet-head { background: transparent; border-radius: 0; margin: 0; box-shadow: none; }
+  #rsDock .rs-hint { background: none; padding: 0; display: block; box-shadow: none; }
+}
 </style>
 
 <div id="app">
@@ -595,7 +605,7 @@ img { -webkit-user-drag: none; user-drag: none; }
         <textarea id="saveCode" rows="3" hidden spellcheck="false" placeholder="存檔碼貼在這裡,再按一次「匯入存檔碼」"></textarea><div class="sub" id="saveMsg"></div></div>
       <div class="controls" id="controls"></div>
       <p class="legal">配件品牌、商品與人物都是虛構的遊戲設定。手機型號使用真實型號。</p>
-      <p class="legal" id="verLine" style="margin-top:2px;opacity:.7">版本 v183 · 2026-10-17</p>
+      <p class="legal" id="verLine" style="margin-top:2px;opacity:.7">版本 v186 · 2026-10-17</p>
     </div>
   </div>
 
@@ -3307,7 +3317,6 @@ function startScene() {
       const c = get(); if (!c) return c;
       if (c.state !== 'running') {
         try { const pr = c.resume(); if (pr && pr.catch) pr.catch(() => {}); } catch (e) { /* ignore */ }
-        setTimeout(() => { if (ctx === c && c.state !== 'running') { try { c.close(); } catch (e) { /* ignore */ } ctx = null; master = null; nb = null; get(); } }, 350);
       }
       return c;
     }
@@ -3358,7 +3367,8 @@ function startScene() {
       }
     }
     return {
-      unlock: wake, voice: voice, rebuild: rebuild, stale: () => { stale = true; }, need: () => stale || !ctx || ctx.state !== 'running', tap: () => { if (stale) { stale = false; return rebuild(); } return wake(); },
+      unlock: wake, voice: voice, rebuild: rebuild, stale: () => { stale = true; }, need: () => stale || !ctx || ctx.state !== 'running', tap: () => { if (stale || !ctx || ctx.state !== 'running') { stale = false; return rebuild(); } return wake(); },   // not running at the moment of a tap: build a fresh output right here, inside the gesture
+      state: () => (ctx ? ctx.state : 'none'),
       step(v) { if (!gate('step' + (v > 0.6 ? 'p' : 'c'), 90)) return; noise({ type: 'lowpass', f: 420, f2: 140, d: 0.07, v: 0.32 * v, a: 0.003 }); tone({ f: 85, f2: 55, d: 0.07, v: 0.14 * v }); },
       drawer() {
         /* cash drawer: latch release, a soft rolling slide, and a low wooden stop; deliberately no bell and nothing high-pitched */
@@ -3455,7 +3465,7 @@ function startScene() {
   /* coming back to the page: freeze the game behind a big 'continue' button. A real button press is the one gesture every browser accepts for turning sound back on, and nothing happens to the shop while the player was away */
   const awayEl = $('#awayCover');
   function showAway() { if (!state.started || !awayEl.hidden) return; G.away = true; awayEl.hidden = false; SFX.stale(); }
-  $('#awayGo').addEventListener('click', () => { SFX.rebuild(); try { SFX.chime(); } catch (e) { /* ignore */ } awayEl.hidden = true; G.away = false; });
+  $('#awayGo').addEventListener('click', () => { SFX.rebuild(); try { SFX.chime(); } catch (e) { /* ignore */ } awayEl.hidden = true; G.away = false; setTimeout(() => { if (SFX.state() !== 'running') toast('🔈 音效還沒恢復,再點一下畫面'); }, 700); });
   const sfxTap = () => SFX.tap();   // a tap is the only moment a browser lets us build a new audio output, so the rebuild happens here
   window.addEventListener('pointerdown', sfxTap, { passive: true }); window.addEventListener('touchend', sfxTap, { passive: true });
   document.addEventListener('visibilitychange', () => { if (document.hidden) { SFX.stale(); showAway(); } else { SFX.unlock(); setTimeout(() => { if (!document.hidden && state.started && SFX.need()) toast('🔈 點一下畫面,恢復音效'); }, 400); } });
@@ -4476,6 +4486,7 @@ function startScene() {
   /* ---------- first-person restocking: drag the goods from the basket onto the display ---------- */
   const rsEl = $('#rsDock'), rsBody = $('#rsBody'); let RS = null;
   const rsLines = () => upLines().filter((l) => RS && l.cat === RS.cat && l.s);
+  let rsHidden = [];
   function rsPose(cat) {
     const S = SHELVES[cat]; if (!S) return false;
     if (S.kind === 'cart') { const p = CARTS[cat].g.position; fp.cPos.set(p.x, 1.62, p.z + 1.55); fp.cLook.set(p.x, 0.7, p.z); }
@@ -4485,10 +4496,12 @@ function startScene() {
   function openRestock0(cat) {
     if (!rsPose(cat)) return false;
     rsEl.classList.remove('min'); $('#rsMin').textContent = '▾ 收合';
+    rsHidden.forEach((k) => { CARTS[k].g.visible = true; }); rsHidden = [];
+    Object.keys(CARTS).forEach((k) => { if (k !== cat && Math.hypot(CARTS[k].g.position.x - fp.cPos.x, CARTS[k].g.position.z - fp.cPos.z) < 4.2) { CARTS[k].g.visible = false; rsHidden.push(k); } });   // anything close to the camera would block the view of the shelf: hide it while restocking
     RS = { cat: cat }; fp.mode = 'cart'; fp.target = 1; rsEl.hidden = false; state.modal = 'restock'; renderRs(); return true;
   }
   function closeRestock() {
-    upFinishNow(); rsEl.hidden = true; if (state.modal === 'restock') state.modal = null; fp.target = 0; RS = null; renderCarry(); renderTodo();
+    upFinishNow(); rsEl.hidden = true; if (state.modal === 'restock') state.modal = null; fp.target = 0; RS = null; rsHidden.forEach((k) => { CARTS[k].g.visible = true; }); rsHidden = []; renderCarry(); renderTodo();
   }
   function renderRs() {
     if (!RS) return;
@@ -5239,11 +5252,12 @@ function startScene() {
     if (tapT > 0) { tapT -= dt; tapRing.material.opacity = Math.max(0, tapT / 0.7); if (tapT <= 0) tapRing.visible = false; }
     updateCamera(dt, false);
   }
-  let wakeAt = 0, tipAt = 0;
+  let wakeAt = 0, tipAt = 0, sfxChk = 0, sfxWarn = 0;
   function tick(now) {
     requestAnimationFrame(tick);
     if (TP && now - tipAt > 250) { tipAt = now; try { tipRender(); } catch (e) { /* ignore */ } }   // keep the box and arrow on whatever the player should press next
     if (now - wakeAt > 4000) { wakeAt = now; try { SFX.unlock(); } catch (e) { /* ignore */ } }   // keep WebAudio awake while music plays
+    if (state.started && !G.away && now - sfxChk > 4000) { sfxChk = now; if (SFX.state() !== 'running' && SFX.state() !== 'none' && now - sfxWarn > 20000) { sfxWarn = now; toast('🔈 音效中斷了,點一下畫面恢復'); } }
     if (last && now - last > 2500) { try { SFX.stale(); showAway(); } catch (e) { /* ignore */ } }   // the page was frozen for a while (other pane/app in front)
     const dt = Math.min(0.05, (now - last) / 1000); last = now;
     update(dt, now);
