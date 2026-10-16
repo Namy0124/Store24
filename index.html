@@ -536,6 +536,9 @@ img { -webkit-user-drag: none; user-drag: none; }
   #tipCard { left: max(10px, env(safe-area-inset-left, 0px)); transform: none; width: min(44vw, 360px); padding: 8px 12px; border-radius: 14px; }
   #tipCard.top { top: 8px; } .tip-t { font-size: 14px; margin: 0 0 2px; } .tip-b { font-size: 12.5px; line-height: 1.4; } .tip-btns { margin-top: 6px; }
 }
+#jumpMenu { max-height: 78vh; overflow-y: auto; }
+/* music is switched off for now (the code stays so it can come back) */
+#btnMusic, #music { display: none !important; }
 </style>
 
 <div id="app">
@@ -585,7 +588,7 @@ img { -webkit-user-drag: none; user-drag: none; }
         <textarea id="saveCode" rows="3" hidden spellcheck="false" placeholder="存檔碼貼在這裡,再按一次「匯入存檔碼」"></textarea><div class="sub" id="saveMsg"></div></div>
       <div class="controls" id="controls"></div>
       <p class="legal">配件品牌、商品與人物都是虛構的遊戲設定。手機型號使用真實型號。</p>
-      <p class="legal" id="verLine" style="margin-top:2px;opacity:.7">版本 v175 · 2026-10-17</p>
+      <p class="legal" id="verLine" style="margin-top:2px;opacity:.7">版本 v176 · 2026-10-17</p>
     </div>
   </div>
 
@@ -2986,6 +2989,32 @@ function startScene() {
   $('#phAppDex').addEventListener('click', dexOpen);
   /* ---------- owner-only jump menu ---------- */
   const jmEl = $('#jumpMenu'); let jmArm = null, jmTimer = 0;
+  /* owner-only shortcuts so a feature can be tried without replaying the whole day */
+  function jmTest(k) {
+    const s = G.shop; if (!s) { toast('先開始營業'); return; }
+    if (k === 'tips') { SAVE.tips = {}; SAVE.tipsOff = false; saveGame(); toast('教學提示已重置,下次遇到會再出現'); return; }
+    if (k === 'mood') { G.mood = { lv: 2, until: G.gt + 160 }; renderStat(); toast('😊 心情變超好'); return; }
+    if (k === 'open') {
+      if (s.door || s.done || isClosing()) { toast('現在不用開店'); return; }
+      if (!s.pos) gameApi.cashier();
+      shopAct(byId.swL); shopAct(byId.swA);
+      CART_ORDER.forEach((c) => { if (!CARTS[c].placed) cartDrop(CARTS[c]); });
+      shopAct(byId.door); return;
+    }
+    if (k === 'cust') { if (!s.door) { toast('先開店(可按「一鍵開好店」)'); return; } if (G.cust) { toast('櫃檯已經有客人了'); return; } G.nextAt = 0; spawnCustomer(); return; }
+    if (k === 'wait') {
+      const c = G.cust; if (!c || !(c.st === 'asking' || c.st === 'ready')) { toast('櫃檯沒有等著的客人'); return; }
+      c.readyAt -= 120; toast('客人已等了約 ' + Math.round(G.gt - c.readyAt) + ' 秒'); return;
+    }
+    if (k === 'order') {
+      const I = SAVE.inv; if (I.sent || I.slip) { toast('已經有一筆貨在處理中'); return; }
+      if (!s.door) { toast('先開店,貨運才會來'); return; }
+      const rows = []; db.products.forEach((p) => variantsOf(p).forEach((picks) => rows.push({ p: p, picks: picks })));
+      if (!rows.length) { toast('沒有商品'); return; }
+      const lines = []; for (let i = 0; i < 8 && rows.length; i++) { const r = rows.splice(Math.floor(Math.random() * rows.length), 1)[0], q = 5 + Math.floor(Math.random() * 60); lines.push({ k: invKey(r.p, r.picks), lab: invLabel(r.p, r.picks), ord: q, got: q, why: '' }); }
+      I.sent = { sd: G.dayNo - 2, arrive: G.dayNo, lines: lines }; saveGame(); G.dlv = { at: G.gt, st: 'wait' }; renderTodo(); toast('已叫一筆貨,貨運人員馬上到'); return;
+    }
+  }
   function jumpDays(delta) {
     if (!isOwner || delta < 1) return false;
     if (G.cust) { scene.remove(G.cust.g); G.cust = null; }
@@ -2996,7 +3025,7 @@ function startScene() {
   const untilWd = (w) => ((w - wdOf(G.dayNo) + 7) % 7) || 7;
   function jmRender() {
     const d = G.dayNo, b = (k, t) => '<button class="btn small' + (jmArm === k ? ' signal' : '') + '" type="button" data-jm="' + k + '">' + (jmArm === k ? '再按一次確認:' : '') + t + '</button>';
-    jmEl.innerHTML = '<div class="jm-t">只有店主看得到 · 目前第 ' + d + ' 天(' + WD[wdOf(d)] + ')</div>' + b('d1', '跳到隔天') + b('w0', '跳到下個週一') + b('w1', '跳到下個週二(到貨日)') + b('w6', '跳到下個週日(叫貨日)') + '<button class="btn small" type="button" data-jm="vip">叫一位特殊客人來櫃檯</button><button class="btn small" type="button" data-jm="dex">📖 客人圖鑑</button>';
+    jmEl.innerHTML = '<div class="jm-t">只有店主看得到 · 目前第 ' + d + ' 天(' + WD[wdOf(d)] + ')</div>' + b('d1', '跳到隔天') + b('w0', '跳到下個週一') + b('w1', '跳到下個週二(到貨日)') + b('w6', '跳到下個週日(叫貨日)') + '<button class="btn small" type="button" data-jm="vip">叫一位特殊客人來櫃檯</button><button class="btn small" type="button" data-jm="dex">📖 客人圖鑑</button><div class="jm-t">測試捷徑</div><button class="btn small" type="button" data-jm="open">🏪 一鍵開好店</button><button class="btn small" type="button" data-jm="cust">🧍 馬上來一位客人</button><button class="btn small" type="button" data-jm="wait">⏱ 櫃檯客人多等 2 分鐘</button><button class="btn small" type="button" data-jm="order">📦 先叫一筆貨,貨運馬上來</button><button class="btn small" type="button" data-jm="mood">😊 心情變超好</button><button class="btn small" type="button" data-jm="tips">🔄 重置教學提示</button>';
   }
   $('#btnJump').addEventListener('click', () => { if (!isOwner) return; jmEl.hidden = !jmEl.hidden; jmArm = null; if (!jmEl.hidden) jmRender(); });
   jmEl.addEventListener('click', (e) => {
@@ -3004,6 +3033,7 @@ function startScene() {
     const k = b.dataset.jm;
     if (k === 'vip') { if (G.cust || !G.shop || state.modal) toast('櫃檯有客人或有視窗開著,現在叫不了'); else { jmEl.hidden = true; spawnVip(); } return; }
     if (k === 'dex') { jmEl.hidden = true; dexOpen(); return; }
+    if (['open', 'cust', 'wait', 'order', 'mood', 'tips'].indexOf(k) >= 0) { jmTest(k); if (k !== 'wait') jmEl.hidden = true; return; }
     if (jmArm !== k) { jmArm = k; clearTimeout(jmTimer); jmTimer = setTimeout(() => { jmArm = null; if (!jmEl.hidden) jmRender(); }, 3000); jmRender(); return; }
     jmArm = null; jmEl.hidden = true;
     jumpDays(k === 'd1' ? 1 : untilWd(+k.slice(1)));
