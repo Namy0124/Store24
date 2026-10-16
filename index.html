@@ -578,7 +578,7 @@ img { -webkit-user-drag: none; user-drag: none; }
         <textarea id="saveCode" rows="3" hidden spellcheck="false" placeholder="存檔碼貼在這裡,再按一次「匯入存檔碼」"></textarea><div class="sub" id="saveMsg"></div></div>
       <div class="controls" id="controls"></div>
       <p class="legal">配件品牌、商品與人物都是虛構的遊戲設定。手機型號使用真實型號。</p>
-      <p class="legal" id="verLine" style="margin-top:2px;opacity:.7">版本 v155 · 2026-10-17</p>
+      <p class="legal" id="verLine" style="margin-top:2px;opacity:.7">版本 v156 · 2026-10-17</p>
     </div>
   </div>
 
@@ -2490,8 +2490,8 @@ function startScene() {
     }
     if (!(c.path && c.path.length) && c.then) { const f = c.then; c.then = null; f(c); }
     if (c.st === 'browse') { c.t -= dt; if (c.t <= 0) { c.say = ''; c.st = 'walkIn'; if (c.browser) browseNext(c); else selfNext(c); } }
-    if (c.st === 'calling' && G.gt - c.callAt > 40) { removeCallable(c); c.ignored = true; c.st = 'walkIn'; c.say = '算了,我去櫃檯問。'; goTo(c, QX, QZ, atCounter); }
-    if (c.st === 'asking' && !c.nag && !G.co && G.gt - c.readyAt > 55) { c.nag = true; c.say = pickOne(SAY.impatient); }
+    if (c.st === 'calling' && G.gt - c.callAt > 40 * (1 + 0.4 * moodLv())) { removeCallable(c); c.ignored = true; c.st = 'walkIn'; c.say = '算了,我去櫃檯問。'; goTo(c, QX, QZ, atCounter); }
+    if (c.st === 'asking' && !c.nag && !G.co && G.gt - c.readyAt > 55 * (1 + 0.4 * moodLv())) { c.nag = true; c.say = pickOne(SAY.impatient); }
     if (moving) c.walkT += dt * 9;
     { const ph = Math.floor(c.walkT / Math.PI); if (moving && ph !== c.stepPh) { c.stepPh = ph; const dd = Math.hypot(c.g.position.x - player.position.x, c.g.position.z - player.position.z); SFX.step(0.5 / (1 + dd * 0.4)); } }
     const sw = moving ? Math.sin(c.walkT) * 0.7 : 0;
@@ -2874,6 +2874,7 @@ function startScene() {
     let stars = r.stars; const m = v.fav[T];
     if (VP.called && VP.lastBest && VP.mgr && VP.mgr.charAt(0) !== '(') stars = 4;
     else if (m >= 3 && stars >= 3) stars += 1; else if (m <= -3 && stars <= 4) stars -= 1;
+    { const mb = moodLv(); if (mb) { if (stars < 5 && Math.random() < 0.25 * mb) stars++; else if (stars <= 2 && Math.random() < 0.3 * mb) stars++; } }
     stars = Math.max(1, Math.min(5, stars));
     v.fav[T] = Math.max(-5, Math.min(8, m + (r.fav || 0)));
     if (r.cost) { v.paid += r.cost; G.stats.vipCost = (G.stats.vipCost || 0) + r.cost; }
@@ -3014,7 +3015,7 @@ function startScene() {
     el.hidden = false; el.querySelector('span').textContent = '手上' + (G.hand.length > 1 ? '(' + G.hand.length + ')' : '') + ':' + G.hand.map(itemText).concat(G.tool ? ['雞毛撢子'] : []).concat(G.basket ? ['「' + catName(G.basket) + '」籃子'] : []).join('、');
   }
   $('#carryDrop').addEventListener('click', () => { G.hand = []; G.tool = null; G.basket = null; renderCarry(); if (G.shop) refreshVerbs(); toast('放回去了'); });
-  function renderStat() { $('#stat').textContent = (G.shop ? '第 ' + G.dayNo + ' 天' + (G.tutorial ? '(教學)' : '') + ' ' + WD[wdOf(G.dayNo)] + ' · ' + fmtClock(clockMin()) + ' · ' : '') + '營業額 ' + fmtN(G.stats.revenue) + ' · ' + G.stats.count + ' 位'; }
+  function renderStat() { $('#stat').textContent = (G.shop ? '第 ' + G.dayNo + ' 天' + (G.tutorial ? '(教學)' : '') + ' ' + WD[wdOf(G.dayNo)] + ' · ' + fmtClock(clockMin()) + ' · ' : '') + (moodLv() ? '😊 ' : '') + '營業額 ' + fmtN(G.stats.revenue) + ' · ' + G.stats.count + ' 位'; }
 
   /* ---- first-person checkout props: goods, cash, phone, receipt, cash drawer ---- */
   const props = new T.Group(); scene.add(props);
@@ -3737,17 +3738,18 @@ function startScene() {
       if (!base.iss) { if (bad.length && pen >= 0.7) text = bad[0] + (bad.length > 1 ? ',' + bad[1] : '') + '。'; else if (!bad.length && stars >= 4) text = pickOne(AP_GOOD); }
       G.stats.reviews.push({ stars: stars, text: text });
       if (base.iss) c.say = base.iss.say;
-      toast('完成!客人評價 ' + '★'.repeat(stars) + '☆'.repeat(5 - stars));
+      toast('完成!客人評價 ' + '★'.repeat(stars) + '☆'.repeat(5 - stars) + moodTip());
       (leaveFn || leave)(c);
     } });
   }
   function finishSale() {
     const co = G.co, c = G.cust;
-    const wait = co.firstAt - c.readyAt;
+    const wait = (co.firstAt - c.readyAt) / (1 + 0.3 * moodLv());
     const waitPen = wait <= 60 ? 0 : wait <= 90 ? 0.5 : wait <= 130 ? 1 : 2;
     const iss = shopIssues(c)[0];
     const vp0 = G.vipPen || 0; G.vipPen = 0;
-    const stars = Math.max(1, Math.min(5, Math.round(5 - co.pen - waitPen - vp0 - (iss ? iss.pen : 0) - 0.001)));
+    let stars = Math.max(1, Math.min(5, Math.round(5 - co.pen - waitPen - vp0 - (iss ? iss.pen : 0) - 0.001)));
+    { const mb = moodLv(); if (mb && stars < 5 && Math.random() < 0.2 * mb) stars++; }
     const st = G.stats, sh = G.shop;
     st.revenue += co.total; st.count++; st.moneyDiff += Math.abs(co.moneyDiff); st.invErr += co.invErr; st.moneyNet += co.moneyDiff;
     sh.drawer += co.paid - (co.givenAmt || 0);
@@ -3760,7 +3762,7 @@ function startScene() {
     if (film) toast('客人:膜我帶回去自己貼就好');
     st.reviews.push({ stars: stars, text: iss ? iss.text : pickOne(COMMENTS[stars]) });
     if (iss) c.say = iss.say;
-    toast('完成!客人評價 ' + '★'.repeat(stars) + '☆'.repeat(5 - stars));
+    toast('完成!客人評價 ' + '★'.repeat(stars) + '☆'.repeat(5 - stars) + moodTip());
     leave(c);
   }
   coBody.addEventListener('click', (e) => {
@@ -3894,6 +3896,17 @@ function startScene() {
   };
   /* tutorial: pause the game the first time a shopper is browsing, explain greeting, wait for the player to do it */
 
+  /* ---------- mood: a good score in the phone game puts the clerk in a good mood for a while ---------- */
+  const moodLv = () => (G.mood && G.gt < G.mood.until ? G.mood.lv : 0);
+  function moodSet(score) {
+    if (!G.shop || score < 8) return 0;
+    const lv = score >= 15 ? 2 : 1, dur = lv === 2 ? 160 : 110, keep = moodLv();
+    G.mood = { lv: Math.max(lv, keep), until: Math.max(G.gt + dur, G.mood ? G.mood.until : 0) }; renderStat(); return lv;
+  }
+  function moodTip() {
+    const mb = moodLv(); if (!mb || Math.random() >= 0.15 * mb) return '';
+    const tp = 10 * (1 + Math.floor(Math.random() * 5)); G.stats.tip = (G.stats.tip || 0) + tp; return ' · 客人給了小費 NT$' + tp;
+  }
   /* ---------- first-time tips: the first time each system shows up the game pauses, a small card explains it and an arrow points at the part to use ---------- */
   const TIPS = {
     checkout: [
@@ -3918,7 +3931,7 @@ function startScene() {
       { t: '特殊客人', b: '有些客人會殺價、退貨或問問題。看他說什麼,從選項挑回應;回應得好可以有好評和獎勵,不好會有客訴。', sel: null }
     ],
     phone: [
-      { t: '手機:訊息與圖鑑', b: '手機裡有店長與公司大群的訊息,有些要回覆。也能看特殊客人圖鑑。訊息不急,忙完再看。', sel: '#phone' }
+      { t: '手機:訊息與圖鑑', b: '手機有訊息、圖鑑和小遊戲。空檔去休息室玩(賣場有監視器),疊到 8 層以上心情會變好,客人比較有耐心、好評多一點。', sel: '#phone' }
     ]
   };
   let TP = null;
@@ -4522,6 +4535,7 @@ function startScene() {
     let h = '<div class="co-sum"><div><span>營業額</span><b>' + fmtN(st.revenue) + '</b></div><div><span>成交</span><b>' + n + ' 筆</b></div><div><span>平均客單</span><b>' + fmtN(avg) + '</b></div></div>';
     h += '<div class="day-card"><b>帳目準確度 ' + acc + '%</b><div class="sub">現金帳差 ' + (s.acctDiff > 0 ? '+' : '') + s.acctDiff + ' · 找錯零金額 ' + fmtN(st.moneyDiff) + ' · 統編錯誤 ' + st.invErr + ' 次 · 重點 ' + s.recounts + ' 次</div></div>';
     h += '<div class="day-card"><b>下班時間</b><div class="sub">' + fmtClock(clockMin()) + ' 打卡(規定 22:00)。' + esc(remark) + '</div></div>';
+    if (st.tip) h += '<div class="day-card"><b>客人小費 ' + fmtN(st.tip) + '</b><div class="sub">心情好的時候客人給的小費,放進你自己的口袋,不用入帳。</div></div>';
     const dirty = ZONES.filter((z) => (G.dust[z.id] || 0) >= DUST_MILD).map((z) => z.name);
     h += '<div class="day-card"><b>店務與清潔</b><div class="sub">掃地 ' + s.swept + '/3 · 今日清潔區「' + esc(ZONES[G.zone].name) + '」' + (s.zoneDone ? '已完成' : '未完成') + ' · 店務表' + (s.signed ? '已簽名' : '未簽名') + (dirty.length ? '<br>偏髒的區域:' + esc(dirty.join('、')) : '<br>各區域都很乾淨') + '</div></div>';
     const todays = s.msgs.filter((m) => m.d === G.dayNo); if (todays.length || s.missed || s.answered) { const ack = todays.filter((m) => m.ack && m.replied === null).length; h += '<div class="day-card"><b>手機與訊息</b><div class="sub">今天收到 ' + todays.filter((m) => !m.sys).length + ' 則訊息 · 接了 ' + s.answered + ' 通工作電話 · 漏接 ' + s.missed + ' 通' + (ack ? ' · 公司/副理訊息 ' + ack + ' 則沒回覆' : '') + '。</div></div>'; }
@@ -4548,7 +4562,7 @@ function startScene() {
     if (MG) { scene.remove(MG.g); MG = null; }
     G.co = null; G.hand = []; renderCarry(); closeCheckout(); closeClose();
     if (G.dayNo === 0 && SAVE.days > 0 && SAVE.dust) { G.dayNo = SAVE.days; G.dust = Object.assign({}, SAVE.dust); G.zone = Math.min(SAVE.zone, ZONES.length - 1); G.pendingMgr = SAVE.mgrId; }
-    G.tutorial = !SAVE.tutorialDone; G.tutSelf = false; G.tutGreeted = false; G.tutGreetDone = false; G.tutPause = false;
+    G.tutorial = !SAVE.tutorialDone; G.tutSelf = false; G.tutGreeted = false; G.tutGreetDone = false; G.tutPause = false; G.mood = null;
     G.gt = 0; brushCd = 0; greetCd = 0; playerSay = null; PH.cool = 0; PH.watch = 0; G.dayNo++; G.pendingMgr = null; G.zone = (G.dayNo - 1) % ZONES.length;
     G.stats = { revenue: 0, count: 0, moneyDiff: 0, moneyNet: 0, invErr: 0, browsers: 0, reviews: [] };
     if (G.dayNo === 1) { G.dust = {}; ZONES.forEach((z) => { G.dust[z.id] = 0; }); G.dust[ZONES[G.zone].id] = 15; } else ZONES.forEach((z) => { G.dust[z.id] = Math.min(50, (G.dust[z.id] || 0) + (() => { const q = Math.random(); return q < 0.25 ? 1 : q < 0.65 ? 2 : 3; })()); });
@@ -5043,7 +5057,8 @@ function startScene() {
     const l = Math.max(top.x, c.x), r = Math.min(top.x + top.w, c.x + c.w), w = r - l;
     if (w <= 2) { stk.state = 'over'; let rec = false;
       if (stk.score > 0) { rec = stk.score > (SAVE.phoneBest || 0); SAVE.phoneTop = (SAVE.phoneTop || []).concat([{ s: stk.score, d: G.dayNo }]).sort((a, b) => b.s - a.s).slice(0, 5); SAVE.phoneBest = SAVE.phoneTop[0].s; saveGame(); }
-      $('#phOver').hidden = false; $('#phOver').innerHTML = '<b>' + (rec ? '新紀錄!' : '倒了!') + '</b><div>疊了 ' + stk.score + ' 層</div><div style="font-size:13px;opacity:.9;line-height:1.6">' + topHtml() + '</div><div style="font-size:13px;opacity:.8">點一下再玩</div>'; beep(180, 0.2); return; }
+      const ml = moodSet(stk.score);
+      $('#phOver').hidden = false; $('#phOver').innerHTML = '<b>' + (rec ? '新紀錄!' : '倒了!') + '</b><div>疊了 ' + stk.score + ' 層</div><div style="font-size:13px;opacity:.9;line-height:1.6">' + topHtml() + '</div>' + (ml ? '<div style="font-size:13px;color:#ffd166">😊 心情' + (ml === 2 ? '超好' : '不錯') + '!客人比較有耐心、好評機率提高</div>' : stk.score ? '<div style="font-size:12px;opacity:.7">疊 8 層以上心情會變好</div>' : '') + '<div style="font-size:13px;opacity:.8">點一下再玩</div>'; beep(180, 0.2); return; }
     const perfect = Math.abs(c.x - top.x) < 4;
     stk.layers.push(perfect ? { x: top.x, w: top.w } : { x: l, w: w });
     stk.score++; $('#phScore').textContent = String(stk.score); beep(perfect ? 900 : 600, 0.05);
