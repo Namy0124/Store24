@@ -610,7 +610,7 @@ img { -webkit-user-drag: none; user-drag: none; }
         <textarea id="saveCode" rows="3" hidden spellcheck="false" placeholder="存檔碼貼在這裡,再按一次「匯入存檔碼」"></textarea><div class="sub" id="saveMsg"></div></div>
       <div class="controls" id="controls"></div>
       <p class="legal">配件品牌、商品與人物都是虛構的遊戲設定。手機型號使用真實型號。</p>
-      <p class="legal" id="verLine" style="margin-top:2px;opacity:.7">版本 v188 · 2026-10-17</p>
+      <p class="legal" id="verLine" style="margin-top:2px;opacity:.7">版本 v189 · 2026-10-17</p>
     </div>
   </div>
 
@@ -2544,9 +2544,9 @@ function startScene() {
     if (c.st === 'calling' && G.gt - c.callAt > 40 * (1 + 0.4 * moodLv())) { removeCallable(c); c.ignored = true; c.st = 'walkIn'; c.say = '算了,我去櫃檯問。'; goTo(c, QX, QZ, atCounter); }
     if ((c.st === 'asking' || c.st === 'ready') && !G.tutorial && c.flow !== 'vip') {   // the longer they wait the angrier they get (opening the checkout does not stop the clock)
       const w = (G.gt - c.readyAt) / (1 + 0.3 * moodLv()), cw = G.co;
-      if (w > 130 && !c.grumble) { c.grumble = true; c.say = pickOne(SAY.grumble); }
-      if (w > 250) angryFace(c);
-      if (w > 400 && (!cw || ((cw.step === 'scan' || cw.step === 'pay') && cw.recv == null && (state.modal !== 'checkout' || w > 600)))) {
+      if (w > 60 && !c.grumble) { c.grumble = true; c.say = pickOne(SAY.grumble); }
+      if (w > 140) angryFace(c);
+      if (w > 280 && (!cw || w > 420 || ((cw.step === 'scan' || cw.step === 'pay') && cw.recv == null))) {
         if (cw) { G.co = null; closeCheckout(); }
         angryFace(c); c.say = pickOne(SAY.mad); G.stats.lost = (G.stats.lost || 0) + 1; G.stats.reviews.push({ stars: 0, text: '等太久了,直接走出大門。' });
         toast('客人等太久,生氣地走掉了'); G.hand = []; renderCarry(); SFX.buzz && SFX.buzz(); leave(c, true); return;
@@ -3845,7 +3845,7 @@ function startScene() {
     const wait = Math.max(0, G.gt - c.readyAt - 40) / (1 + 0.3 * moodLv());   // whole time at the counter, with a little allowance for ringing it up
     const waitPen = wait <= 60 ? 0 : wait <= 90 ? 0.5 : wait <= 130 ? 1 : wait <= 170 ? 2 : wait <= 210 ? 3 : 4;   // one star from here on
     let iss = shopIssues(c)[0];
-    if (wait > 330) { iss = { text: '等了超久,如果可以我連一星都不想給。', say: '等這麼久…', pen: 0 }; angryFace(c); }
+    if (wait > 240) { iss = { text: '等了超久,如果可以我連一星都不想給。', say: '等這麼久…', pen: 0 }; angryFace(c); }
     const vp0 = G.vipPen || 0; G.vipPen = 0;
     let stars = Math.max(1, Math.min(5, Math.round(5 - co.pen - waitPen - vp0 - (iss ? iss.pen : 0) - 0.001)));
     { const mb = moodLv(); if (mb && stars < 5 && Math.random() < 0.2 * mb) stars++; }
