@@ -516,6 +516,19 @@ img { -webkit-user-drag: none; user-drag: none; }
   #tutSheet .sheet-body { padding-top: 4px; padding-bottom: 10px; font-size: 12.5px; line-height: 1.4; overflow-y: auto; }
   #tutSheet .sheet-body p { margin: 0 0 6px; } #tutSheet .btn { min-height: 34px; padding: 5px 14px; font-size: 13px; }
 }
+#tipLayer { position: fixed; inset: 0; z-index: 70; pointer-events: auto; background: rgba(10, 30, 35, .12); }
+#tipRing { position: fixed; border: 3px solid #ffb703; border-radius: 12px; box-shadow: 0 0 0 4px rgba(255, 183, 3, .35); pointer-events: none; animation: tipPulse 1s ease-in-out infinite; display: none; }
+#tipArrow { position: fixed; font-size: 30px; line-height: 1; color: #ffb703; text-shadow: 0 2px 4px rgba(0, 0, 0, .5); pointer-events: none; display: none; animation: tipBob .7s ease-in-out infinite alternate; }
+@keyframes tipPulse { 50% { box-shadow: 0 0 0 9px rgba(255, 183, 3, .12); } }
+@keyframes tipBob { to { transform: translateY(6px); } }
+#tipCard { position: fixed; left: 50%; bottom: max(14px, env(safe-area-inset-bottom, 0px)); transform: translateX(-50%); width: min(420px, calc(100vw - 28px)); background: #fff; color: #17323a; border-radius: 16px; padding: 12px 16px 12px; box-shadow: 0 8px 30px rgba(10, 40, 45, .45); }
+#tipCard.top { bottom: auto; top: max(14px, env(safe-area-inset-top, 0px)); }
+.tip-n { font-size: 11px; color: #6a8a90; } .tip-t { font-weight: 800; font-size: 16px; margin: 2px 0 4px; } .tip-b { font-size: 14px; line-height: 1.5; }
+.tip-btns { display: flex; justify-content: space-between; gap: 8px; margin-top: 10px; }
+@media (orientation: landscape) and (max-height: 520px) {
+  #tipCard { left: max(10px, env(safe-area-inset-left, 0px)); transform: none; width: min(44vw, 360px); padding: 8px 12px; border-radius: 14px; }
+  #tipCard.top { top: 8px; } .tip-t { font-size: 14px; margin: 0 0 2px; } .tip-b { font-size: 12.5px; line-height: 1.4; } .tip-btns { margin-top: 6px; }
+}
 </style>
 
 <div id="app">
@@ -561,9 +574,11 @@ img { -webkit-user-drag: none; user-drag: none; }
       </div>
       <div class="savebox"><div class="sub" id="saveInfo"></div>
         <div class="btn-row"><button class="btn small" id="btnSaveExport" type="button">匯出存檔碼</button><button class="btn small" id="btnSaveImport" type="button">匯入存檔碼</button><button class="btn small danger" id="btnSaveReset" type="button">重新開始</button></div>
+        <div class="btn-row"><button class="btn small" id="btnTipReplay" type="button">重看教學提示</button><button class="btn small" id="btnTipToggle" type="button"></button></div>
         <textarea id="saveCode" rows="3" hidden spellcheck="false" placeholder="存檔碼貼在這裡,再按一次「匯入存檔碼」"></textarea><div class="sub" id="saveMsg"></div></div>
       <div class="controls" id="controls"></div>
       <p class="legal">配件品牌、商品與人物都是虛構的遊戲設定。手機型號使用真實型號。</p>
+      <p class="legal" id="verLine" style="margin-top:2px;opacity:.7">版本 v155 · 2026-10-17</p>
     </div>
   </div>
 
@@ -675,6 +690,7 @@ img { -webkit-user-drag: none; user-drag: none; }
     <div class="ph-warn" id="phWarn" hidden></div>
     <button type="button" class="btn small ph-close" id="phClose" aria-label="收起手機" title="收起手機">✕</button>
   </div>
+  <div id="tipLayer" hidden><div id="tipRing"></div><div id="tipArrow">▼</div><div id="tipCard" role="dialog" aria-modal="true"><div class="tip-n" id="tipN"></div><div class="tip-t" id="tipT"></div><div class="tip-b" id="tipB"></div><div class="tip-btns"><button class="btn small" id="tipOff" type="button">全部關閉</button><button class="btn small primary" id="tipNext" type="button">知道了</button></div></div></div>
   <div id="tutSheet" class="sheet" hidden role="dialog" aria-modal="true" aria-labelledby="tutTitle">
     <div class="sheet-box">
       <div class="sheet-head gutter"><h2 id="tutTitle">教學:打招呼</h2></div>
@@ -857,7 +873,7 @@ function cleanVip(o) {
   if (o.seen && typeof o.seen === 'object') Object.keys(o.seen).slice(0, 40).forEach((k) => { const x = o.seen[k] || {}; v.seen[String(k).slice(0, 20)] = { n: Math.max(0, Math.min(999, Math.floor(+x.n || 0))), e: (Array.isArray(x.e) ? x.e : []).filter((t) => ['good', 'mid', 'bad', 'paid', 'call'].indexOf(t) >= 0).filter((t, i, a) => a.indexOf(t) === i) }; });
   return v;
 }
-const blankSave = () => ({ vip: blankVip(), inv: blankInv(), v: 1, name: '', msgs: [], feed: [], phoneBest: 0, phoneTop: [], days: 0, tutorialDone: false, dust: null, zone: 0, mgrId: null, history: [] });
+const blankSave = () => ({ vip: blankVip(), inv: blankInv(), v: 1, name: '', msgs: [], feed: [], phoneBest: 0, phoneTop: [], days: 0, tutorialDone: false, tips: {}, tipsOff: false, dust: null, zone: 0, mgrId: null, history: [] });
 const invNum = (v, mx) => Math.max(0, Math.min(mx || 9999, Math.floor(+v || 0)));
 function cleanInv(o) {
   const inv = blankInv(); if (!o || typeof o !== 'object') return inv;
@@ -876,7 +892,7 @@ function cleanSave(o) {
   if (!o || typeof o !== 'object' || o.v !== 1) return null;
   const s = blankSave();
   s.days = Math.max(0, Math.min(9999, Math.floor(+o.days || 0)));
-  s.tutorialDone = !!o.tutorialDone;
+  s.tutorialDone = !!o.tutorialDone; s.tipsOff = !!o.tipsOff; s.tips = {}; if (o.tips && typeof o.tips === 'object') Object.keys(o.tips).slice(0, 20).forEach((k) => { if (o.tips[k]) s.tips[String(k).slice(0, 12)] = 1; });
   s.feed = (Array.isArray(o.feed) ? o.feed : []).slice(0, 30).map((f) => ({ c: String(f.c || '').slice(0, 40), n: String(f.n || '').slice(0, 12), t: String(f.t || '').slice(0, 60), e: String(f.e || '').slice(0, 4), ago: Math.max(0, Math.min(999, Math.floor(+f.ago || 0))), likes: Math.max(0, Math.min(9999, Math.floor(+f.likes || 0))), liked: !!f.liked })).filter((f) => f.n && f.t);
   s.msgs = (Array.isArray(o.msgs) ? o.msgs : []).slice(0, 60).map((m) => ({ id: Math.floor(+m.id || 0), from: String(m.from || '').slice(0, 20), text: String(m.text || '').slice(0, 120), t: String(m.t || '').slice(0, 8), d: Math.floor(+m.d || 0), read: true, co: !!m.co, ack: !!m.ack, sys: !!m.sys, replies: Array.isArray(m.replies) ? m.replies.slice(0, 3).map((r) => String(r).slice(0, 12)) : null, replied: m.replied === null || m.replied === undefined ? null : Math.floor(+m.replied) })).filter((m) => m.from && m.text);
   s.name = typeof o.name === 'string' ? o.name.trim().slice(0, 8) : '';
@@ -1465,6 +1481,10 @@ $('#btnSaveImport').addEventListener('click', () => {
   if (!s) { $('#saveMsg').textContent = '這串存檔碼讀不出來,請確認有完整複製。'; return; }
   SAVE = s; saveGame(); refreshSaveUi(); ta.value = ''; ta.hidden = true; $('#saveMsg').textContent = '匯入完成。';
 });
+const tipToggleRefresh = () => { $('#btnTipToggle').textContent = SAVE.tipsOff ? '教學提示:已關(按一下開啟)' : '教學提示:開(按一下關閉)'; };
+tipToggleRefresh();
+$('#btnTipReplay').addEventListener('click', () => { SAVE.tips = {}; SAVE.tipsOff = false; saveGame(); tipToggleRefresh(); $('#saveMsg').textContent = '之後第一次遇到各個系統時,會再跳出教學提示。'; });
+$('#btnTipToggle').addEventListener('click', () => { SAVE.tipsOff = !SAVE.tipsOff; saveGame(); tipToggleRefresh(); $('#saveMsg').textContent = SAVE.tipsOff ? '教學提示已全部關閉。' : '教學提示已開啟。'; });
 $('#btnSaveReset').addEventListener('click', () => {
   if (!resetArmed) { resetArmed = true; $('#saveMsg').textContent = '再按一次「重新開始」會清掉所有進度。'; return; }
   resetArmed = false; SAVE = blankSave(); saveGame(); refreshSaveUi(); $('#saveMsg').textContent = '已重新開始。';
@@ -2883,7 +2903,7 @@ function startScene() {
     const b = e.target.closest('[data-vp]'); if (!b) return;
     const a = b.dataset.vp; if (a === 'end') vipClose(); else if (a === 'call') vipCall(); else vipPick(+a);
   });
-  function spawnVip() {
+  function spawnVip0() {
     const pr = buildPerson(); pr.g.position.set(0, 0, 5.9); pr.g.rotation.y = Math.PI; scene.add(pr.g); SFX.chime();
     const c = { g: pr.g, parts: pr.parts, flow: 'vip', look: false, callout: false, st: 'walkIn', path: [], then: null, walkT: 0, say: '', items: [], stops: [], t: 0, readyAt: 0, yaw: Math.PI, nag: false, askIdx: 0, got: [], upfront: false, ignored: false };
     G.cust = c; G.co = null; goTo(c, QX, QZ, atCounter);
@@ -3462,7 +3482,7 @@ function startScene() {
   $('#coMin').addEventListener('click', () => setMin(!coMin));
   $('#coClose').addEventListener('click', closeCheckout);
   coEl.addEventListener('pointerdown', (e) => { if (e.target === coEl) closeCheckout(); });
-  function openCheckout() {
+  function openCheckout0() {
     const c = G.cust;
     if (!c || (c.st !== 'asking' && c.st !== 'ready')) { toast('目前沒有客人在櫃檯'); return; }
     if (c.flow === 'ask' && !G.hand.length && !(G.co && G.co.lines.some((l) => l.scanned))) { toast('先去貨架拿客人要的商品'); return; }
@@ -3873,6 +3893,64 @@ function startScene() {
     coAct: coAct
   };
   /* tutorial: pause the game the first time a shopper is browsing, explain greeting, wait for the player to do it */
+
+  /* ---------- first-time tips: the first time each system shows up the game pauses, a small card explains it and an arrow points at the part to use ---------- */
+  const TIPS = {
+    checkout: [
+      { t: '結帳收銀 1/2:掃描', b: '客人的商品會列在左邊。點每一項旁邊的「掃描」(或點桌上的商品),全部掃完按右邊的「結帳」。', sel: '.pos-list' },
+      { t: '結帳收銀 2/2:收款、找零、發票', b: '接著四步:看客人給多少、輸入實收金額、依「應找」湊零錢、詢問發票。上方的步驟列會跟著走。', sel: '.steps' }
+    ],
+    erp: [
+      { t: '庫存與叫貨', b: '這是 POS 的庫存系統:看庫存、到「叫貨」分頁選商品與數量。叫的貨會在之後的下午由貨運人員送到店裡。', sel: '#invTabs' },
+      { t: '到貨單與公司公告', b: '貨點完之後,到「到貨」分頁核對數量,按「點收入庫」才算進庫存。「公司公告」會整理公司大群的消息。', sel: '#invTabs' }
+    ],
+    dlv: [
+      { t: '貨到了:點貨', b: '貨運人員把箱子放在店裡。走到箱子旁邊點「點貨」,對照貨單清點。可以中途離開去服務客人,進度不會重算。', sel: null },
+      { t: '點完之後', b: '點完貨,到 POS 的「庫存 → 到貨」按「點收入庫」,再用箱子整理上架。', sel: null }
+    ],
+    unpack: [
+      { t: '拆箱整理', b: '先把箱子裡的商品分類,再帶到各貨架。整理完的商品才會出現在對應的架上。', sel: '#upBody' }
+    ],
+    restock: [
+      { t: '上架補貨', b: '把下方的商品往上拖到貨架(花車)。先親手放幾件,剩下的可以按「補完」一次放好。', sel: '#rsBody' }
+    ],
+    vip: [
+      { t: '特殊客人', b: '有些客人會殺價、退貨或問問題。看他說什麼,從選項挑回應;回應得好可以有好評和獎勵,不好會有客訴。', sel: null }
+    ],
+    phone: [
+      { t: '手機:訊息與圖鑑', b: '手機裡有店長與公司大群的訊息,有些要回覆。也能看特殊客人圖鑑。訊息不急,忙完再看。', sel: '#phone' }
+    ]
+  };
+  let TP = null;
+  const tipEl = $('#tipLayer'), tipCard = $('#tipCard'), tipRing = $('#tipRing'), tipArrow = $('#tipArrow');
+  function tipRender() {
+    const L = TIPS[TP.key], st = L[TP.i]; $('#tipN').textContent = '教學提示' + (L.length > 1 ? ' ' + (TP.i + 1) + '/' + L.length : '');
+    $('#tipT').textContent = st.t; $('#tipB').textContent = st.b; $('#tipNext').textContent = TP.i < L.length - 1 ? '下一步' : '知道了';
+    tipRing.style.display = 'none'; tipArrow.style.display = 'none'; tipCard.classList.remove('top');
+    const el = st.sel ? document.querySelector(st.sel) : null; const r = el && typeof el.getBoundingClientRect === 'function' && el.offsetParent !== null ? el.getBoundingClientRect() : null;
+    if (r && r.width > 4 && r.height > 4) {
+      tipRing.style.cssText = 'display:block;left:' + (r.left - 4) + 'px;top:' + (r.top - 4) + 'px;width:' + (r.width + 8) + 'px;height:' + (r.height + 8) + 'px';
+      if (r.top > 40) { tipArrow.textContent = '▼'; tipArrow.style.cssText = 'display:block;left:' + (r.left + r.width / 2 - 10) + 'px;top:' + Math.max(2, r.top - 40) + 'px'; }
+      const cr = tipCard.getBoundingClientRect(); if (r.bottom > cr.top - 6 && r.top < cr.bottom + 6) tipCard.classList.add('top');
+    }
+  }
+  function tipShow(key) {
+    if (SAVE.tipsOff || (SAVE.tips && SAVE.tips[key]) || TP || G.tutPause || !TIPS[key]) return;
+    SAVE.tips = SAVE.tips || {}; SAVE.tips[key] = 1; saveGame();
+    TP = { key: key, i: 0 }; G.tutPause = true; tipEl.hidden = false; tipRender();
+  }
+  function tipEnd() { TP = null; tipEl.hidden = true; G.tutPause = false; }
+  $('#tipNext').addEventListener('click', () => { if (!TP) return; if (TP.i < TIPS[TP.key].length - 1) { TP.i++; tipRender(); } else tipEnd(); });
+  $('#tipOff').addEventListener('click', () => { SAVE.tipsOff = true; saveGame(); tipEnd(); toast('教學提示已關閉,可在開始畫面重新開啟'); });
+  window.addEventListener('resize', () => { if (TP) tipRender(); });
+
+  function openCheckout() { openCheckout0(); if (state.modal === 'checkout') tipShow('checkout'); }
+  function openInv() { openInv0(); if (state.modal === 'inv') tipShow('erp'); }
+  function openUp(m) { openUp0(m); if (state.modal === 'up') tipShow('unpack'); }
+  function openRestock(c) { const r = openRestock0(c); if (r) tipShow('restock'); return r; }
+  function openPhone() { openPhone0(); if (PH.open) tipShow('phone'); }
+  function spawnVip() { spawnVip0(); tipShow('vip'); }
+  function dlvStart() { dlvStart0(); tipShow('dlv'); }
   const tutEl = $('#tutSheet');
   function tutShow() {
     G.tutPause = true; state.modal = 'tut'; tutEl.hidden = false;
@@ -4021,7 +4099,7 @@ function startScene() {
   const INV = { tab: 'stock', q: '', cat: 'all', rows: [], prev: null, only: true, range: 7 };
   const invWeek = () => Math.floor((G.dayNo - 1) / 7);
   const isOrderDay = () => wdOf(G.dayNo) === 6;
-  function openInv() {
+  function openInv0() {
     const s = G.shop; if (!s || !s.pos) { toast('先開收銀機與 POS'); return; }
     INV.prev = state.modal === 'close' ? 'close' : state.modal === 'checkout' ? 'checkout' : null; invEl.hidden = false; state.modal = 'inv'; renderInv();
   }
@@ -4139,7 +4217,7 @@ function startScene() {
     const it = { id: 'boxes', kind: 'boxes', name: '到貨的箱子', verb: '整理', stands: [{ x: BOX_SPOT[0], z: BOX_SPOT[1] + 0.95 }, { x: BOX_SPOT[0] + 0.9, z: BOX_SPOT[1] }, { x: BOX_SPOT[0] - 0.9, z: BOX_SPOT[1] }], cx: BOX_SPOT[0], cz: BOX_SPOT[1], grp: g };
     register(g, it); byId.boxes = it;
   }
-  function openUp(mode) {
+  function openUp0(mode) {
     if (!SAVE.inv.up) { toast('沒有要整理的貨'); return; }
     upEl.hidden = false; state.modal = 'up'; renderUp(mode);
   }
@@ -4215,7 +4293,7 @@ function startScene() {
     const it = { id: 'dlv', kind: 'dlv', name: '貨運送來的箱子', verb: '點貨', stands: [{ x: DLV_SPOT[0], z: DLV_SPOT[1] + 1.0 }, { x: DLV_SPOT[0] + 1.0, z: DLV_SPOT[1] + 0.2 }, { x: DLV_SPOT[0] - 1.0, z: DLV_SPOT[1] + 0.2 }], cx: DLV_SPOT[0] + 0.1, cz: DLV_SPOT[1], grp: g };
     register(g, it); byId.dlv = it;
   }
-  function dlvStart() {
+  function dlvStart0() {
     const pr = buildPerson(); pr.g.position.set(0, 0, 6.3); pr.g.rotation.y = Math.PI; scene.add(pr.g);
     const carry = new T.Group(); carry.position.set(0, 1.0, 0.5); pr.g.add(carry);
     for (let i = 0; i < Math.min(3, dlvBoxes()); i++) box(0.5, 0.3, 0.4, 0xC9A06A, 0, i * 0.32 - 0.1, 0, carry);
@@ -4300,7 +4378,7 @@ function startScene() {
     else { fp.cPos.set(S.x, 1.5, S.z + 4.8); fp.cLook.set(S.x, 1.55, S.z); }
     return true;
   }
-  function openRestock(cat) {
+  function openRestock0(cat) {
     if (!rsPose(cat)) return false;
     RS = { cat: cat }; fp.mode = 'cart'; fp.target = 1; rsEl.hidden = false; state.modal = 'restock'; renderRs(); return true;
   }
@@ -4915,7 +4993,7 @@ function startScene() {
     const t = SAVE.phoneTop || [];
     return t.length ? '🏆 疊疊貨箱 歷史高分<br>' + t.map((r, i) => (i + 1) + '. ' + r.s + ' 層' + (r.d ? '(第 ' + r.d + ' 天)' : '')).join('<br>') : '疊疊貨箱:還沒有紀錄';
   }
-  function openPhone() {
+  function openPhone0() {
     if (PH.open || !state.started || state.modal || G.tutPause) return;
     PH.open = true; state.modal = 'phone'; PH.watch = 0; phEl.hidden = false; SFX.phoneUp();
     phShow('home'); phTick(); phWhere(); if (PH.ring) showCall();
