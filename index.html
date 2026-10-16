@@ -582,7 +582,7 @@ img { -webkit-user-drag: none; user-drag: none; }
         <textarea id="saveCode" rows="3" hidden spellcheck="false" placeholder="存檔碼貼在這裡,再按一次「匯入存檔碼」"></textarea><div class="sub" id="saveMsg"></div></div>
       <div class="controls" id="controls"></div>
       <p class="legal">配件品牌、商品與人物都是虛構的遊戲設定。手機型號使用真實型號。</p>
-      <p class="legal" id="verLine" style="margin-top:2px;opacity:.7">版本 v164 · 2026-10-17</p>
+      <p class="legal" id="verLine" style="margin-top:2px;opacity:.7">版本 v165 · 2026-10-17</p>
     </div>
   </div>
 
@@ -4797,12 +4797,13 @@ function startScene() {
   $('#btnLog').addEventListener('click', openSheet);
   $('#sbClose').addEventListener('click', closeSheet);
   /* tap anywhere outside a floating panel (phone, store log) or on the dim backdrop of a pop-up window puts it away, like the ✕ */
-  document.addEventListener('pointerdown', (e) => {
+  const outsideClose = (e) => {
     const t = e.target; if (!t || !t.closest) return;
     if (t.closest('#btnPhone, #btnLog, #sigPad, #tipLayer, #toast')) return;
     if (SB.open && !t.closest('#sheetBook')) closeSheet();
     else if (PH.open && !PH.call && !(PH.ring) && !t.closest('#phone')) closePhone();
-  });
+  };
+  document.addEventListener('pointerdown', outsideClose, true); document.addEventListener('touchstart', outsideClose, { capture: true, passive: true }); document.addEventListener('mousedown', outsideClose, true);
   [['#invSheet', closeInv], ['#dexSheet', dexClose], ['#upSheet', closeUp]].forEach((x) => { const el = $(x[0]); el.addEventListener('pointerdown', (e) => { if (e.target === el && !TP) x[1](); }); });
   window.addEventListener('keydown', (e) => { if (e.key === 'Escape' && SB.open) closeSheet(); });
   $('#sbSign').addEventListener('click', () => {
