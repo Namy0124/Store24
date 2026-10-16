@@ -527,7 +527,7 @@ img { -webkit-user-drag: none; user-drag: none; }
 @keyframes tipBob { to { transform: translateY(6px); } }
 #tipCard { position: fixed; left: 50%; bottom: max(14px, env(safe-area-inset-bottom, 0px)); transform: translateX(-50%); width: min(420px, calc(100vw - 28px)); background: #fff; color: #17323a; border-radius: 16px; padding: 12px 16px 12px; box-shadow: 0 8px 30px rgba(10, 40, 45, .45); }
 #tipCard .btn { background: #EEF3F3; color: #17323A; border: 1px solid #C5D3D4; box-shadow: none; } #tipCard .btn.primary { background: #0B7A85; color: #fff; border-color: #0B7A85; }
-#tipCard.top { bottom: auto; top: max(14px, env(safe-area-inset-top, 0px)); }
+#tipCard.top { bottom: auto; top: max(108px, env(safe-area-inset-top, 0px)); }
 .tip-n { font-size: 11px; color: #6a8a90; } .tip-t { font-weight: 800; font-size: 16px; margin: 2px 0 4px; } .tip-b { font-size: 14px; line-height: 1.5; }
 .tip-btns { display: flex; justify-content: space-between; gap: 8px; margin-top: 10px; }
 @media (orientation: landscape) and (max-height: 520px) {
@@ -583,7 +583,7 @@ img { -webkit-user-drag: none; user-drag: none; }
         <textarea id="saveCode" rows="3" hidden spellcheck="false" placeholder="存檔碼貼在這裡,再按一次「匯入存檔碼」"></textarea><div class="sub" id="saveMsg"></div></div>
       <div class="controls" id="controls"></div>
       <p class="legal">配件品牌、商品與人物都是虛構的遊戲設定。手機型號使用真實型號。</p>
-      <p class="legal" id="verLine" style="margin-top:2px;opacity:.7">版本 v169 · 2026-10-17</p>
+      <p class="legal" id="verLine" style="margin-top:2px;opacity:.7">版本 v170 · 2026-10-17</p>
     </div>
   </div>
 
@@ -3250,6 +3250,7 @@ function startScene() {
     let ctx = null, master = null, nb = null; const last = {};
     function get() {
       try {
+        if (stale) { stale = false; if (ctx) { try { ctx.onstatechange = null; ctx.close(); } catch (e) { /* ignore */ } } ctx = null; master = null; nb = null; }
         if (!ctx) { const AC = window.AudioContext || window.webkitAudioContext; if (!AC) return null; ctx = new AC(); master = ctx.createGain(); master.gain.value = 1.7;   // louder than before so it is not buried under the music
           const comp = ctx.createDynamicsCompressor(); comp.threshold.value = -14; comp.ratio.value = 6; master.connect(comp); comp.connect(ctx.destination);
           ctx.onstatechange = () => { if (ctx.state !== 'running' && ctx.resume) ctx.resume().catch(() => {}); }; }
@@ -3270,6 +3271,7 @@ function startScene() {
       return c;
     }
     /* a tap right after coming back: throw the old (dead) context away and build a new one inside the tap, which iOS accepts */
+    let stale = false;
     function rebuild() { if (ctx) { try { ctx.onstatechange = null; ctx.close(); } catch (e) { /* ignore */ } } ctx = null; master = null; nb = null; return get(); }
     const gate = (k, ms) => { const t = Date.now(); if (last[k] && t - last[k] < ms) return false; last[k] = t; return true; };
     function noise(o) {
@@ -3315,7 +3317,7 @@ function startScene() {
       }
     }
     return {
-      unlock: wake, voice: voice, rebuild: rebuild,
+      unlock: wake, voice: voice, rebuild: rebuild, stale: () => { stale = true; },
       step(v) { if (!gate('step' + (v > 0.6 ? 'p' : 'c'), 90)) return; noise({ type: 'lowpass', f: 420, f2: 140, d: 0.07, v: 0.32 * v, a: 0.003 }); tone({ f: 85, f2: 55, d: 0.07, v: 0.14 * v }); },
       drawer() {
         /* cash drawer: latch release, a soft rolling slide, and a low wooden stop; deliberately no bell and nothing high-pitched */
@@ -3408,8 +3410,12 @@ function startScene() {
       scribble(dur) { for (let k = 0; k < Math.floor(dur / 0.07); k++) noise({ f: 2500 + Math.random() * 2000, q: 1.5, d: 0.05, v: 0.08, at: k * 0.07 }); }
     };
   })();
-  let sfxStale = false; const sfxTap = () => { if (sfxStale) { sfxStale = false; SFX.rebuild(); } else SFX.unlock(); };
-  window.addEventListener('pointerdown', sfxTap, { passive: true }); window.addEventListener('touchend', sfxTap, { passive: true }); document.addEventListener('visibilitychange', () => { if (document.hidden) sfxStale = true; else SFX.unlock(); }); window.addEventListener('pageshow', () => SFX.unlock()); window.addEventListener('focus', () => SFX.unlock());
+  /* leaving the page / switching to another pane or app can leave the audio output dead even though it still says 'running': mark it stale and build a fresh one on the next sound or tap */
+  const sfxTap = () => SFX.unlock();
+  window.addEventListener('pointerdown', sfxTap, { passive: true }); window.addEventListener('touchend', sfxTap, { passive: true });
+  document.addEventListener('visibilitychange', () => { if (document.hidden) SFX.stale(); else SFX.unlock(); });
+  ['pagehide', 'blur', 'freeze'].forEach((ev) => window.addEventListener(ev, () => SFX.stale()));
+  ['pageshow', 'focus', 'resume'].forEach((ev) => window.addEventListener(ev, () => SFX.unlock()));
   let audioCtx = null;
   function beep(f, d) {
     try {
@@ -3973,21 +3979,21 @@ function startScene() {
   function tipRender() {
     const L = TIPS[TP.key], st = L[TP.i]; $('#tipN').textContent = '教學提示' + (L.length > 1 ? ' ' + (TP.i + 1) + '/' + L.length : '');
     $('#tipT').textContent = st.t; $('#tipB').textContent = st.b; $('#tipNext').textContent = TP.i < L.length - 1 ? '下一步' : '知道了';
-    tipEl.classList.toggle('through', !!st.through); $('#tipNext').hidden = !!st.through; $('#tipOff').hidden = !!st.through;
+    tipEl.classList.add('through'); $('#tipNext').hidden = false; $('#tipOff').hidden = TP.key === 'greet';   // never blocks: the player keeps playing while the tip is up
     tipRing.style.display = 'none'; tipArrow.style.display = 'none'; tipCard.classList.remove('top');
     const el = st.sel ? document.querySelector(st.sel) : null; const r = el && typeof el.getBoundingClientRect === 'function' && el.offsetParent !== null ? el.getBoundingClientRect() : null;
     if (r && r.width > 4 && r.height > 4) {
       tipRing.style.cssText = 'display:block;left:' + (r.left - 4) + 'px;top:' + (r.top - 4) + 'px;width:' + (r.width + 8) + 'px;height:' + (r.height + 8) + 'px';
       if (r.top > 40) { tipArrow.textContent = '▼'; tipArrow.style.cssText = 'display:block;left:' + (r.left + r.width / 2 - 10) + 'px;top:' + Math.max(2, r.top - 40) + 'px'; }
       const cr = tipCard.getBoundingClientRect(); if (r.bottom > cr.top - 6 && r.top < cr.bottom + 6) tipCard.classList.add('top');
-    }
+    } else if (state.modal) tipCard.classList.add('top');
   }
   function tipShow(key) {
-    if (SAVE.tipsOff || (SAVE.tips && SAVE.tips[key]) || TP || G.tutPause || !TIPS[key]) return;
+    if (SAVE.tipsOff || (SAVE.tips && SAVE.tips[key]) || TP || !TIPS[key]) return;
     SAVE.tips = SAVE.tips || {}; SAVE.tips[key] = 1; saveGame();
-    TP = { key: key, i: 0 }; G.tutPause = true; tipEl.hidden = false; tipRender();
+    TP = { key: key, i: 0 }; tipEl.hidden = false; tipRender();
   }
-  function tipEnd() { TP = null; tipEl.hidden = true; G.tutPause = false; }
+  function tipEnd() { const g = TP && TP.key === 'greet'; TP = null; tipEl.hidden = true; if (g) G.tutGreetDone = true; }
   $('#tipNext').addEventListener('click', () => { if (!TP) return; if (TP.i < TIPS[TP.key].length - 1) { TP.i++; tipRender(); } else tipEnd(); });
   $('#tipOff').addEventListener('click', () => { SAVE.tipsOff = true; saveGame(); tipEnd(); toast('教學提示已關閉,可在開始畫面重新開啟'); });
   window.addEventListener('resize', () => { if (TP) tipRender(); });
@@ -4000,16 +4006,16 @@ function startScene() {
   function spawnVip() { spawnVip0(); tipShow('vip'); }
   function dlvStart() { dlvStart0(); tipShow('dlv'); }
   const tutEl = $('#tutSheet');
-  function tutShow() { G.tutPause = true; TP = { key: 'greet', i: 0 }; tipEl.hidden = false; tipRender(); }   // points at the real 👋 button and waits for the tap
+  function tutShow() { if (TP) return; TP = { key: 'greet', i: 0 }; tipEl.hidden = false; tipRender(); }   // points at the real 👋 button and waits for the tap
   function tutGreet() {
     if (!(TP && TP.key === 'greet')) return;
-    tipEnd(); G.tutGreetDone = true; greetCd = 0;
+    tipEnd(); greetCd = 0;
     greet(Math.floor(Math.random() * GREET.length));
   }
   function gameUpdate(dt) {
     if (!state.started) return;
     if (G.tutPause) { updateBubble(); return; }
-    if (G.tutorial && !G.tutGreetDone && G.cust && G.cust.flow === 'self' && G.cust.st === 'browse' && !G.cust.toCounter && !state.modal && G.shop && G.shop.door) { tutShow(); return; }
+    if (G.tutorial && !G.tutGreetDone && G.cust && G.cust.flow === 'self' && G.cust.st === 'browse' && !G.cust.toCounter && !state.modal && G.shop && G.shop.door && !TP) { tutShow(); }
     if (!G.started) { G.started = true; newDay(); }
     stepTweens(dt);
     stepShop(dt); phoneStep(dt);
@@ -5181,6 +5187,7 @@ function startScene() {
   function tick(now) {
     requestAnimationFrame(tick);
     if (now - wakeAt > 4000) { wakeAt = now; try { SFX.unlock(); } catch (e) { /* ignore */ } }   // keep WebAudio awake while music plays
+    if (last && now - last > 1500) { try { SFX.stale(); } catch (e) { /* ignore */ } }   // the page was frozen for a while (other pane/app in front)
     const dt = Math.min(0.05, (now - last) / 1000); last = now;
     update(dt, now);
     if (cv.clientWidth && (cv.clientWidth !== W || cv.clientHeight !== H)) resize();
