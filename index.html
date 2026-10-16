@@ -584,7 +584,7 @@ img { -webkit-user-drag: none; user-drag: none; }
         <textarea id="saveCode" rows="3" hidden spellcheck="false" placeholder="存檔碼貼在這裡,再按一次「匯入存檔碼」"></textarea><div class="sub" id="saveMsg"></div></div>
       <div class="controls" id="controls"></div>
       <p class="legal">配件品牌、商品與人物都是虛構的遊戲設定。手機型號使用真實型號。</p>
-      <p class="legal" id="verLine" style="margin-top:2px;opacity:.7">版本 v173 · 2026-10-17</p>
+      <p class="legal" id="verLine" style="margin-top:2px;opacity:.7">版本 v174 · 2026-10-17</p>
     </div>
   </div>
 
@@ -3257,6 +3257,7 @@ function startScene() {
         /* iPhones put WebAudio to sleep ('interrupted') when music starts in an <audio>/iframe, and mute it with the silent switch: ask for the playback session and wake it up */
         try { if (navigator.audioSession && navigator.audioSession.type !== 'playback') navigator.audioSession.type = 'playback'; } catch (e) { /* ignore */ }
         if (ctx.state !== 'running' && ctx.resume) { const pr = ctx.resume(); if (pr && pr.catch) pr.catch(() => {}); }
+        if (!ctx.__kicked) { ctx.__kicked = true; try { const b0 = ctx.createBuffer(1, 1, 22050), s0 = ctx.createBufferSource(); s0.buffer = b0; s0.connect(ctx.destination); s0.start(0); } catch (e) { /* ignore */ } }   // iOS only counts the output as unlocked once something has been started inside a tap
         return ctx;
       } catch (e) { return null; }
     }
@@ -3317,7 +3318,7 @@ function startScene() {
       }
     }
     return {
-      unlock: wake, voice: voice, rebuild: rebuild, stale: () => { stale = true; }, tap: () => { if (stale) { stale = false; return rebuild(); } return wake(); },
+      unlock: wake, voice: voice, rebuild: rebuild, stale: () => { stale = true; }, need: () => stale || !ctx || ctx.state !== 'running', tap: () => { if (stale) { stale = false; return rebuild(); } return wake(); },
       step(v) { if (!gate('step' + (v > 0.6 ? 'p' : 'c'), 90)) return; noise({ type: 'lowpass', f: 420, f2: 140, d: 0.07, v: 0.32 * v, a: 0.003 }); tone({ f: 85, f2: 55, d: 0.07, v: 0.14 * v }); },
       drawer() {
         /* cash drawer: latch release, a soft rolling slide, and a low wooden stop; deliberately no bell and nothing high-pitched */
@@ -3413,7 +3414,7 @@ function startScene() {
   /* leaving the page / switching to another pane or app can leave the audio output dead even though it still says 'running': mark it stale and build a fresh one on the next sound or tap */
   const sfxTap = () => SFX.tap();   // a tap is the only moment a browser lets us build a new audio output, so the rebuild happens here
   window.addEventListener('pointerdown', sfxTap, { passive: true }); window.addEventListener('touchend', sfxTap, { passive: true });
-  document.addEventListener('visibilitychange', () => { if (document.hidden) SFX.stale(); else SFX.unlock(); });
+  document.addEventListener('visibilitychange', () => { if (document.hidden) SFX.stale(); else { SFX.unlock(); setTimeout(() => { if (!document.hidden && state.started && SFX.need()) toast('🔈 點一下畫面,恢復音效'); }, 400); } });
   ['pagehide', 'freeze'].forEach((ev) => window.addEventListener(ev, () => SFX.stale()));
   ['pageshow', 'focus', 'resume'].forEach((ev) => window.addEventListener(ev, () => SFX.unlock()));
   let audioCtx = null;
