@@ -583,7 +583,7 @@ img { -webkit-user-drag: none; user-drag: none; }
         <textarea id="saveCode" rows="3" hidden spellcheck="false" placeholder="存檔碼貼在這裡,再按一次「匯入存檔碼」"></textarea><div class="sub" id="saveMsg"></div></div>
       <div class="controls" id="controls"></div>
       <p class="legal">配件品牌、商品與人物都是虛構的遊戲設定。手機型號使用真實型號。</p>
-      <p class="legal" id="verLine" style="margin-top:2px;opacity:.7">版本 v170 · 2026-10-17</p>
+      <p class="legal" id="verLine" style="margin-top:2px;opacity:.7">版本 v171 · 2026-10-17</p>
     </div>
   </div>
 
@@ -3991,9 +3991,11 @@ function startScene() {
   function tipShow(key) {
     if (SAVE.tipsOff || (SAVE.tips && SAVE.tips[key]) || TP || !TIPS[key]) return;
     SAVE.tips = SAVE.tips || {}; SAVE.tips[key] = 1; saveGame();
-    TP = { key: key, i: 0 }; tipEl.hidden = false; tipRender();
+    TP = { key: key, i: 0, run: 0 }; G.tutPause = true; tipEl.hidden = false; tipRender();
   }
-  function tipEnd() { const g = TP && TP.key === 'greet'; TP = null; tipEl.hidden = true; if (g) G.tutGreetDone = true; }
+  function tipEnd() { const g = TP && TP.key === 'greet'; TP = null; tipEl.hidden = true; G.tutPause = false; if (g) G.tutGreetDone = true; }
+  /* while a tip is up the game stands still; every tap the player makes lets it run for a moment (so the reaction plays out) and then it freezes again */
+  document.addEventListener('pointerup', (e) => { if (TP && !(e.target && e.target.closest && e.target.closest('#tipCard'))) TP.run = performance.now() + 1100; }, true);
   $('#tipNext').addEventListener('click', () => { if (!TP) return; if (TP.i < TIPS[TP.key].length - 1) { TP.i++; tipRender(); } else tipEnd(); });
   $('#tipOff').addEventListener('click', () => { SAVE.tipsOff = true; saveGame(); tipEnd(); toast('教學提示已關閉,可在開始畫面重新開啟'); });
   window.addEventListener('resize', () => { if (TP) tipRender(); });
@@ -4006,7 +4008,7 @@ function startScene() {
   function spawnVip() { spawnVip0(); tipShow('vip'); }
   function dlvStart() { dlvStart0(); tipShow('dlv'); }
   const tutEl = $('#tutSheet');
-  function tutShow() { if (TP) return; TP = { key: 'greet', i: 0 }; tipEl.hidden = false; tipRender(); }   // points at the real 👋 button and waits for the tap
+  function tutShow() { if (TP) return; TP = { key: 'greet', i: 0, run: 0 }; G.tutPause = true; tipEl.hidden = false; tipRender(); }   // points at the real 👋 button and waits for the tap
   function tutGreet() {
     if (!(TP && TP.key === 'greet')) return;
     tipEnd(); greetCd = 0;
@@ -4014,7 +4016,7 @@ function startScene() {
   }
   function gameUpdate(dt) {
     if (!state.started) return;
-    if (G.tutPause) { updateBubble(); return; }
+    if (G.tutPause && !(TP && performance.now() < TP.run)) { updateBubble(); return; }
     if (G.tutorial && !G.tutGreetDone && G.cust && G.cust.flow === 'self' && G.cust.st === 'browse' && !G.cust.toCounter && !state.modal && G.shop && G.shop.door && !TP) { tutShow(); }
     if (!G.started) { G.started = true; newDay(); }
     stepTweens(dt);
