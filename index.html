@@ -55,6 +55,7 @@ button { cursor: pointer; }
 .gutter { padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
 
 /* buttons */
+button, .btn, [data-co] { touch-action: manipulation; -webkit-tap-highlight-color: transparent; }   /* no double-tap-zoom delay on taps */
 .btn { border: 1.5px solid var(--line); background: var(--panel); border-radius: 999px; padding: 9px 18px; font-weight: 500; min-height: 40px; }
 .btn:hover { border-color: var(--accent); }
 .btn.signal { background: var(--signal); color: #1a1a1a; border-color: var(--signal); font-weight: 700; }
@@ -583,7 +584,7 @@ img { -webkit-user-drag: none; user-drag: none; }
         <textarea id="saveCode" rows="3" hidden spellcheck="false" placeholder="存檔碼貼在這裡,再按一次「匯入存檔碼」"></textarea><div class="sub" id="saveMsg"></div></div>
       <div class="controls" id="controls"></div>
       <p class="legal">配件品牌、商品與人物都是虛構的遊戲設定。手機型號使用真實型號。</p>
-      <p class="legal" id="verLine" style="margin-top:2px;opacity:.7">版本 v172 · 2026-10-17</p>
+      <p class="legal" id="verLine" style="margin-top:2px;opacity:.7">版本 v173 · 2026-10-17</p>
     </div>
   </div>
 
@@ -3845,7 +3846,7 @@ function startScene() {
     else if (a === 'kc') co.keyed = '';
     else if (a === 'recv') {
       const v = +co.keyed;
-      if (!co.keyed || v < co.total) co.msg = '實收金額不足,請確認客人給的錢。';
+      if (!co.keyed || v < co.total) { co.msg = !co.keyed ? '先用數字鍵輸入客人給的金額,再按「確認實收」。' : '實收金額不足,請確認客人給的錢。'; toast(co.msg); SFX.err && SFX.err(); }
       else { co.recv = v; co.posChange = v - co.total; co.chg = {}; co.step = 'change'; PR.exit = exitToSlot(RE_PAY); PR.exitDelay = 0.3; SFX.bills(3); }
     } else if (a === 'repay') { co.step = 'pay'; co.keyed = ''; co.recv = null; PR.exit = exitToSlot(RE_CHG); }
     else if (a === 'dp') { if (co.step !== 'change') return; const d = +data.d; co.chg[d] = (co.chg[d] || 0) + 1; if (d >= 100) SFX.bills(1); else SFX.coins(1); }
