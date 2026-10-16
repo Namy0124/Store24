@@ -3216,6 +3216,8 @@ function startScene() {
       }
       return c;
     }
+    /* a tap right after coming back: throw the old (dead) context away and build a new one inside the tap, which iOS accepts */
+    function rebuild() { if (ctx) { try { ctx.onstatechange = null; ctx.close(); } catch (e) { /* ignore */ } } ctx = null; master = null; nb = null; return get(); }
     const gate = (k, ms) => { const t = Date.now(); if (last[k] && t - last[k] < ms) return false; last[k] = t; return true; };
     function noise(o) {
       const c = get(); if (!c) return;
@@ -3260,7 +3262,7 @@ function startScene() {
       }
     }
     return {
-      unlock: wake, voice: voice,
+      unlock: wake, voice: voice, rebuild: rebuild,
       step(v) { if (!gate('step' + (v > 0.6 ? 'p' : 'c'), 90)) return; noise({ type: 'lowpass', f: 420, f2: 140, d: 0.07, v: 0.32 * v, a: 0.003 }); tone({ f: 85, f2: 55, d: 0.07, v: 0.14 * v }); },
       drawer() {
         /* cash drawer: latch release, a soft rolling slide, and a low wooden stop; deliberately no bell and nothing high-pitched */
@@ -3353,7 +3355,8 @@ function startScene() {
       scribble(dur) { for (let k = 0; k < Math.floor(dur / 0.07); k++) noise({ f: 2500 + Math.random() * 2000, q: 1.5, d: 0.05, v: 0.08, at: k * 0.07 }); }
     };
   })();
-  window.addEventListener('pointerdown', () => SFX.unlock(), { passive: true }); window.addEventListener('touchend', () => SFX.unlock(), { passive: true }); document.addEventListener('visibilitychange', () => { if (!document.hidden) SFX.unlock(); }); window.addEventListener('pageshow', () => SFX.unlock()); window.addEventListener('focus', () => SFX.unlock());
+  let sfxStale = false; const sfxTap = () => { if (sfxStale) { sfxStale = false; SFX.rebuild(); } else SFX.unlock(); };
+  window.addEventListener('pointerdown', sfxTap, { passive: true }); window.addEventListener('touchend', sfxTap, { passive: true }); document.addEventListener('visibilitychange', () => { if (document.hidden) sfxStale = true; else SFX.unlock(); }); window.addEventListener('pageshow', () => SFX.unlock()); window.addEventListener('focus', () => SFX.unlock());
   let audioCtx = null;
   function beep(f, d) {
     try {
