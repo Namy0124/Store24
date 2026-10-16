@@ -578,7 +578,7 @@ img { -webkit-user-drag: none; user-drag: none; }
         <textarea id="saveCode" rows="3" hidden spellcheck="false" placeholder="存檔碼貼在這裡,再按一次「匯入存檔碼」"></textarea><div class="sub" id="saveMsg"></div></div>
       <div class="controls" id="controls"></div>
       <p class="legal">配件品牌、商品與人物都是虛構的遊戲設定。手機型號使用真實型號。</p>
-      <p class="legal" id="verLine" style="margin-top:2px;opacity:.7">版本 v156 · 2026-10-17</p>
+      <p class="legal" id="verLine" style="margin-top:2px;opacity:.7">版本 v157 · 2026-10-17</p>
     </div>
   </div>
 
@@ -2239,7 +2239,9 @@ function startScene() {
     look: ['看看…', '嗯…', '這個不錯耶', '哇,好多喔', '先看看'],
     more: ['對了,我還要{item}。', '再幫我拿{item},一起結。', '喔對,順便拿{item}。'],
     wrong: ['欸,這個好像不是我要的耶。', '呃…型號或顏色拿錯了喔。', '不是這個啦,幫我再找一下。'],
-    impatient: ['請問還要等多久呢…', '那個…我趕時間喔。']
+    impatient: ['請問還要等多久呢…', '那個…我趕時間喔。'],
+    grumble: ['到底要等多久啊…', '怎麼都沒人理我?', '我等很久了欸。'],
+    mad: ['等這麼久,我不買了!', '什麼爛店,我走了!', '太誇張了,不用了!']
   };
   const COMMENTS = {
     5: ['店員很親切,結帳很快!', '找貨俐落,下次還會來。', '服務很好,五顆星。'],
@@ -2472,8 +2474,15 @@ function startScene() {
     c.say = c.flow === 'ask' ? (c.askIdx ? pickOne(SAY.ask).replace('{item}', itemText(c.items[c.askIdx])) : (c.lineTxt || askLine(c))) : pickOne(SAY.self);
     renderOrder();
   }
-  function leave(c) {
-    c.st = 'leaving'; c.say = pickOne(SAY.thanks);
+  function angryFace(c) {
+    if (c.angryOn) return; c.angryOn = true;
+    const add = (w, h, x, y, rz, col) => { const m = new T.Mesh(new T.BoxGeometry(w, h, 0.02), mat(col)); m.position.set(x, y, 0.245); m.rotation.z = rz; c.g.add(m); };
+    add(0.11, 0.025, -0.09, 1.645, -0.55, 0x1B1B1B); add(0.11, 0.025, 0.09, 1.645, 0.55, 0x1B1B1B);   // brows slanting down to the middle
+    add(0.1, 0.022, 0, 1.46, 0, 0x7A1F1F);   // flat mouth
+    add(0.07, 0.05, -0.17, 1.52, 0, 0xE8665A); add(0.07, 0.05, 0.17, 1.52, 0, 0xE8665A);   // flushed cheeks
+  }
+  function leave(c, mad) {
+    c.st = 'leaving'; c.say = mad ? c.say : pickOne(SAY.thanks);
     goTo(c, 0, 5.9, () => { SFX.chime(); scene.remove(c.g); if (G.cust === c) G.cust = null; G.nextAt = Math.max(G.nextAt, G.gt + 4); updateBubble(); renderOrder(); });
     renderOrder();
   }
@@ -2491,6 +2500,15 @@ function startScene() {
     if (!(c.path && c.path.length) && c.then) { const f = c.then; c.then = null; f(c); }
     if (c.st === 'browse') { c.t -= dt; if (c.t <= 0) { c.say = ''; c.st = 'walkIn'; if (c.browser) browseNext(c); else selfNext(c); } }
     if (c.st === 'calling' && G.gt - c.callAt > 40 * (1 + 0.4 * moodLv())) { removeCallable(c); c.ignored = true; c.st = 'walkIn'; c.say = '算了,我去櫃檯問。'; goTo(c, QX, QZ, atCounter); }
+    if (c.st === 'asking' && !G.co && !G.tutorial && c.flow !== 'vip') {   // the longer they wait the angrier they get
+      const w = (G.gt - c.readyAt) / (1 + 0.3 * moodLv());
+      if (w > 130 && !c.grumble) { c.grumble = true; c.say = pickOne(SAY.grumble); }
+      if (w > 250) angryFace(c);
+      if (w > 400) {
+        angryFace(c); c.say = pickOne(SAY.mad); G.stats.lost = (G.stats.lost || 0) + 1; G.stats.reviews.push({ stars: 0, text: '等太久了,直接走出大門。' });
+        toast('客人等太久,生氣地走掉了'); G.hand = []; renderCarry(); SFX.buzz && SFX.buzz(); leave(c, true); return;
+      }
+    }
     if (c.st === 'asking' && !c.nag && !G.co && G.gt - c.readyAt > 55 * (1 + 0.4 * moodLv())) { c.nag = true; c.say = pickOne(SAY.impatient); }
     if (moving) c.walkT += dt * 9;
     { const ph = Math.floor(c.walkT / Math.PI); if (moving && ph !== c.stepPh) { c.stepPh = ph; const dd = Math.hypot(c.g.position.x - player.position.x, c.g.position.z - player.position.z); SFX.step(0.5 / (1 + dd * 0.4)); } }
@@ -3745,8 +3763,9 @@ function startScene() {
   function finishSale() {
     const co = G.co, c = G.cust;
     const wait = (co.firstAt - c.readyAt) / (1 + 0.3 * moodLv());
-    const waitPen = wait <= 60 ? 0 : wait <= 90 ? 0.5 : wait <= 130 ? 1 : 2;
-    const iss = shopIssues(c)[0];
+    const waitPen = wait <= 60 ? 0 : wait <= 90 ? 0.5 : wait <= 130 ? 1 : wait <= 170 ? 2 : wait <= 210 ? 3 : 4;   // one star from here on
+    let iss = shopIssues(c)[0];
+    if (wait > 330) { iss = { text: '等了超久,如果可以我連一星都不想給。', say: '等這麼久…', pen: 0 }; angryFace(c); }
     const vp0 = G.vipPen || 0; G.vipPen = 0;
     let stars = Math.max(1, Math.min(5, Math.round(5 - co.pen - waitPen - vp0 - (iss ? iss.pen : 0) - 0.001)));
     { const mb = moodLv(); if (mb && stars < 5 && Math.random() < 0.2 * mb) stars++; }
