@@ -111,7 +111,7 @@ button { cursor: pointer; }
 .ph-hand { position: absolute; bottom: -24px; width: 62px; height: 130px; background: #E0AC84; border-radius: 34px; z-index: 30; pointer-events: none; transform-style: flat; }
 .ph-hand.l { left: -26px; transform: rotate(14deg); } .ph-hand.r { right: -26px; transform: rotate(-14deg); }
 .ph-warn { position: absolute; left: 50%; top: -34px; transform: translateX(-50%); white-space: nowrap; background: #FFF4CC; color: #3A2A00; font-size: 13px; font-weight: 700; padding: 5px 12px; border-radius: 999px; box-shadow: var(--shadow); }
-.ph-close { position: absolute; right: 6px; top: -40px; }
+.ph-close { position: absolute; right: -46px; top: 10px; width: 38px; height: 38px; min-height: 0; padding: 0; border-radius: 50%; font-size: 16px; line-height: 1; box-shadow: var(--shadow); }
 .interact.alt { background: #FFF4CC; color: #3A2A00; border: 2px solid #F2B200; }
 .sbook { width: min(430px, 94vw); }
 #invSheet, #upSheet { z-index: 22; }
@@ -447,10 +447,12 @@ img { -webkit-user-drag: none; user-drag: none; }
 /* landscape phones (short screens): everything is smaller and pushed to the edges so the shop in the middle stays visible.
    left thumb = joystick area (kept clear), right thumb = round utility column on top + action button at the bottom */
 @media (orientation: landscape) and (max-height: 520px) {
-  .hud-top { top: max(6px, env(safe-area-inset-top, 0px)); padding-left: env(safe-area-inset-left, 0px); padding-right: env(safe-area-inset-right, 0px); }
-  .chip { font-size: 12px; padding: 4px 10px; } #storeChip { max-width: 24%; } .stat { max-width: 50%; }
-  .hud-top .btn { padding: 3px 10px; min-height: 28px; font-size: 12px; }
-  .hud-col { top: 40px; padding-left: env(safe-area-inset-left, 0px); }
+  .hud-top { top: max(6px, env(safe-area-inset-top, 0px)); padding-left: max(12px, env(safe-area-inset-left, 0px)); padding-right: max(12px, env(safe-area-inset-right, 0px)); gap: 6px; flex-wrap: nowrap; align-items: flex-start; justify-content: flex-start; }
+  .chip { font-size: 12px; padding: 4px 10px; line-height: 1.25; min-width: 0; }
+  #storeChip { flex: 0 1 auto; max-width: 22%; }
+  #stat { flex: 1 1 0; max-width: none; white-space: normal; text-align: center; border-radius: 14px; }
+  .hud-top .btn { flex: none; white-space: nowrap; padding: 3px 10px; min-height: 28px; font-size: 12px; }
+  .hud-col { top: 52px; padding-left: max(12px, env(safe-area-inset-left, 0px)); }
   .nexth { font-size: 12px; padding: 4px 8px; max-width: 46vw; margin-top: 4px; }
   .todo #todoList { padding: 6px 10px; min-width: 170px; max-height: 52vh; overflow-y: auto; font-size: 12.5px; }
   .order { padding: 4px 10px; border-radius: 10px; } .order .o-s { display: none; } .order .o-t { font-size: 13px; margin: 0; } .order .o-h { font-size: 10.5px; }
@@ -663,7 +665,7 @@ img { -webkit-user-drag: none; user-drag: none; }
       <div class="ph-hand l"></div><div class="ph-hand r"></div>
     </div>
     <div class="ph-warn" id="phWarn" hidden></div>
-    <button type="button" class="btn small ph-close" id="phClose">收起手機</button>
+    <button type="button" class="btn small ph-close" id="phClose" aria-label="收起手機" title="收起手機">✕</button>
   </div>
   <div id="tutSheet" class="sheet" hidden role="dialog" aria-modal="true" aria-labelledby="tutTitle">
     <div class="sheet-box">
@@ -695,7 +697,7 @@ img { -webkit-user-drag: none; user-drag: none; }
     <div class="m-btns"><button class="btn small primary" id="musicRandom" type="button">🔀 隨機播放</button><button class="btn small" id="musicStop" type="button">停止</button></div>
     <label class="m-vol" style="display:flex;align-items:center;gap:8px;font-size:12.5px">🔈 音量 <input id="musicVol" type="range" min="0" max="100" step="1" style="flex:1"><span id="musicVolN" style="min-width:2.5em;text-align:right"></span></label>
     <div id="musicBox"></div>
-    <p class="m-note">音量滑桿對 YouTube 和「試聽音檔」有效;Apple Music、Spotify 的內嵌播放器沒辦法從這裡調,iPhone 也要用手機側邊音量鍵。<br>Apple Music、Spotify 沒登入只會播 30 秒試聽;收起面板時音樂會繼續播。<br>內嵌播放器沒畫面或沒聲音(被頁面擋住)?按「播放:內嵌」切成「試聽音檔」,搜尋結果也可以直接按「試聽」。</p>
+    <p class="m-note">音量滑桿在「停止」鈕下面。對「試聽音檔」一定有效;YouTube 在 iPhone 上被系統限制,調不動,要用手機側邊音量鍵(或改用試聽音檔);Apple Music、Spotify 的內嵌播放器也一樣。<br>Apple Music、Spotify 沒登入只會播 30 秒試聽;收起面板時音樂會繼續播。<br>內嵌播放器沒畫面或沒聲音(被頁面擋住)?按「播放:內嵌」切成「試聽音檔」,搜尋結果也可以直接按「試聽」。</p>
   </div>
   <div id="bubble" class="bubble" hidden></div>
   <div id="bubble2" class="bubble" hidden></div>
@@ -5080,12 +5082,29 @@ function parseMusicLink(raw) {
   }
   function yt(cmd, args) { try { frame.contentWindow.postMessage(JSON.stringify({ event: 'command', func: cmd, args: args || [] }), '*'); } catch (e) { /* ignore */ } }
   function audStop() { if (aud) { try { aud.pause(); aud.onended = aud.onerror = null; aud.src = ''; } catch (e) { /* ignore */ } aud = null; } }
+  /* volume for the plain audio player: phones ignore <audio>.volume, so run the sound through a WebAudio gain node instead.
+     That needs a CORS-clean file; if the server refuses, fall back to the plain player (then only the phone's volume keys work). */
+  let mctx = null, mgain = null;
   function playAudio(i, url) {
     audStop(); frame = null; cur = i; box.innerHTML = '<div class="m-note">🎧 試聽音檔播放中(Apple 試聽約 30 秒,播完自動換下一首)</div>';
-    aud = new Audio(url); aud.volume = VOL / 100;   // iPhones ignore this (system volume only)
-    aud.onended = () => random(true);
-    aud.onerror = () => { toast('這首的音檔放不出來,換下一首'); setTimeout(() => random(true), 600); };
-    const pr = aud.play(); if (pr && pr.catch) pr.catch(() => { toast('瀏覽器擋住自動播放,請再按一次「播放」'); });
+    const start = (cors) => {
+      const a = new Audio(); a.__routed = false; if (cors) a.crossOrigin = 'anonymous';
+      aud = a; a.src = url;
+      a.onended = () => random(true);
+      a.onerror = () => { if (cors && aud === a) { try { a.onerror = null; } catch (e) { /* ignore */ } start(false); return; } toast('這首的音檔放不出來,換下一首'); setTimeout(() => random(true), 600); };
+      let routed = false;
+      if (cors) {
+        try {
+          const AC = window.AudioContext || window.webkitAudioContext; mctx = mctx || new AC();
+          if (mctx.state !== 'running' && mctx.resume) mctx.resume();
+          if (!mgain) { mgain = mctx.createGain(); mgain.connect(mctx.destination); }
+          mctx.createMediaElementSource(a).connect(mgain); mgain.gain.value = VOL / 100; a.volume = 1; routed = true; a.__routed = true;
+        } catch (e) { routed = false; }
+      }
+      if (!routed) { if (cors) { start(false); return; } a.volume = VOL / 100; }
+      const pr = a.play(); if (pr && pr.catch) pr.catch(() => { toast('瀏覽器擋住自動播放,請再按一次「播放」'); });
+    };
+    start(true);
     render();
   }
   function play(i, forceAudio) {
@@ -5176,7 +5195,7 @@ function parseMusicLink(raw) {
   $('#musicRandom').addEventListener('click', random);
   $('#musicStop').addEventListener('click', stop);
   const volEl = $('#musicVol'); volEl.value = VOL; $('#musicVolN').textContent = VOL;
-  volEl.addEventListener('input', () => { VOL = +volEl.value; $('#musicVolN').textContent = VOL; LS.set(VKEY, VOL); if (aud) aud.volume = VOL / 100; if (frame && cur >= 0 && list[cur] && list[cur].p.kind === 'yt') yt('setVolume', [VOL]); });
+  volEl.addEventListener('input', () => { VOL = +volEl.value; $('#musicVolN').textContent = VOL; LS.set(VKEY, VOL); if (aud) { if (aud.__routed && mgain) mgain.gain.value = VOL / 100; else aud.volume = VOL / 100; } if (frame && cur >= 0 && list[cur] && list[cur].p.kind === 'yt') yt('setVolume', [VOL]); });
   const modeLbl = () => { $('#mModePlay').textContent = MODE === 'audio' ? '播放:試聽音檔' : '播放:內嵌'; $('#mModePlay').classList.toggle('primary', MODE === 'audio'); };
   $('#mModePlay').addEventListener('click', () => { MODE = MODE === 'audio' ? 'frame' : 'audio'; LS.set(MKEY, MODE); modeLbl(); toast(MODE === 'audio' ? '改用試聽音檔(不用內嵌播放器)' : '改用內嵌播放器'); if (cur >= 0) stop(); });
   modeLbl();
