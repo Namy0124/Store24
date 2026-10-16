@@ -453,7 +453,7 @@ img { -webkit-user-drag: none; user-drag: none; }
   .nexth { font-size: 12px; padding: 4px 8px; max-width: 46vw; margin-top: 4px; }
   .todo #todoList { padding: 6px 10px; min-width: 170px; max-height: 52vh; overflow-y: auto; font-size: 12.5px; }
   .order { padding: 4px 10px; border-radius: 10px; } .order .o-s { display: none; } .order .o-t { font-size: 13px; margin: 0; } .order .o-h { font-size: 10.5px; }
-  .greet { position: absolute; left: auto; right: max(12px, env(safe-area-inset-right, 0px)); top: 46px; bottom: auto; flex-direction: column !important; gap: 8px; }
+  .greet { position: fixed; left: auto; right: max(12px, env(safe-area-inset-right, 0px)); top: calc(46px + env(safe-area-inset-top, 0px)); bottom: auto; z-index: 6; flex-direction: column !important; gap: 8px; }
   .greet .btn { width: 40px; height: 40px; min-height: 40px; padding: 0; font-size: 18px; border-radius: 50%; opacity: .88; }
   .greet .lb { display: none; }
   .hud-bottom { bottom: calc(8px + env(safe-area-inset-bottom, 0px)); }
@@ -5079,8 +5079,12 @@ function parseMusicLink(raw) {
     resEl.innerHTML = '<div class="m-empty">搜尋中…</div>';
     const url = 'https://itunes.apple.com/search?term=' + encodeURIComponent(q) + '&country=tw&media=music&entity=' + (mode === 'album' ? 'album' : 'song') + '&limit=12';
     let data = null;
-    try { const r = await Promise.race([fetch(url), new Promise((_, rej) => setTimeout(() => rej(new Error('timeout')), 6000))]); data = await r.json(); } catch (e) { data = await jsonp(url); }
-    if (!data || !Array.isArray(data.results)) { found = []; resEl.innerHTML = '<div class="m-empty">這個頁面連不上搜尋服務(被瀏覽器或頁面限制擋住了)。</div><div class="m-empty"><a href="https://music.apple.com/tw/search?term=' + encodeURIComponent(q) + '" target="_blank" rel="noopener">→ 在 Apple Music 網頁搜尋「' + esc(q) + '」</a>,找到歌後複製連結,回來按下面的「貼上」。</div>'; return; }
+    let why = '';
+    {   // ask two ways at once (plain request and a script tag, which is not subject to CORS) and take whichever answers first
+      const viaFetch = Promise.race([fetch(url), new Promise((_, rej) => setTimeout(() => rej(new Error('timeout')), 7000))]).then((r) => r.json()).catch((e) => { why = String(e && e.message || e).slice(0, 60); return null; });
+      data = await new Promise((res) => { let left = 2; [viaFetch, jsonp(url)].forEach((pr) => pr.then((v) => { if (v) res(v); else if (--left === 0) res(null); })); });
+    }
+    if (!data || !Array.isArray(data.results)) { found = []; resEl.innerHTML = '<div class="m-empty">這個頁面連不上搜尋服務(被瀏覽器或頁面限制擋住了' + (why ? ',原因:' + esc(why) : '') + ')。</div><div class="m-empty"><a href="https://music.apple.com/tw/search?term=' + encodeURIComponent(q) + '" target="_blank" rel="noopener">→ 在 Apple Music 網頁搜尋「' + esc(q) + '」</a>,找到歌後複製連結,回來按下面的「貼上」。</div>'; return; }
     found = data.results.map((r) => ({ title: (r.trackName || r.collectionName || '') + ' - ' + (r.artistName || ''), name: r.trackName || r.collectionName || '', artist: r.artistName || '', art: r.artworkUrl60 || '', link: r.trackViewUrl || r.collectionViewUrl || '', prev: r.previewUrl || '' })).filter((x) => parseMusicLink(x.link) || x.prev);
     resEl.innerHTML = found.length ? found.map((x, i) => '<div class="m-res"><img alt="" src="' + esc(x.art) + '"><div class="m-tt">' + esc(x.name) + '<span>' + esc(x.artist) + '</span></div><button class="btn small" type="button" data-m="rplay" data-i="' + i + '">播放</button>' + (x.prev ? '<button class="btn small" type="button" data-m="rprev" data-i="' + i + '">試聽</button>' : '') + '<button class="btn small" type="button" data-m="radd" data-i="' + i + '">加入</button></div>').join('') : '<div class="m-empty">找不到結果,換個關鍵字試試。</div>';
   }
