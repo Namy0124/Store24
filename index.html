@@ -397,8 +397,8 @@ button, .btn, [data-co] { touch-action: manipulation; -webkit-tap-highlight-colo
 .up-hands { display: flex; justify-content: center; gap: 120px; font-size: 46px; margin-top: -6px; } .up-hands span { display: inline-block; animation: upReach .35s ease-in-out infinite alternate; } .up-hands span:last-child { animation-delay: .17s; transform: scaleX(-1); }
 @keyframes upReach { from { transform: translateY(8px); } to { transform: translateY(-10px); } }
 .up-fly { animation: upFly .32s ease-out; } @keyframes upFly { from { transform: translateY(90px) scale(1.7); opacity: .2; } to { transform: none; opacity: 1; } }
-.rs-hint { color: var(--muted); margin-bottom: 8px; } .rs-tray { display: flex; flex-wrap: wrap; gap: 8px; }
-.rs-chip { padding: 10px 14px; background: var(--panel); border: 2px solid var(--accent); border-radius: 10px; font-weight: 700; touch-action: none; cursor: grab; user-select: none; -webkit-user-select: none; }
+.rs-hint { color: var(--muted); margin-bottom: 4px; font-size: 13px; } .rs-tray { display: flex; flex-wrap: wrap; gap: 6px; }
+.rs-chip { padding: 7px 11px; font-size: 14px; background: var(--panel); border: 2px solid var(--accent); border-radius: 10px; font-weight: 700; touch-action: none; cursor: grab; user-select: none; -webkit-user-select: none; }
 .rs-chip.drag { opacity: .35; }
 .rs-ghost { position: fixed; z-index: 60; pointer-events: none; padding: 10px 14px; background: var(--accent); color: var(--accent-ink); border-radius: 10px; font-weight: 700; box-shadow: var(--shadow); transform: translate(-50%, -60%) scale(1.08); }
 .rs-ghost.land { transition: transform .28s ease-in, opacity .28s; transform: translate(-50%, -60%) scale(.2); opacity: 0; }
@@ -591,7 +591,7 @@ img { -webkit-user-drag: none; user-drag: none; }
         <textarea id="saveCode" rows="3" hidden spellcheck="false" placeholder="存檔碼貼在這裡,再按一次「匯入存檔碼」"></textarea><div class="sub" id="saveMsg"></div></div>
       <div class="controls" id="controls"></div>
       <p class="legal">配件品牌、商品與人物都是虛構的遊戲設定。手機型號使用真實型號。</p>
-      <p class="legal" id="verLine" style="margin-top:2px;opacity:.7">版本 v181 · 2026-10-17</p>
+      <p class="legal" id="verLine" style="margin-top:2px;opacity:.7">版本 v182 · 2026-10-17</p>
     </div>
   </div>
 
@@ -655,7 +655,7 @@ img { -webkit-user-drag: none; user-drag: none; }
   </div>
   <div id="rsDock" class="sheet dock" hidden role="dialog" aria-modal="true" aria-labelledby="rsTitle">
     <div class="sheet-box">
-      <div class="sheet-head gutter"><h2 id="rsTitle">補貨</h2><button class="btn small" id="rsClose" type="button">先離開</button></div>
+      <div class="sheet-head gutter"><h2 id="rsTitle">補貨</h2><span style="display:flex;gap:8px"><button class="btn small" id="rsMin" type="button">▾ 收合</button><button class="btn small" id="rsClose" type="button">先離開</button></span></div>
       <div class="sheet-body gutter" id="rsBody"></div>
     </div>
   </div>
@@ -4480,6 +4480,7 @@ function startScene() {
   }
   function openRestock0(cat) {
     if (!rsPose(cat)) return false;
+    rsEl.classList.remove('min'); $('#rsMin').textContent = '▾ 收合';
     RS = { cat: cat }; fp.mode = 'cart'; fp.target = 1; rsEl.hidden = false; state.modal = 'restock'; renderRs(); return true;
   }
   function closeRestock() {
@@ -4491,7 +4492,7 @@ function startScene() {
     $('#rsTitle').textContent = '補貨:' + catName(RS.cat) + '(' + (mine.length - left.length) + ' / ' + mine.length + ')';
     let h = '';
     if (UA) h = '<div class="rs-hint">剩下的我來補…</div>';
-    else if (left.length && mDone < quota) h = '<div class="rs-hint">把下面的商品用手指/滑鼠往上拖到' + (SHELVES[RS.cat].kind === 'cart' ? '花車' : '陳列牆') + '上。親手放 ' + quota + ' 件(' + mDone + '/' + quota + '),剩下的我會一次補完。</div><div class="rs-tray">' + left.map((l) => '<div class="rs-chip" data-lab="' + esc(l.lab) + '">' + esc(l.lab) + ' ×' + l.qty + '</div>').join('') + '</div>';
+    else if (left.length && mDone < quota) h = '<div class="rs-hint">往上拖到' + (SHELVES[RS.cat].kind === 'cart' ? '花車' : '陳列牆') + '。親手放 ' + quota + ' 件(' + mDone + '/' + quota + '),其餘自動補。</div><div class="rs-tray">' + left.map((l) => '<div class="rs-chip" data-lab="' + esc(l.lab) + '">' + esc(l.lab) + ' ×' + l.qty + '</div>').join('') + '</div>';
     else if (left.length) h = '<div class="rs-hint">手放好了。</div><div class="btn-row"><button class="btn primary" type="button" data-rs="auto">把剩下的 ' + left.length + ' 件補完</button></div>';
     else h = '<div class="rs-hint">這一類補好了。</div><div class="btn-row"><button class="btn primary" type="button" data-rs="done">放下籃子</button></div>';
     rsBody.innerHTML = h;
@@ -4529,6 +4530,7 @@ function startScene() {
     else if (b.dataset.rs === 'done') { G.basket = null; closeRestock(); toast(upStage() === 'clean' ? '所有貨都上架了,回箱子那邊整理空箱子' : '這一類補好了,再提下一個籃子'); }
   });
   $('#rsClose').addEventListener('click', closeRestock);
+  $('#rsMin').addEventListener('click', () => { const m = !rsEl.classList.contains('min'); rsEl.classList.toggle('min', m); $('#rsMin').textContent = m ? '▴ 展開' : '▾ 收合'; });   // fold the tray away to see the shelf
   function upShelf(it) {   // called when the player taps a shelf: with a basket in hand it becomes restocking
     if (!G.basket) return false;
     if (it.cat !== G.basket) { toast('手上是「' + catName(G.basket) + '」的籃子,要放到「' + catName(G.basket) + '」那邊'); return true; }
