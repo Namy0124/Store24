@@ -583,7 +583,7 @@ img { -webkit-user-drag: none; user-drag: none; }
         <textarea id="saveCode" rows="3" hidden spellcheck="false" placeholder="存檔碼貼在這裡,再按一次「匯入存檔碼」"></textarea><div class="sub" id="saveMsg"></div></div>
       <div class="controls" id="controls"></div>
       <p class="legal">配件品牌、商品與人物都是虛構的遊戲設定。手機型號使用真實型號。</p>
-      <p class="legal" id="verLine" style="margin-top:2px;opacity:.7">版本 v171 · 2026-10-17</p>
+      <p class="legal" id="verLine" style="margin-top:2px;opacity:.7">版本 v172 · 2026-10-17</p>
     </div>
   </div>
 
@@ -2860,7 +2860,7 @@ function startScene() {
     else { const r = regOf(v); key = r.isNew || !r.v ? 'intro' : choose(['chat', 'last', 'chat', 'complain'].filter((k) => k !== 'complain' || r.f <= 1 || Math.random() < 0.25)); VP.reg = r; node = RG[key](r); }
     VP.sc = type + key; return node;
   }
-  function vipOpen(c) {
+  function vipOpen0(c) {
     const type = vipPickType(), pe = pickOne(PERSONA);
     VP = { c: c, type: type, who: pe[0], face: pe[1], hist: [], called: false, mgr: null, dial: false, lastBest: false, res: null, sc: '', reg: null };
     VP.node = vipScenario(type); if (VP.node.who) VP.who = VP.node.who;
@@ -3250,7 +3250,6 @@ function startScene() {
     let ctx = null, master = null, nb = null; const last = {};
     function get() {
       try {
-        if (stale) { stale = false; if (ctx) { try { ctx.onstatechange = null; ctx.close(); } catch (e) { /* ignore */ } } ctx = null; master = null; nb = null; }
         if (!ctx) { const AC = window.AudioContext || window.webkitAudioContext; if (!AC) return null; ctx = new AC(); master = ctx.createGain(); master.gain.value = 1.7;   // louder than before so it is not buried under the music
           const comp = ctx.createDynamicsCompressor(); comp.threshold.value = -14; comp.ratio.value = 6; master.connect(comp); comp.connect(ctx.destination);
           ctx.onstatechange = () => { if (ctx.state !== 'running' && ctx.resume) ctx.resume().catch(() => {}); }; }
@@ -3317,7 +3316,7 @@ function startScene() {
       }
     }
     return {
-      unlock: wake, voice: voice, rebuild: rebuild, stale: () => { stale = true; },
+      unlock: wake, voice: voice, rebuild: rebuild, stale: () => { stale = true; }, tap: () => { if (stale) { stale = false; return rebuild(); } return wake(); },
       step(v) { if (!gate('step' + (v > 0.6 ? 'p' : 'c'), 90)) return; noise({ type: 'lowpass', f: 420, f2: 140, d: 0.07, v: 0.32 * v, a: 0.003 }); tone({ f: 85, f2: 55, d: 0.07, v: 0.14 * v }); },
       drawer() {
         /* cash drawer: latch release, a soft rolling slide, and a low wooden stop; deliberately no bell and nothing high-pitched */
@@ -3411,10 +3410,10 @@ function startScene() {
     };
   })();
   /* leaving the page / switching to another pane or app can leave the audio output dead even though it still says 'running': mark it stale and build a fresh one on the next sound or tap */
-  const sfxTap = () => SFX.unlock();
+  const sfxTap = () => SFX.tap();   // a tap is the only moment a browser lets us build a new audio output, so the rebuild happens here
   window.addEventListener('pointerdown', sfxTap, { passive: true }); window.addEventListener('touchend', sfxTap, { passive: true });
   document.addEventListener('visibilitychange', () => { if (document.hidden) SFX.stale(); else SFX.unlock(); });
-  ['pagehide', 'blur', 'freeze'].forEach((ev) => window.addEventListener(ev, () => SFX.stale()));
+  ['pagehide', 'freeze'].forEach((ev) => window.addEventListener(ev, () => SFX.stale()));
   ['pageshow', 'focus', 'resume'].forEach((ev) => window.addEventListener(ev, () => SFX.unlock()));
   let audioCtx = null;
   function beep(f, d) {
@@ -3949,13 +3948,16 @@ function startScene() {
   /* ---------- first-time tips: the first time each system shows up the game pauses, a small card explains it and an arrow points at the part to use ---------- */
   const TIPS = {
     greet: [{ t: '打招呼', b: '客人在逛的時候,按畫面右邊的 👋 圓形按鈕打招呼,他可能會走過來問你要找什麼。', sel: '#btnGreet', through: true }],
-    checkout: [
-      { t: '結帳收銀 1/2:掃描', b: '客人的商品會列在左邊。點每一項旁邊的「掃描」(或點桌上的商品),全部掃完按右邊的「結帳」。', sel: '.pos-list' },
-      { t: '結帳收銀 2/2:收款、找零、發票', b: '接著四步:看客人給多少、輸入實收金額、依「應找」湊零錢、詢問發票。上方的步驟列會跟著走。', sel: '.steps' }
-    ],
+    checkout: [{ t: '結帳收銀', b: '', sel: null, dyn: () => {
+      const co = G.co; if (!co) return { b: '跟著黃框操作就好。', sel: null };
+      if (co.step === 'scan') { const all = co.lines.length > 0 && co.lines.every((l) => l.scanned); return all ? { t: '結帳 1/4:掃描完成', b: '全部掃完了,按「結帳」進入收款。', sel: '[data-co="toPay"]' } : { t: '結帳 1/4:掃描', b: '點每一項旁邊的「掃描」(或點桌上的商品),逐項掃過。', sel: '[data-co="scanItem"]' }; }
+      if (co.step === 'pay') return co.keyed ? { t: '結帳 2/4:收款', b: '金額對了就按「確認實收」。', sel: '[data-co="recv"]' } : { t: '結帳 2/4:收款', b: '看客人遞出多少現金,用數字鍵輸入「實收金額」。', sel: '.keypad' };
+      if (co.step === 'change') return DEN.some((d) => co.chg[d]) ? { t: '結帳 3/4:找零', b: '取出的金額等於「應找」就按「確認找零」。', sel: '[data-co="give"]' } : { t: '結帳 3/4:找零', b: '看 POS 的「應找」,點抽屜裡的鈔票硬幣湊出一樣的金額。', sel: '.dn-grid' };
+      return { t: '結帳 4/4:發票', b: '詢問客人要不要統編或載具,照右邊的按鈕完成。', sel: '.pos-right' };
+    } }],
     erp: [
-      { t: '庫存與叫貨', b: '這是 POS 的庫存系統:看庫存、到「叫貨」分頁選商品與數量。叫的貨會在之後的下午由貨運人員送到店裡。', sel: '#invTabs' },
-      { t: '到貨單與公司公告', b: '貨點完之後,到「到貨」分頁核對數量,按「點收入庫」才算進庫存。「公司公告」會整理公司大群的消息。', sel: '#invTabs' }
+      { t: '庫存與叫貨', b: '這是 POS 的庫存系統:看庫存、到「叫貨」分頁選商品與數量。叫的貨會在之後的下午由貨運人員送到店裡。', sel: '[data-itab="order"]' },
+      { t: '到貨單與公司公告', b: '貨點完之後,到「到貨」分頁核對數量,按「點收入庫」才算進庫存。「公司公告」會整理公司大群的消息。', sel: '[data-itab="slip"]' }
     ],
     dlv: [
       { t: '貨到了:點貨', b: '貨運人員把箱子放在店裡。走到箱子旁邊點「點貨」,對照貨單清點。可以中途離開去服務客人,進度不會重算。', sel: null },
@@ -3968,7 +3970,7 @@ function startScene() {
       { t: '上架補貨', b: '把下方的商品往上拖到貨架(花車)。先親手放幾件,剩下的可以按「補完」一次放好。', sel: '#rsBody' }
     ],
     vip: [
-      { t: '特殊客人', b: '有些客人會殺價、退貨或問問題。看他說什麼,從選項挑回應;回應得好可以有好評和獎勵,不好會有客訴。', sel: null }
+      { t: '特殊客人', b: '有些客人會殺價、退貨或問問題。看他說什麼,從選項挑回應;回應得好可以有好評和獎勵,不好會有客訴。', sel: '#vipBody' }
     ],
     phone: [
       { t: '手機:訊息與圖鑑', b: '手機有訊息、圖鑑和小遊戲。空檔去休息室玩(賣場有監視器),疊到 8 層以上心情會變好,客人比較有耐心、好評多一點。', sel: '#phone' }
@@ -3977,7 +3979,7 @@ function startScene() {
   let TP = null;
   const tipEl = $('#tipLayer'), tipCard = $('#tipCard'), tipRing = $('#tipRing'), tipArrow = $('#tipArrow');
   function tipRender() {
-    const L = TIPS[TP.key], st = L[TP.i]; $('#tipN').textContent = '教學提示' + (L.length > 1 ? ' ' + (TP.i + 1) + '/' + L.length : '');
+    const L = TIPS[TP.key], st0 = L[TP.i], st = st0.dyn ? Object.assign({}, st0, st0.dyn()) : st0; $('#tipN').textContent = '教學提示' + (L.length > 1 ? ' ' + (TP.i + 1) + '/' + L.length : '');
     $('#tipT').textContent = st.t; $('#tipB').textContent = st.b; $('#tipNext').textContent = TP.i < L.length - 1 ? '下一步' : '知道了';
     tipEl.classList.add('through'); $('#tipNext').hidden = false; $('#tipOff').hidden = TP.key === 'greet';   // never blocks: the player keeps playing while the tip is up
     tipRing.style.display = 'none'; tipArrow.style.display = 'none'; tipCard.classList.remove('top');
@@ -4005,7 +4007,8 @@ function startScene() {
   function openUp(m) { openUp0(m); if (state.modal === 'up') tipShow('unpack'); }
   function openRestock(c) { const r = openRestock0(c); if (r) tipShow('restock'); return r; }
   function openPhone() { openPhone0(); if (PH.open) tipShow('phone'); }
-  function spawnVip() { spawnVip0(); tipShow('vip'); }
+  function spawnVip() { spawnVip0(); }
+  function vipOpen(c) { vipOpen0(c); if (state.modal === 'vip') tipShow('vip'); }
   function dlvStart() { dlvStart0(); tipShow('dlv'); }
   const tutEl = $('#tutSheet');
   function tutShow() { if (TP) return; TP = { key: 'greet', i: 0, run: 0 }; G.tutPause = true; tipEl.hidden = false; tipRender(); }   // points at the real 👋 button and waits for the tap
@@ -5185,9 +5188,10 @@ function startScene() {
     if (tapT > 0) { tapT -= dt; tapRing.material.opacity = Math.max(0, tapT / 0.7); if (tapT <= 0) tapRing.visible = false; }
     updateCamera(dt, false);
   }
-  let wakeAt = 0;
+  let wakeAt = 0, tipAt = 0;
   function tick(now) {
     requestAnimationFrame(tick);
+    if (TP && now - tipAt > 250) { tipAt = now; try { tipRender(); } catch (e) { /* ignore */ } }   // keep the box and arrow on whatever the player should press next
     if (now - wakeAt > 4000) { wakeAt = now; try { SFX.unlock(); } catch (e) { /* ignore */ } }   // keep WebAudio awake while music plays
     if (last && now - last > 1500) { try { SFX.stale(); } catch (e) { /* ignore */ } }   // the page was frozen for a while (other pane/app in front)
     const dt = Math.min(0.05, (now - last) / 1000); last = now;
