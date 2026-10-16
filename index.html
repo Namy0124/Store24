@@ -522,6 +522,9 @@ img { -webkit-user-drag: none; user-drag: none; }
   #tutSheet .sheet-body p { margin: 0 0 6px; } #tutSheet .btn { min-height: 34px; padding: 5px 14px; font-size: 13px; }
 }
 #tipLayer { position: fixed; inset: 0; z-index: 70; pointer-events: auto; background: rgba(10, 30, 35, .12); }
+#awayCover { position: fixed; inset: 0; z-index: 120; display: flex; align-items: center; justify-content: center; background: rgba(10, 30, 35, .78); } #awayCover[hidden] { display: none; }
+.away-box { background: #fff; color: #17323A; border-radius: 18px; padding: 20px 22px; text-align: center; max-width: min(340px, 86vw); box-shadow: 0 10px 40px rgba(0,0,0,.5); } .away-t { font-size: 20px; font-weight: 800; } .away-s { font-size: 14px; margin: 6px 0 14px; color: #44585E; }
+#awayCover .btn.primary { background: #0B7A85; color: #fff; border-color: #0B7A85; min-height: 48px; padding: 10px 22px; font-size: 16px; }
 #tipLayer.through { pointer-events: none; background: none; } #tipLayer.through #tipCard { pointer-events: auto; }
 #tipRing { position: fixed; border: 3px solid #ffb703; border-radius: 12px; box-shadow: 0 0 0 4px rgba(255, 183, 3, .35); pointer-events: none; animation: tipPulse 1s ease-in-out infinite; display: none; }
 #tipArrow { position: fixed; font-size: 30px; line-height: 1; color: #ffb703; text-shadow: 0 2px 4px rgba(0, 0, 0, .5); pointer-events: none; display: none; animation: tipBob .7s ease-in-out infinite alternate; }
@@ -588,7 +591,7 @@ img { -webkit-user-drag: none; user-drag: none; }
         <textarea id="saveCode" rows="3" hidden spellcheck="false" placeholder="存檔碼貼在這裡,再按一次「匯入存檔碼」"></textarea><div class="sub" id="saveMsg"></div></div>
       <div class="controls" id="controls"></div>
       <p class="legal">配件品牌、商品與人物都是虛構的遊戲設定。手機型號使用真實型號。</p>
-      <p class="legal" id="verLine" style="margin-top:2px;opacity:.7">版本 v179 · 2026-10-17</p>
+      <p class="legal" id="verLine" style="margin-top:2px;opacity:.7">版本 v180 · 2026-10-17</p>
     </div>
   </div>
 
@@ -700,6 +703,7 @@ img { -webkit-user-drag: none; user-drag: none; }
     <div class="ph-warn" id="phWarn" hidden></div>
     <button type="button" class="btn small ph-close" id="phClose" aria-label="收起手機" title="收起手機">✕</button>
   </div>
+  <div id="awayCover" hidden role="dialog" aria-modal="true"><div class="away-box"><div class="away-t">⏸ 遊戲暫停</div><div class="away-s">你離開過畫面,遊戲先停住了。</div><button class="btn primary" id="awayGo" type="button">點這裡繼續(恢復音效)</button></div></div>
   <div id="tipLayer" hidden><div id="tipRing"></div><div id="tipArrow">▼</div><div id="tipCard" role="dialog" aria-modal="true"><div class="tip-n" id="tipN"></div><div class="tip-t" id="tipT"></div><div class="tip-b" id="tipB"></div><div class="tip-btns"><button class="btn small" id="tipOff" type="button">全部關閉</button><button class="btn small primary" id="tipNext" type="button">知道了</button></div></div></div>
   <div id="tutSheet" class="sheet" hidden role="dialog" aria-modal="true" aria-labelledby="tutTitle">
     <div class="sheet-box">
@@ -3444,10 +3448,14 @@ function startScene() {
     };
   })();
   /* leaving the page / switching to another pane or app can leave the audio output dead even though it still says 'running': mark it stale and build a fresh one on the next sound or tap */
+  /* coming back to the page: freeze the game behind a big 'continue' button. A real button press is the one gesture every browser accepts for turning sound back on, and nothing happens to the shop while the player was away */
+  const awayEl = $('#awayCover');
+  function showAway() { if (!state.started || !awayEl.hidden) return; G.away = true; awayEl.hidden = false; SFX.stale(); }
+  $('#awayGo').addEventListener('click', () => { SFX.rebuild(); try { SFX.chime(); } catch (e) { /* ignore */ } awayEl.hidden = true; G.away = false; });
   const sfxTap = () => SFX.tap();   // a tap is the only moment a browser lets us build a new audio output, so the rebuild happens here
   window.addEventListener('pointerdown', sfxTap, { passive: true }); window.addEventListener('touchend', sfxTap, { passive: true });
-  document.addEventListener('visibilitychange', () => { if (document.hidden) SFX.stale(); else { SFX.unlock(); setTimeout(() => { if (!document.hidden && state.started && SFX.need()) toast('🔈 點一下畫面,恢復音效'); }, 400); } });
-  ['pagehide', 'freeze'].forEach((ev) => window.addEventListener(ev, () => SFX.stale()));
+  document.addEventListener('visibilitychange', () => { if (document.hidden) { SFX.stale(); showAway(); } else { SFX.unlock(); setTimeout(() => { if (!document.hidden && state.started && SFX.need()) toast('🔈 點一下畫面,恢復音效'); }, 400); } });
+  ['pagehide', 'freeze'].forEach((ev) => window.addEventListener(ev, () => { SFX.stale(); showAway(); }));
   ['pageshow', 'focus', 'resume'].forEach((ev) => window.addEventListener(ev, () => SFX.unlock()));
   let audioCtx = null;
   function beep(f, d) {
@@ -4068,6 +4076,7 @@ function startScene() {
   }
   function gameUpdate(dt) {
     if (!state.started) return;
+    if (G.away) return;
     if (G.tutPause && !(TP && performance.now() < TP.run)) { updateBubble(); return; }
     if (G.tutorial && !G.tutGreetDone && G.cust && G.cust.flow === 'self' && G.cust.st === 'browse' && !G.cust.toCounter && !state.modal && G.shop && G.shop.door && !TP) { tutShow(); }
     if (!G.started) { G.started = true; newDay(); }
@@ -5242,7 +5251,7 @@ function startScene() {
     requestAnimationFrame(tick);
     if (TP && now - tipAt > 250) { tipAt = now; try { tipRender(); } catch (e) { /* ignore */ } }   // keep the box and arrow on whatever the player should press next
     if (now - wakeAt > 4000) { wakeAt = now; try { SFX.unlock(); } catch (e) { /* ignore */ } }   // keep WebAudio awake while music plays
-    if (last && now - last > 1500) { try { SFX.stale(); } catch (e) { /* ignore */ } }   // the page was frozen for a while (other pane/app in front)
+    if (last && now - last > 2500) { try { SFX.stale(); showAway(); } catch (e) { /* ignore */ } }   // the page was frozen for a while (other pane/app in front)
     const dt = Math.min(0.05, (now - last) / 1000); last = now;
     update(dt, now);
     if (cv.clientWidth && (cv.clientWidth !== W || cv.clientHeight !== H)) resize();
