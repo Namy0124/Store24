@@ -494,6 +494,16 @@ img { -webkit-user-drag: none; user-drag: none; }
   .btn-row .btn { min-height: 28px; padding: 3px 6px; }
 }
 @media (orientation: landscape) and (max-height: 640px) { .pos-left .pos-list { max-height: calc(100vh - 140px); overflow-y: auto; } }
+/* portrait phones: keep the top row on one line and keep the 'holding' bar clear of the action button */
+@media (max-width: 720px) and (orientation: portrait) {
+  .hud-top { gap: 6px; padding-left: max(10px, env(safe-area-inset-left, 0px)); padding-right: max(10px, env(safe-area-inset-right, 0px)); flex-wrap: nowrap; }
+  .hud-top .btn { white-space: nowrap; flex: none; padding: 4px 10px; min-height: 30px; font-size: 12px; }
+  .chip { font-size: 12.5px; padding: 5px 10px; min-width: 0; } #storeChip { max-width: 24%; } .stat { max-width: 100%; flex: 1 1 auto; }
+  .hud-col { top: 52px; }
+  .carry { align-self: flex-start; margin-left: max(12px, env(safe-area-inset-left, 0px)); max-width: calc(100vw - 38vw - 34px); font-size: 12.5px; padding: 5px 6px 5px 12px; gap: 6px; }
+  .carry span { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .hud-bottom .interact { max-width: 38vw; }
+}
 </style>
 
 <div id="app">
@@ -3174,8 +3184,12 @@ function startScene() {
     let ctx = null, master = null, nb = null; const last = {};
     function get() {
       try {
-        if (!ctx) { const AC = window.AudioContext || window.webkitAudioContext; if (!AC) return null; ctx = new AC(); master = ctx.createGain(); master.gain.value = 0.9; master.connect(ctx.destination); }
-        if (ctx.state === 'suspended' && ctx.resume) ctx.resume();
+        if (!ctx) { const AC = window.AudioContext || window.webkitAudioContext; if (!AC) return null; ctx = new AC(); master = ctx.createGain(); master.gain.value = 1.7;   // louder than before so it is not buried under the music
+          const comp = ctx.createDynamicsCompressor(); comp.threshold.value = -14; comp.ratio.value = 6; master.connect(comp); comp.connect(ctx.destination);
+          ctx.onstatechange = () => { if (ctx.state !== 'running' && ctx.resume) ctx.resume().catch(() => {}); }; }
+        /* iPhones put WebAudio to sleep ('interrupted') when music starts in an <audio>/iframe, and mute it with the silent switch: ask for the playback session and wake it up */
+        try { if (navigator.audioSession && navigator.audioSession.type !== 'playback') navigator.audioSession.type = 'playback'; } catch (e) { /* ignore */ }
+        if (ctx.state !== 'running' && ctx.resume) { const pr = ctx.resume(); if (pr && pr.catch) pr.catch(() => {}); }
         return ctx;
       } catch (e) { return null; }
     }
@@ -3316,11 +3330,11 @@ function startScene() {
       scribble(dur) { for (let k = 0; k < Math.floor(dur / 0.07); k++) noise({ f: 2500 + Math.random() * 2000, q: 1.5, d: 0.05, v: 0.08, at: k * 0.07 }); }
     };
   })();
-  window.addEventListener('pointerdown', () => SFX.unlock(), { passive: true });
+  window.addEventListener('pointerdown', () => SFX.unlock(), { passive: true }); window.addEventListener('touchend', () => SFX.unlock(), { passive: true }); document.addEventListener('visibilitychange', () => { if (!document.hidden) SFX.unlock(); });
   let audioCtx = null;
   function beep(f, d) {
     try {
-      audioCtx = audioCtx || new (window.AudioContext || window.webkitAudioContext)();
+      audioCtx = audioCtx || new (window.AudioContext || window.webkitAudioContext)(); if (audioCtx.state !== 'running' && audioCtx.resume) audioCtx.resume();
       const o = audioCtx.createOscillator(), gn = audioCtx.createGain(); o.type = 'square'; o.frequency.value = f; gn.gain.value = 0.03;
       o.connect(gn); gn.connect(audioCtx.destination); o.start(); o.stop(audioCtx.currentTime + d);
     } catch (e) { /* no audio */ }
@@ -4759,7 +4773,7 @@ function startScene() {
     { l: [['琪琪', '今天有人問我們有沒有 3.5mm 耳機孔轉接頭'], ['阿凱', '有啊,放在最角落,賣超慢'], ['小美', '公司進的是五十個一箱'], ['阿豪', '那可能夠我們賣三年']] },
     { l: [['阿凱', '有一款手機支架,整個月只賣出兩個'], ['小美', '顏色還是客人最不喜歡的那種'], ['琪琪', '總部覺得好賣才進的,但我們這邊就是不行'], ['阿豪', '下次可以反映一下,別再進那款顏色']], r: ['我來反映', '應該先問過各店'], f: ['阿凱', '好,辛苦了,希望有用'] },
     { l: [['小美', '每次總部進貨都不先問我們店需要什麼'], ['阿豪', '好賣的永遠缺貨,賣不掉的塞滿'], ['阿凱', '補貨單上寫的數量,有時候根本不是我們要的'], ['琪琪', '我們也只能照單收']] },
-    { l: [['琪琪', '那個十塊錢的手機貼紙,客人沒人要,還要我們每天擦灰塵'], ['阿豪', '放角落又怕被偷'], ['小美', '乾脆送給客人好了'], ['阿凱', '你敢送,副理就敢罵你']] },
+    { l: [['琪琪', '儲藏室的燈好像快壞了,一閃一閃的'], ['阿豪', '我上次就反應過了,說會排人來修'], ['小美', '那個「會排」已經兩個月了'], ['阿凱', '我自己帶手電筒好了']] },
     { l: [['阿凱', '花車下面的庫存塞太滿了,補貨每次都要蹲下去翻'], ['小美', '我昨天找一條線找了快五分鐘'], ['琪琪', '應該要有人把箱子整理一下'], ['阿豪', '我下班前順手整理好了,大家別再亂塞']], r: ['謝謝整理', '我也會幫忙整理'], f: ['阿豪', '有你們配合就沒問題'] },
     { l: [['小美', '櫃台那張椅子的椅墊好硬,坐久了屁股會痛'], ['阿凱', '我帶了自己的坐墊'], ['琪琪', '好想要有人換一張新椅子'], ['阿豪', '反應過了,說「會評估」']] },
     { l: [['琪琪', '這個月業績目標又調高了'], ['阿凱', '客人就那麼多,是要我去街上拉客嗎'], ['小美', '目標是總部訂的,店裡也沒辦法'], ['阿豪', '達不到又要寫檢討,煩死']], r: ['我也很有壓力', '盡力就好'], f: ['琪琪', '嗯,盡力就好,不要太逼自己'] },
@@ -5004,8 +5018,10 @@ function startScene() {
     if (tapT > 0) { tapT -= dt; tapRing.material.opacity = Math.max(0, tapT / 0.7); if (tapT <= 0) tapRing.visible = false; }
     updateCamera(dt, false);
   }
+  let wakeAt = 0;
   function tick(now) {
     requestAnimationFrame(tick);
+    if (now - wakeAt > 4000) { wakeAt = now; try { SFX.unlock(); } catch (e) { /* ignore */ } }   // keep WebAudio awake while music plays
     const dt = Math.min(0.05, (now - last) / 1000); last = now;
     update(dt, now);
     if (cv.clientWidth && (cv.clientWidth !== W || cv.clientHeight !== H)) resize();
@@ -5052,7 +5068,7 @@ function parseMusicLink(raw) {
   function audStop() { if (aud) { try { aud.pause(); aud.onended = aud.onerror = null; aud.src = ''; } catch (e) { /* ignore */ } aud = null; } }
   function playAudio(i, url) {
     audStop(); frame = null; cur = i; box.innerHTML = '<div class="m-note">🎧 試聽音檔播放中(Apple 試聽約 30 秒,播完自動換下一首)</div>';
-    aud = new Audio(url); aud.volume = 0.8;
+    aud = new Audio(url); aud.volume = 0.45;   // iPhones ignore this (system volume only)
     aud.onended = () => random(true);
     aud.onerror = () => { toast('這首的音檔放不出來,換下一首'); setTimeout(() => random(true), 600); };
     const pr = aud.play(); if (pr && pr.catch) pr.catch(() => { toast('瀏覽器擋住自動播放,請再按一次「播放」'); });
@@ -5074,6 +5090,7 @@ function parseMusicLink(raw) {
     frame.addEventListener('load', () => {
       if (p.kind !== 'yt') return;
       try { frame.contentWindow.postMessage(JSON.stringify({ event: 'listening', id: 1, channel: 'widget' }), '*'); } catch (e) { /* ignore */ }
+      yt('setVolume', [45]); setTimeout(() => yt('setVolume', [45]), 1500);
       if (p.list) { yt('setLoop', [true]); yt('setShuffle', [true]); }
     });
     box.appendChild(frame); render();
