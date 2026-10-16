@@ -494,12 +494,14 @@ img { -webkit-user-drag: none; user-drag: none; }
   .btn-row .btn { min-height: 28px; padding: 3px 6px; }
 }
 @media (orientation: landscape) and (max-height: 640px) { .pos-left .pos-list { max-height: calc(100vh - 140px); overflow-y: auto; } }
-/* portrait phones: keep the top row on one line and keep the 'holding' bar clear of the action button */
+/* portrait phones: the status chip may wrap (it is long), the owner buttons sit on the first row, nothing gets pushed off-screen */
 @media (max-width: 720px) and (orientation: portrait) {
-  .hud-top { gap: 6px; padding-left: max(10px, env(safe-area-inset-left, 0px)); padding-right: max(10px, env(safe-area-inset-right, 0px)); flex-wrap: nowrap; }
-  .hud-top .btn { white-space: nowrap; flex: none; padding: 4px 10px; min-height: 30px; font-size: 12px; }
-  .chip { font-size: 12.5px; padding: 5px 10px; min-width: 0; } #storeChip { max-width: 24%; } .stat { max-width: 100%; flex: 1 1 auto; }
-  .hud-col { top: 52px; }
+  .hud-top { gap: 6px; padding-left: max(10px, env(safe-area-inset-left, 0px)); padding-right: max(10px, env(safe-area-inset-right, 0px)); flex-wrap: wrap; align-items: stretch; }
+  .hud-top .btn { white-space: nowrap; flex: none; padding: 4px 10px; min-height: 30px; font-size: 12px; align-self: center; }
+  .chip { font-size: 12.5px; padding: 5px 11px; min-width: 0; line-height: 1.3; }
+  #storeChip { flex: 1 1 auto; max-width: none; align-self: center; }
+  #stat { flex: 1 1 100%; max-width: 100%; order: 5; white-space: normal; border-radius: 16px; text-align: center; font-size: 12.5px; }
+  .hud-col { top: 100px; }
   .carry { align-self: flex-start; margin-left: max(12px, env(safe-area-inset-left, 0px)); max-width: calc(100vw - 38vw - 34px); font-size: 12.5px; padding: 5px 6px 5px 12px; gap: 6px; }
   .carry span { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .hud-bottom .interact { max-width: 38vw; }
