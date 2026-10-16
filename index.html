@@ -135,7 +135,7 @@ button { cursor: pointer; }
 .signm svg { display: block; overflow: visible; }
 .sb-board { background: #8A6A3A; border-radius: 18px 18px 0 0; padding: 22px 12px 0; position: relative; transform: perspective(900px) rotateX(8deg); transform-origin: 50% 100%; box-shadow: 0 -6px 30px rgba(0, 0, 0, .4); }
 .sb-clip { position: absolute; top: 4px; left: 50%; width: 70px; height: 22px; margin-left: -35px; background: #B0B7BA; border-radius: 6px; }
-.sb-paper { background: #FFFEF8; color: #26323A; border-radius: 6px 6px 0 0; padding: 10px 10px 12px; display: flex; flex-direction: column; gap: 6px; }
+.sb-paper { position: relative; background: #FFFEF8; color: #26323A; border-radius: 6px 6px 0 0; padding: 10px 10px 12px; display: flex; flex-direction: column; gap: 6px; }
 .sb-title { font-weight: 700; font-size: 18px; text-align: center; } .sb-sub { font-size: 12px; color: #6B7A80; text-align: center; }
 .sb-scroll { max-height: min(300px, 40vh); overflow-y: auto; border: 1px solid #9AA5A8; border-radius: 4px; }
 .sb-tbl { width: 100%; border-collapse: collapse; font-size: 13px; }
@@ -510,7 +510,7 @@ img { -webkit-user-drag: none; user-drag: none; }
   .carry span { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .hud-bottom .interact { max-width: 38vw; }
 }
-#sbClose { right: 6px; top: -8px; width: 36px; height: 36px; z-index: 5; }
+#sbClose { right: 6px; top: 6px; width: 32px; height: 32px; z-index: 5; font-size: 15px; }
 /* landscape phones: the tutorial / small pop-up windows become a compact card on the left so the shop stays visible */
 @media (orientation: landscape) and (max-height: 520px) {
   #tutSheet { background: transparent; align-items: flex-end; justify-content: flex-start; padding: 0 0 8px max(10px, env(safe-area-inset-left, 0px)); }
@@ -582,7 +582,7 @@ img { -webkit-user-drag: none; user-drag: none; }
         <textarea id="saveCode" rows="3" hidden spellcheck="false" placeholder="存檔碼貼在這裡,再按一次「匯入存檔碼」"></textarea><div class="sub" id="saveMsg"></div></div>
       <div class="controls" id="controls"></div>
       <p class="legal">配件品牌、商品與人物都是虛構的遊戲設定。手機型號使用真實型號。</p>
-      <p class="legal" id="verLine" style="margin-top:2px;opacity:.7">版本 v163 · 2026-10-17</p>
+      <p class="legal" id="verLine" style="margin-top:2px;opacity:.7">版本 v164 · 2026-10-17</p>
     </div>
   </div>
 
@@ -660,6 +660,7 @@ img { -webkit-user-drag: none; user-drag: none; }
   <div id="sheetBook" class="phone sbook" hidden aria-label="每日店務表">
     <div class="sb-board"><div class="sb-clip"></div>
       <div class="sb-paper">
+        <button type="button" class="btn small ph-close" id="sbClose" aria-label="放下店務表" title="放下店務表">✕</button>
         <div class="sb-title" id="sbTitle">每日店務表</div>
         <div class="sb-sub" id="sbSub"></div>
         <div class="sb-scroll" id="sbScroll"><table class="sb-tbl"><thead><tr><th>日期</th><th>店員簽名</th><th>今日打掃範圍</th></tr></thead><tbody id="sbRows"></tbody></table></div>
@@ -668,7 +669,6 @@ img { -webkit-user-drag: none; user-drag: none; }
       </div>
       <div class="ph-hand l"></div><div class="ph-hand r"></div>
     </div>
-    <button type="button" class="btn small ph-close" id="sbClose" aria-label="放下店務表" title="放下店務表">✕</button>
   </div>
   <div id="sigPad" hidden role="dialog" aria-modal="true" aria-label="手寫簽名">
     <div class="sp-box">
