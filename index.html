@@ -623,7 +623,7 @@ img { -webkit-user-drag: none; user-drag: none; }
         <textarea id="saveCode" rows="3" hidden spellcheck="false" placeholder="存檔碼貼在這裡,再按一次「匯入存檔碼」"></textarea><div class="sub" id="saveMsg"></div></div>
       <div class="controls" id="controls"></div>
       <p class="legal">配件品牌、商品與人物都是虛構的遊戲設定。手機型號使用真實型號。</p>
-      <p class="legal" id="verLine" style="margin-top:2px;opacity:.7">版本 v207 · 2026-10-17</p>
+      <p class="legal" id="verLine" style="margin-top:2px;opacity:.7">版本 v208 · 2026-10-17</p>
     </div>
   </div>
 
@@ -2422,6 +2422,7 @@ function startScene() {
   }
   function spawnCustomer() {
     if (!db.products.length) { G.nextAt = G.gt + 8; return; }
+    if ((G.tutorial || G.vipDue) && primaryCount() > 0) { G.nextAt = G.gt + 5; return; }   // never replace someone who is still being served
     G.nextAt = Math.max(G.nextAt, G.gt - 30) + Math.max(6, expo(gapAvg()));
     { const nth = G.nSp = (G.nSp || 0) + 1; if (G.vipPlan && G.vipPlan.length && nth >= G.vipPlan[0] && primaryCount() === 0) { G.vipPlan.shift(); spawnVip(); return; } }
     const pr = buildPerson(); pr.g.position.set(0, 0, 5.9); pr.g.rotation.y = Math.PI; scene.add(pr.g); SFX.chime();
@@ -2430,7 +2431,7 @@ function startScene() {
     const c = { g: pr.g, parts: pr.parts, flow: kind === 'self' ? 'self' : 'ask', look: kind === 'look', callout: kind === 'look' && Math.random() < 0.5, st: 'walkIn', path: [], then: null, walkT: 0, say: '', items: [], stops: [], t: 0, readyAt: 0, yaw: Math.PI, nag: false, askIdx: 0, got: [], upfront: false, ignored: false };
     const bk = pickBasket(c.flow); c.items = bk.items; c.upfront = bk.upfront;
     if (c.flow === 'self') fixSelfStock(c);
-    if (primaryCount() > 0 && !G.tutorial) { c.pend = true; G.pend.push(c); } else { G.cust = c; G.co = null; }
+    if (primaryCount() > 0) { c.pend = true; G.pend.push(c); } else { G.cust = c; G.co = null; }
     if (c.flow === 'self' || c.look) {
       c.stops = c.items.map((i) => i.p.cat).filter((v, i, a) => a.indexOf(v) === i);
       if (c.look && Math.random() < 0.3) { const extra = pickOne(CATS).id; if (c.stops.indexOf(extra) < 0) c.stops.unshift(extra); }
@@ -3081,7 +3082,7 @@ function startScene() {
       CART_ORDER.forEach((c) => { if (!CARTS[c].placed) cartDrop(CARTS[c]); });
       shopAct(byId.door); return;
     }
-    if (k === 'cust') { if (!s.door) { toast('先開店(可按「一鍵開好店」)'); return; } if (primaryCount() >= 3) { toast('店裡客人已經夠多了'); return; } G.nextAt = 0; spawnCustomer(); return; }
+    if (k === 'cust') { if (!s.door) { toast('先開店(可按「一鍵開好店」)'); return; } if (primaryCount() >= (G.tutorial ? 1 : 3)) { toast('店裡客人已經夠多了'); return; } G.nextAt = 0; spawnCustomer(); return; }
     if (k === 'wait') {
       const c = G.cust; if (!c || !(c.st === 'asking' || c.st === 'ready')) { toast('櫃檯沒有等著的客人'); return; }
       c.readyAt -= 120; toast('客人已等了約 ' + Math.round(G.gt - c.readyAt) + ' 秒'); return;
