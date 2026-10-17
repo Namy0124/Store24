@@ -623,7 +623,7 @@ img { -webkit-user-drag: none; user-drag: none; }
         <textarea id="saveCode" rows="3" hidden spellcheck="false" placeholder="存檔碼貼在這裡,再按一次「匯入存檔碼」"></textarea><div class="sub" id="saveMsg"></div></div>
       <div class="controls" id="controls"></div>
       <p class="legal">配件品牌、商品與人物都是虛構的遊戲設定。手機型號使用真實型號。</p>
-      <p class="legal" id="verLine" style="margin-top:2px;opacity:.7">版本 v208 · 2026-10-17</p>
+      <p class="legal" id="verLine" style="margin-top:2px;opacity:.7">版本 v209 · 2026-10-17</p>
     </div>
   </div>
 
@@ -2927,7 +2927,7 @@ function startScene() {
   let VP = null;
   const vpEl = $('#vipSheet'), vpBody = $('#vipBody');
   function vipPickType() {
-    const v = V(), w = { haggle: 3, ret: 3, ask: 3, reg: v.regs.length ? 3 : 2 };
+    const v = V(), w = { haggle: 7, ret: 3, ask: 3, reg: v.regs.length ? 3 : 2 };
     if (v.again.some((a) => a.due <= G.dayNo)) w.haggle += 5;
     if (v.recent[0] && w[v.recent[0].t] > 1) w[v.recent[0].t] = 0.4;
     let sum = 0; Object.keys(w).forEach((k) => { sum += w[k]; });
