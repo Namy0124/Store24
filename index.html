@@ -610,7 +610,7 @@ img { -webkit-user-drag: none; user-drag: none; }
         <textarea id="saveCode" rows="3" hidden spellcheck="false" placeholder="存檔碼貼在這裡,再按一次「匯入存檔碼」"></textarea><div class="sub" id="saveMsg"></div></div>
       <div class="controls" id="controls"></div>
       <p class="legal">配件品牌、商品與人物都是虛構的遊戲設定。手機型號使用真實型號。</p>
-      <p class="legal" id="verLine" style="margin-top:2px;opacity:.7">版本 v193 · 2026-10-17</p>
+      <p class="legal" id="verLine" style="margin-top:2px;opacity:.7">版本 v194 · 2026-10-17</p>
     </div>
   </div>
 
@@ -2487,10 +2487,10 @@ function startScene() {
   function greet(i) {
     if (!state.started || state.modal || G.gt < greetCd) return;
     greetCd = G.gt + 3; playerSay = { g: player, say: GREET[i] || GREET[0], until: G.gt + 2.5 };
-    const c = G.cust;
+    const c = [G.cust].concat(G.pend).filter((x) => x && !x.greeted && !x.toCounter && (x.flow === 'self' || x.look) && (x.st === 'browse' || x.st === 'walkIn')).sort((a, b) => Math.hypot(a.g.position.x - player.position.x, a.g.position.z - player.position.z) - Math.hypot(b.g.position.x - player.position.x, b.g.position.z - player.position.z))[0];
     if (!c || c.greeted || c.toCounter || !(c.flow === 'self' || c.look) || !(c.st === 'browse' || c.st === 'walkIn')) return;
     const p = player.position, q = c.g.position, d = Math.hypot(p.x - q.x, p.z - q.z);
-    if (d > 9) return;
+    if (d > 4.5) return;
     c.greeted = true;
     if (G.tutorial && !G.tutGreeted) { G.tutGreeted = true; toast('打招呼了。附近逛的客人有機會過來問你'); } else if (Math.random() < 0) return;
     if (Math.random() >= (G.tutorial ? 0.9 : c.st === 'browse' ? 0.4 : 0.3)) return;
