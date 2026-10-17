@@ -332,6 +332,19 @@ button, .btn, [data-co] { touch-action: manipulation; -webkit-tap-highlight-colo
 .sheet.dock #coBody { padding-top: 10px; }
 .pos-right > .btn-row:last-child, .pos-left > .btn-row:last-child { position: sticky; bottom: 0; z-index: 2; background: var(--panel-soft); padding: 8px 0 2px; margin-top: 0; box-shadow: 0 -8px 8px -6px rgba(0,0,0,.08); }
 @media (min-width: 721px) and (min-height: 640px) { .sheet.dock .sheet-box { max-height: 66%; } }
+/* desktop / tablet: the money steps fit without scrolling (item rows fold away, keys and spacing tighten, the window may reach a bit higher) */
+@media (min-width: 721px) and (min-height: 560px) {
+  .sheet.dock .sheet-box { max-height: 76%; }
+  .pos.st-pay .pos-head, .pos.st-change .pos-head { display: none; }
+  .pos.st-pay .pos-line, .pos.st-change .pos-line, .pos.st-invoice .pos-line, .pos.st-pay .pos-th, .pos.st-change .pos-th, .pos.st-invoice .pos-th { display: none; }
+  .pos.st-pay .steps, .pos.st-change .steps, .pos.st-invoice .steps { margin-bottom: 6px; }
+  .pos.st-pay .keypad .btn { min-height: 40px; font-size: 18px; }
+  .pos.st-pay .kp-disp { font-size: 24px; min-height: 42px; padding: 4px 12px; }
+  .pos.st-pay .pos-right, .pos.st-change .pos-right { gap: 6px; padding: 10px; }
+  .pos.st-pay .pos-right .co-l[style] { margin-top: 4px !important; }
+  .pos.st-change .dn { min-height: 44px; }
+  .pos.st-change .dn-took { min-height: 28px; margin: 6px 0 2px; }
+}
 @media (max-height: 820px) { .keypad .btn { min-height: 44px; font-size: 18px; } .kp-disp { font-size: 24px; min-height: 44px; padding: 5px 12px; } .pos-line { padding: 7px 12px; } .pos-head { margin-bottom: 8px; } .pos-right, .pos-left { gap: 8px; } }
 .pos-main { display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr); gap: 14px; align-items: start; }
 @media (max-width: 720px) { .pos-main { grid-template-columns: 1fr; } }
@@ -610,7 +623,7 @@ img { -webkit-user-drag: none; user-drag: none; }
         <textarea id="saveCode" rows="3" hidden spellcheck="false" placeholder="存檔碼貼在這裡,再按一次「匯入存檔碼」"></textarea><div class="sub" id="saveMsg"></div></div>
       <div class="controls" id="controls"></div>
       <p class="legal">配件品牌、商品與人物都是虛構的遊戲設定。手機型號使用真實型號。</p>
-      <p class="legal" id="verLine" style="margin-top:2px;opacity:.7">版本 v199 · 2026-10-17</p>
+      <p class="legal" id="verLine" style="margin-top:2px;opacity:.7">版本 v201 · 2026-10-17</p>
     </div>
   </div>
 
