@@ -159,6 +159,10 @@ button, .btn, [data-co] { touch-action: manipulation; -webkit-tap-highlight-colo
 .pm .pf { display: flex; justify-content: space-between; font-size: 11.5px; color: #6B7A80; } .pm .pf b { color: #0B7A82; }
 .pm.co { border-left: 4px solid #F2B200; } .pm.sys { background: #FDECEA; }
 .pm { color: #1B2A30; } .pm .btn, .pm-head .btn { background: #EDF3F2; color: #1B2A30; border-color: #9AA5A8; }
+.so-poll { display: flex; flex-direction: column; gap: 5px; margin-top: 8px; }
+.so-opt { position: relative; display: flex; justify-content: space-between; align-items: center; gap: 8px; border: 1px solid #9AA5A8; background: #EDF3F2; color: #1B2A30; border-radius: 10px; padding: 7px 10px; font-size: 13px; overflow: hidden; text-align: left; }
+.so-opt i { position: absolute; left: 0; top: 0; bottom: 0; background: #BFE3DD; z-index: 0; transition: width .4s; } .so-opt span, .so-opt em { position: relative; z-index: 1; font-style: normal; } .so-opt.on { border-color: #0B7A82; font-weight: 700; }
+.so-cm { margin-top: 6px; padding: 6px 8px; background: #F2F5F6; border-radius: 8px; font-size: 12px; color: #33444A; } .so-cm b { color: #0B7A82; }
 .pm .rp { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 6px; } .pm .you { margin-top: 4px; text-align: right; color: #0B7A82; }
 .pc-btns { display: flex; gap: 10px; }
 .savebox { display: flex; flex-direction: column; gap: 8px; background: var(--panel-soft); border-radius: 14px; padding: 10px 12px; }
@@ -623,7 +627,7 @@ img { -webkit-user-drag: none; user-drag: none; }
         <textarea id="saveCode" rows="3" hidden spellcheck="false" placeholder="存檔碼貼在這裡,再按一次「匯入存檔碼」"></textarea><div class="sub" id="saveMsg"></div></div>
       <div class="controls" id="controls"></div>
       <p class="legal">配件品牌、商品與人物都是虛構的遊戲設定。手機型號使用真實型號。</p>
-      <p class="legal" id="verLine" style="margin-top:2px;opacity:.7">版本 v210 · 2026-10-17</p>
+      <p class="legal" id="verLine" style="margin-top:2px;opacity:.7">版本 v212 · 2026-10-17</p>
     </div>
   </div>
 
@@ -726,7 +730,7 @@ img { -webkit-user-drag: none; user-drag: none; }
         <div id="phHome" class="ph-home"><div class="ph-clock" id="phClock">11:00</div><div class="ph-apps"><button type="button" class="ph-app" id="phAppStack"><span>📦</span>疊疊貨箱</button><button type="button" class="ph-app" id="phAppMsg"><span>💬<i class="bd" id="phBd" hidden></i></span>訊息</button><button type="button" class="ph-app" id="phAppSocial"><span>📸</span>社群</button><button type="button" class="ph-app" id="phAppDex"><span>📖</span>客人圖鑑</button><button type="button" class="ph-app off" disabled><span>🎵</span>音樂</button></div><div class="ph-best" id="phBestHome"></div></div>
         <div id="phGame" class="ph-game" hidden><canvas id="phCv" width="270" height="440"></canvas><div class="ph-score" id="phScore">0</div><div class="ph-over" id="phOver" hidden></div></div>
         <div id="phMsgs" class="ph-msgs" hidden><div class="pm-head"><button type="button" class="btn small" id="phMsgBack">‹ 返回</button><b>訊息</b></div><div class="pm-list" id="phMsgList"></div></div>
-        <div id="phSocial" class="ph-msgs" hidden><div class="pm-head"><button type="button" class="btn small" id="phSoBack">‹ 返回</button><b>動態</b><button type="button" class="btn small" id="phSoMore" style="margin-left:auto">刷新</button></div><div class="pm-list" id="phSoList"></div></div>
+        <div id="phSocial" class="ph-msgs" hidden><div class="pm-head"><button type="button" class="btn small" id="phSoBack">‹ 返回</button><b>動態</b><button type="button" class="btn small" id="phSoNew" style="margin-left:auto">＋ 發文</button><button type="button" class="btn small" id="phSoMore">刷新</button></div><div id="phSoCompose" class="pm" hidden style="margin:8px 8px 0"></div><div class="pm-list" id="phSoList"></div></div>
         <div id="phCall" class="ph-call" hidden><div class="pc-name" id="phCallName">副理</div><div class="pc-sub" id="phCallSub">來電中…</div><div class="pc-btns"><button type="button" class="btn primary" id="phAnswer">接聽</button><button type="button" class="btn danger" id="phDecline">拒接</button></div></div>
         <button type="button" class="ph-homebtn" id="phHomeBtn" aria-label="回主畫面"></button>
       </div>
@@ -920,7 +924,7 @@ function cleanVip(o) {
   if (o.seen && typeof o.seen === 'object') Object.keys(o.seen).slice(0, 40).forEach((k) => { const x = o.seen[k] || {}; v.seen[String(k).slice(0, 20)] = { n: Math.max(0, Math.min(999, Math.floor(+x.n || 0))), e: (Array.isArray(x.e) ? x.e : []).filter((t) => ['good', 'mid', 'bad', 'paid', 'call'].indexOf(t) >= 0).filter((t, i, a) => a.indexOf(t) === i) }; });
   return v;
 }
-const blankSave = () => ({ vip: blankVip(), inv: blankInv(), v: 1, name: '', msgs: [], feed: [], phoneBest: 0, phoneTop: [], days: 0, tutorialDone: false, tips: {}, tipsOff: false, dust: null, zone: 0, mgrId: null, history: [] });
+const blankSave = () => ({ vip: blankVip(), inv: blankInv(), v: 1, name: '', msgs: [], feed: [], soDay: 0, soArc: {}, soAns: {}, soFriend: {}, soSeen: { d: 0, k: [] }, phoneBest: 0, phoneTop: [], days: 0, tutorialDone: false, tips: {}, tipsOff: false, dust: null, zone: 0, mgrId: null, history: [] });
 const invNum = (v, mx) => Math.max(0, Math.min(mx || 9999, Math.floor(+v || 0)));
 function cleanInv(o) {
   const inv = blankInv(); if (!o || typeof o !== 'object') return inv;
@@ -940,7 +944,17 @@ function cleanSave(o) {
   const s = blankSave();
   s.days = Math.max(0, Math.min(9999, Math.floor(+o.days || 0)));
   s.tutorialDone = !!o.tutorialDone; s.tipsOff = !!o.tipsOff; s.tips = {}; if (o.tips && typeof o.tips === 'object') Object.keys(o.tips).slice(0, 20).forEach((k) => { if (o.tips[k]) s.tips[String(k).slice(0, 12)] = 1; });
-  s.feed = (Array.isArray(o.feed) ? o.feed : []).slice(0, 30).map((f) => ({ c: String(f.c || '').slice(0, 40), n: String(f.n || '').slice(0, 12), t: String(f.t || '').slice(0, 60), e: String(f.e || '').slice(0, 4), ago: Math.max(0, Math.min(999, Math.floor(+f.ago || 0))), likes: Math.max(0, Math.min(9999, Math.floor(+f.likes || 0))), liked: !!f.liked })).filter((f) => f.n && f.t);
+  s.feed = (Array.isArray(o.feed) ? o.feed : []).slice(0, 40).map((f) => {
+    const x = { k: ['post', 'story', 'poll', 'news', 'ad', 'live', 'store'].indexOf(f.k) >= 0 ? f.k : 'post', c: String(f.c || '').slice(0, 40), n: String(f.n || '').slice(0, 12), t: String(f.t || '').slice(0, 90), e: String(f.e || '').slice(0, 4), ago: Math.max(0, Math.min(999, Math.floor(+f.ago || 0))), d: Math.max(0, Math.floor(+f.d || 0)), g: Math.max(0, Math.floor(+f.g || 0)), likes: Math.max(0, Math.min(9999, Math.floor(+f.likes || 0))), liked: !!f.liked, mine: !!f.mine, rx: !!f.rx, arc: String(f.arc || '').slice(0, 10), tone: String(f.tone || '').slice(0, 6) };
+    x.cm = (Array.isArray(f.cm) ? f.cm : []).slice(0, 8).map((m) => ({ n: String(m.n || '').slice(0, 12), t: String(m.t || '').slice(0, 60) })).filter((m) => m.n && m.t);
+    if (f.po && Array.isArray(f.po.o)) { const o2 = f.po.o.slice(0, 4).map((q) => String(q).slice(0, 14)); x.po = { o: o2, v: o2.map((q, qi) => Math.max(0, Math.min(9999, Math.floor(+(f.po.v || [])[qi] || 0)))), m: Math.max(-1, Math.min(3, Math.floor(f.po.m === undefined ? -1 : +f.po.m))) }; }
+    return x;
+  }).filter((f) => f.n && f.t);
+  s.soDay = Math.max(0, Math.floor(+o.soDay || 0));
+  s.soArc = {}; if (o.soArc && typeof o.soArc === 'object') Object.keys(o.soArc).slice(0, 12).forEach((k) => { s.soArc[String(k).slice(0, 10)] = Math.max(0, Math.min(9, Math.floor(+o.soArc[k] || 0))); });
+  s.soAns = {}; if (o.soAns && typeof o.soAns === 'object') Object.keys(o.soAns).slice(0, 12).forEach((k) => { s.soAns[String(k).slice(0, 10)] = Math.max(0, Math.min(3, Math.floor(+o.soAns[k] || 0))); });
+  s.soFriend = {}; if (o.soFriend && typeof o.soFriend === 'object') Object.keys(o.soFriend).slice(0, 30).forEach((k) => { s.soFriend[String(k).slice(0, 12)] = Math.max(0, Math.min(30, Math.floor(+o.soFriend[k] || 0))); });
+  s.soSeen = { d: Math.max(0, Math.floor(+(o.soSeen || {}).d || 0)), k: (Array.isArray((o.soSeen || {}).k) ? o.soSeen.k : []).slice(0, 8).map((x) => String(x).slice(0, 10)) };
   s.msgs = (Array.isArray(o.msgs) ? o.msgs : []).slice(0, 60).map((m) => ({ id: Math.floor(+m.id || 0), from: String(m.from || '').slice(0, 20), text: String(m.text || '').slice(0, 120), t: String(m.t || '').slice(0, 8), d: Math.floor(+m.d || 0), read: true, co: !!m.co, ack: !!m.ack, sys: !!m.sys, replies: Array.isArray(m.replies) ? m.replies.slice(0, 3).map((r) => String(r).slice(0, 12)) : null, replied: m.replied === null || m.replied === undefined ? null : Math.floor(+m.replied) })).filter((m) => m.from && m.text);
   s.name = typeof o.name === 'string' ? o.name.trim().slice(0, 8) : '';
   if (o.dust && typeof o.dust === 'object') { s.dust = {}; Object.keys(o.dust).slice(0, 20).forEach((k) => { s.dust[String(k).slice(0, 12)] = Math.max(0, Math.min(50, Math.floor(+o.dust[k] || 0))); }); }
@@ -2385,7 +2399,7 @@ function startScene() {
       while (items.length < n) { const last = items[items.length - 1]; items.push((Math.random() < 0.5 && companionOf(last)) || randItem()); }
       return { items: items, upfront: true };
     }
-    const target = TICKET_MED * (G.ticketMult || 1);
+    const target = TICKET_MED * (G.ticketMult || 1) * (G.grpMult || 1);   // groups spend more, singles slightly less, so the day's average ticket stays on target
     /* draw several baskets and pick one at random, favouring those near the target ticket (so cheap items like cables still get bought) */
     const cand = [];
     for (let k = 0; k < 16; k++) {
@@ -2400,6 +2414,29 @@ function startScene() {
   /* several customers can be in the shop: one at the counter, the rest still shopping (pend) or lined up behind (line) */
   const primaryCount = () => (G.cust && G.cust.st !== 'leaving' ? 1 : 0) + G.pend.length + G.line.length;
   const LINE_MAX = 3;
+  const MATE_OFF = [[-0.9, -0.8], [-1.7, -0.5]];
+  const MATE_SAY = ['快點啦,我餓了', '這個好看欸', '你要買哪個?', '好了沒~', '我先去那邊看看', '這個會不會比較好?', '你確定要買這個?'];
+  function spawnMates(c, n) {
+    c.mates = [];
+    for (let i = 0; i < n; i++) {
+      const pr = buildPerson(); pr.g.position.set(-0.7 + 1.4 * i, 0, 5.95); pr.g.rotation.y = Math.PI; scene.add(pr.g);
+      const m = { g: pr.g, parts: pr.parts, st: 'mate', mate: true, lead: c, slot: i, path: [], then: null, walkT: 0, say: '', yaw: Math.PI, t: 0, speakAt: G.gt + 8 + Math.random() * 20 };
+      G.crowd.push(m); c.mates.push(m);
+    }
+  }
+  function mateStep(m) {
+    const L = m.lead, p = m.g.position;
+    if (m.say && G.gt > m.sayUntil) m.say = '';
+    if (m.st === 'leaving') return;
+    if (!L || L.st === 'leaving' || !L.g.parent) {   // the group is done: walk out together
+      m.st = 'leaving'; m.say = ''; goTo(m, 0, 5.9, () => { scene.remove(m.g); const i = G.crowd.indexOf(m); if (i >= 0) G.crowd.splice(i, 1); }); return;
+    }
+    if (G.gt >= m.speakAt && !m.say) { m.say = pickOne(MATE_SAY); m.sayUntil = G.gt + 3.5; m.speakAt = G.gt + 22 + Math.random() * 30; }
+    if (!(m.path && m.path.length) && !m.then) {
+      const o = MATE_OFF[m.slot % 2], tx = L.g.position.x + o[0], tz = L.g.position.z + o[1];
+      if (Math.hypot(tx - p.x, tz - p.z) > 1.3) goTo(m, tx, tz, null); else face(m, L.g.position.x, L.g.position.z);
+    }
+  }
   function dropQ(c) { let i = G.pend.indexOf(c); if (i >= 0) G.pend.splice(i, 1); i = G.line.indexOf(c); if (i >= 0) { G.line.splice(i, 1); layoutLine(); } }
   function layoutLine() {
     G.line.forEach((c, i) => {
@@ -2429,9 +2466,12 @@ function startScene() {
     const r = G.tutorial && !G.tutSelf ? 0.5 : Math.random() * (G.tutorial ? 0.65 : 1); if (G.tutorial) G.tutSelf = true;
     const kind = r < 0.35 ? 'ask' : r < 0.65 ? 'self' : 'look';
     const c = { g: pr.g, parts: pr.parts, flow: kind === 'self' ? 'self' : 'ask', look: kind === 'look', callout: kind === 'look' && Math.random() < 0.5, st: 'walkIn', path: [], then: null, walkT: 0, say: '', items: [], stops: [], t: 0, readyAt: 0, yaw: Math.PI, nag: false, askIdx: 0, got: [], upfront: false, ignored: false };
-    const bk = pickBasket(c.flow); c.items = bk.items; c.upfront = bk.upfront;
+    const grp = !G.tutorial && Math.random() < 0.22 ? (Math.random() < 0.7 ? 1 : 2) : 0;   // 22% of customers arrive with 1-2 companions
+    G.grpMult = grp === 0 ? 0.88 : grp === 1 ? 1.5 : 1.9;
+    const bk = pickBasket(c.flow); G.grpMult = 1; c.items = bk.items; c.upfront = bk.upfront; c.group = grp;
     if (c.flow === 'self') fixSelfStock(c);
     if (primaryCount() > 0) { c.pend = true; G.pend.push(c); } else { G.cust = c; G.co = null; }
+    if (grp) spawnMates(c, grp);
     if (c.flow === 'self' || c.look) {
       c.stops = c.items.map((i) => i.p.cat).filter((v, i, a) => a.indexOf(v) === i);
       if (c.look && Math.random() < 0.3) { const extra = pickOne(CATS).id; if (c.stops.indexOf(extra) < 0) c.stops.unshift(extra); }
@@ -2587,6 +2627,7 @@ function startScene() {
   }
   function stepCust(c, dt) {
     let moving = false;
+    if (c.mate) mateStep(c);
     if (c.path && c.path.length) {
       const p = c.g.position, t = c.path[0], dx = t.x - p.x, dz = t.z - p.z, dist = Math.hypot(dx, dz);
       if (dist < 0.08) c.path.shift();
@@ -2632,7 +2673,7 @@ function startScene() {
   }
   function updateBubble() {
     placeBubble(bubbleEl, G.cust);
-    { const oth = G.crowd.concat(G.pend, G.line, G.exit).filter((x) => (x.say || x.em) && (x.st === 'browse' || x.st === 'queued' || x.st === 'leaving')); placeBubble($('#bubble2'), oth[0]); placeBubble($('#bubble3'), oth[1]); }
+    { const oth = G.crowd.concat(G.pend, G.line, G.exit).filter((x) => (x.say || x.em) && (x.st === 'browse' || x.st === 'queued' || x.st === 'leaving' || x.st === 'mate')); placeBubble($('#bubble2'), oth[0]); placeBubble($('#bubble3'), oth[1]); }
     placeBubble($('#bubbleM'), MG && MG.say ? MG : DL && DL.say ? DL : null);
     placeBubble($('#bubbleP'), playerSay && G.gt < playerSay.until ? playerSay : null);
   }
@@ -3116,7 +3157,7 @@ function startScene() {
       CART_ORDER.forEach((c) => { if (!CARTS[c].placed) cartDrop(CARTS[c]); });
       shopAct(byId.door); return;
     }
-    if (k === 'cust') { if (!s.door) { toast('先開店(可按「一鍵開好店」)'); return; } if (primaryCount() >= (G.tutorial ? 1 : 3)) { toast('店裡客人已經夠多了'); return; } G.nextAt = 0; spawnCustomer(); return; }
+    if (k === 'cust') { if (!s.door) { toast('先開店(可按「一鍵開好店」)'); return; } if (primaryCount() >= (G.tutorial ? 1 : 4)) { toast('店裡客人已經夠多了'); return; } G.nextAt = 0; spawnCustomer(); return; }
     if (k === 'wait') {
       const c = G.cust; if (!c || !(c.st === 'asking' || c.st === 'ready')) { toast('櫃檯沒有等著的客人'); return; }
       c.readyAt -= 120; toast('客人已等了約 ' + Math.round(G.gt - c.readyAt) + ' 秒'); return;
@@ -4205,8 +4246,8 @@ function startScene() {
     stepTweens(dt);
     stepShop(dt); phoneStep(dt);
     const sh = G.shop, open = sh.door && cartsPlaced() === 6 && !sh.countStarted && !sh.done;
-    if (open && G.gt >= G.nextAt) { if (primaryCount() < (G.tutorial ? 1 : 3)) spawnCustomer(); else G.nextAt = G.gt + 5; }
-    if (open && G.gt >= G.nextBrowse) { if (G.crowd.length < 2 && db.products.length) spawnBrowser(); G.nextBrowse = G.gt + 50 + Math.random() * 60; }
+    if (open && G.gt >= G.nextAt) { if (primaryCount() < (G.tutorial ? 1 : 4)) spawnCustomer(); else G.nextAt = G.gt + 5; }
+    if (open && G.gt >= G.nextBrowse) { if (G.crowd.filter((x) => x.browser).length < 3 && db.products.length) spawnBrowser(); G.nextBrowse = G.gt + 50 + Math.random() * 60; }
     updateCust(dt);
     updateBubble();
   }
@@ -5216,26 +5257,154 @@ function startScene() {
     $('#phBestHome').innerHTML = topHtml();
     if (which === 'game') stackStart(); else stackStop();
     if (which === 'msgs') renderInbox();
-    if (which === 'social') { if (!SAVE.feed.length) moreFeed(5); else if (PH.feedDay !== G.dayNo) moreFeed(4); else renderFeed(); PH.feedDay = G.dayNo; }
+    if (which === 'social') { PH.soReply = -1; soOpen(); $('#phSoCompose').hidden = true; }
     phWhere();
   }
   const FEED = [['小宇','今天的手搖杯 🧋 半糖少冰','🧋'],['Amy','週末去海邊!水好藍','🌊'],['阿豪','新買的耳機音質超讚','🎧'],['Joyce','加班第三天…','💻'],['大雄','貓咪又在我鍵盤上睡著','🐱'],['小美','午餐吃什麼好,求推薦','🍜'],['Kevin','演唱會搶票失敗,崩潰','🎤'],['Sandy','今天天氣好舒服','☀️'],['阿傑','健身房打卡 💪 今天練腿','🏋️'],['Mia','新出的甜點店好好吃','🍰'],['志明','颱風天不用上班真爽','🌀'],['小琪','終於看完那部影集,結局好扯','📺'],
     ['阿翔','新手機到貨!膜還沒貼','📱'],['婷婷','咖啡續命第二杯','☕'],['老王','釣魚一整天,一條都沒有','🎣'],['Eric','跟朋友打球,累癱','🏀'],['小雨','下雨天好想睡覺','🌧️'],['Lisa','週末市集買到好可愛的小物','🧸'],['阿德','騎車去環島第一天','🏍️'],['Tina','新髮型,覺得如何?','💇'],['宗翰','宵夜吃鹽酥雞,罪惡','🍗'],['怡君','追星成功!拿到簽名','⭐'],['小安','考試考完了,終於解脫','📚'],['阿凱','跟老婆去看夜景','🌃'],['Cindy','家裡的植物又開花了','🌸'],['大衛','今天發薪水!請大家吃飯','💰'],['Rita','早起跑步,空氣超好','🏃'],['阿宏','剛剛看到一隻超大蟑螂…','🪳'],['小萱','做了第一次蛋糕,賣相普通','🎂'],['泰瑞','通勤路上又塞車','🚗'],
     ['門市討論版','今天有人遇到客人砍價嗎?','💬'],['連鎖公司','【公告】本週店長會議改線上舉行','📢'],['生活日報','颱風假要不要放?各縣市最新消息','📰'],['手機評測','新旗艦機拍照實測,夜景大進步','📷'],['熱門影片','貓咪跟狗狗的日常,超療癒','🎬'],['小編','雙11快到了,你的購物車準備好了嗎?','🛒']];
   const COMMENT = ['哈哈真的','看起來好好吃','羨慕!','我也想去','+1','太真實了','笑死','辛苦了~','讚讚','下次約'];
+  /* ---------- social app: serial stories, mixed content, replies, polls, your own posts, links to the store ---------- */
   const feedList = () => SAVE.feed;
+  const SO_ARCS = {
+    joyce: { n: 'Joyce', ch: [
+      { t: '加班第三天…主管又改了需求', e: '💻' }, { t: '今天被主管當眾點名,我只想消失', e: '😶' },
+      { t: '偷偷投履歷了。你們不要說出去', e: '📄', k: 'story' },
+      { t: '有面試通知!!緊張到手抖。該穿哪一件?', e: '😳', k: 'poll', o: ['襯衫', '洋裝', '西裝'] },
+      { t: (a) => a === 2 ? '面試官說我太正式了…但還是錄取了!!我要辭職啦' : '錄取了!!我要辭職啦,終於逃出生天', e: '🎉' }] },
+    amy: { n: 'Amy', ch: [
+      { t: '週末去海邊!水好藍,好像有人一直偷看我', e: '🌊' },
+      { t: '他傳訊息來了,我要怎麼回?', e: '📱', k: 'poll', o: ['秒回', '晚點回', '已讀不回'] },
+      { t: (a) => a === 2 ? '他說我已讀不回很冷淡…但還是約我了' : a === 0 ? '秒回之後他也秒回,我們聊到半夜' : '晚點回,他說看到我的訊息整天都在等', e: '💬' },
+      { t: '第一次約會!餐廳超美', e: '🍝' },
+      { t: '我們吵架了…他說我都不回訊息', e: '💔' }] },
+    haohao: { n: '阿豪', ch: [
+      { t: '想買新耳機,預算一萬。頭戴、入耳還是真無線?', e: '🎧', k: 'poll', o: ['頭戴', '入耳', '真無線'] },
+      { t: (a) => '看了一堆' + ['頭戴', '入耳', '真無線'][a] + '的評測,越看越亂', e: '😵' },
+      { t: '忍不住下單了,等到貨', e: '📦' },
+      { t: '開箱!音質真的差很多', e: '✨' },
+      { t: '結果線材忘了買…有人知道哪裡有賣嗎', e: '🔌' }] },
+    daxiong: { n: '大雄', ch: [
+      { t: '貓咪又在我鍵盤上睡著', e: '🐱' }, { t: '它把我的杯子推下桌,第 7 次', e: '🥤', k: 'story' },
+      { t: '它今天不吃飯,我很擔心', e: '😿' }, { t: '帶去看獸醫了,只是零食吃太多…', e: '🏥' },
+      { t: '現在開始減肥計畫,它一直瞪我', e: '😾' }] },
+    kevin: { n: 'Kevin', ch: [
+      { t: '演唱會開賣倒數!我準備好了', e: '🎤' }, { t: '搶票失敗…系統當掉了,崩潰', e: '😭' },
+      { t: '黃牛票價是原價五倍,這根本搶劫', e: '💸' },
+      { t: '朋友說可以轉讓一張給我!要不要買?', e: '🎫', k: 'poll', o: ['買', '再想想'] },
+      { t: (a) => a === 0 ? '現場!!!!嗓子全啞了,太值得了' : '朋友後來賣掉了…下次一定要搶到', e: '🎶' }] }
+  };
+  const SO_POOL = {
+    post: FEED.filter((f) => f[1].length < 40),
+    meme: [['迷因','週一的我 vs 週五的我','🫠'],['迷因','存款:0 購物車:99','🛒'],['迷因','我:再看一集就睡。 天亮了:嗨','🌅'],['迷因','開會:這件事可以 mail 講。 結果:開了兩小時','📅'],['迷因','手機電量 1%:我還能再撐一下','🪫'],['迷因','我的錢包:你是不是又網購了','👛'],['迷因','朋友:你在哪?我:在路上。(其實剛起床)','🛌'],['迷因','做人最重要的是開心。 房東:先繳租金','🏠']],
+    news: [['生活日報','颱風外圍環流影響,明天各地有雨','🌀'],['科技新聞','新旗艦機發表,電池容量大升級、相機突出更多','📱'],['生活日報','便利商店推出新口味,網友:黑暗料理?','🍙'],['手機評測','三款熱門保護殼落摔實測,結果出乎意料','🧪'],['科技新聞','充電器新規格公布,舊的充電線還能用嗎?','🔌'],['財經日報','雙 11 檔期提前開跑,各大通路搶先促銷','🛍️']],
+    ad: [['小編','【限時】耳機買一送一!(只有今天,明天還有)','🎧'],['手機配件福利社','滿 300 送襪子!收到後發現是單隻','🧦'],['連鎖公司','【公告】新品上市海報已撤下,請勿張貼','📢'],['電商小編','你的購物車商品降價了!已經等你三天了','🛒'],['外送平台','餓了嗎?現在點餐免運費!(限 500 元以上)','🛵']],
+    poll: [['生活投票','鳳梨該不該放在披薩上?','🍍',['該','不該','看心情']],['生活投票','你比較常用哪種手機殼?','📱',['透明殼','防摔殼','皮革殼','沒用殼']],['生活投票','早餐你吃什麼?','🥪',['蛋餅','三明治','不吃','飯糰']],['生活投票','下班後最想做什麼?','🌆',['睡覺','追劇','吃宵夜','運動']],['生活投票','電量多少你會開始焦慮?','🔋',['50%','20%','10%','0%']]],
+    live: [['大衛','🔴 直播中:開箱抽獎','🎁'],['阿德','🔴 直播中:騎車環島第 3 天','🏍️'],['Tina','🔴 直播中:新髮型教學','💇'],['小萱','🔴 直播中:做蛋糕翻車現場','🎂']]
+  };
+  const SO_NAMES = ['小宇','Sandy','Mia','志明','小琪','阿翔','婷婷','老王','Eric','小雨','Lisa','Tina','宗翰','怡君','小安','阿凱','Cindy','大衛','Rita','阿宏'];
+  const SO_CM = ['哈哈真的','看起來好好吃','羨慕!','我也想去','+1','太真實了','笑死','辛苦了~','讚讚','下次約','抱抱','加油!!','等你後續','這集我追','天啊'];
+  const SO_RP = { care: ['辛苦了,加油!', '抱抱,有需要隨時講', '我挺你!', '有事跟我說,別一個人扛'], roast: ['這也太慘了吧哈哈', '活該啦 😂', '又來了喔你', '你人生怎麼這麼精彩'], joke: ['笑死,這是什麼人生', '我先笑為敬 🤣', '給你按讚,但不是因為好笑', '建議做成電影'] };
+  const SO_BACK = { care: ['謝啦,有你真好 🥹', '被你安慰到了,晚點再跟你說!', '嗚嗚你是我最好的朋友'], roast: ['喂!你給我記住 😤', '你才活該啦', '算了,你說得也對'], joke: ['哈哈哈你很煩欸', '好啦我承認好笑', '我就知道你會這樣回'] };
+  const soRn = (a, b) => a + Math.floor(Math.random() * (b - a + 1));
+  const soDays = () => G.dayNo || 1;
+  function soMk(o) { return Object.assign({ k: 'post', n: '', t: '', e: '', ago: 0, d: soDays(), g: Math.round(G.gt || 0), likes: soRn(0, 40), liked: false, mine: false, rx: false, arc: '', tone: '', cm: [], c: '' }, o); }
+  function soCm(f, n) { for (let i = 0; i < n; i++) { const w = pickOne(SO_NAMES); if (w !== f.n && !f.cm.some((x) => x.n === w)) f.cm.push({ n: w, t: pickOne(SO_CM) }); } return f; }
+  function soPush(f) { SAVE.feed.unshift(f); SAVE.feed = SAVE.feed.slice(0, 40); }
+  function soPoll(f, opts) { f.k = 'poll'; f.po = { o: opts.slice(0, 4), v: opts.slice(0, 4).map(() => soRn(2, 40)), m: -1 }; return f; }
+  function soArcPost(id) {
+    const arc = SO_ARCS[id], i = SAVE.soArc[id] || 0; if (!arc || i >= arc.ch.length) return false;
+    const ch = arc.ch[i], ans = SAVE.soAns[id], f = soMk({ n: arc.n, t: typeof ch.t === 'function' ? ch.t(ans === undefined ? 0 : ans) : ch.t, e: ch.e, arc: id, k: ch.k === 'story' ? 'story' : 'post' });
+    if (ch.k === 'poll') soPoll(f, ch.o);
+    soCm(f, soRn(0, 2)); soPush(f); SAVE.soArc[id] = i + 1; return true;
+  }
+  function soVariety(n) {
+    const kinds = ['post', 'meme', 'news', 'ad', 'poll', 'live', 'post', 'meme'];
+    for (let i = 0; i < n; i++) {
+      const kd = pickOne(kinds), pool = SO_POOL[kd], it = pickOne(pool); if (!it) continue;
+      const f = soMk({ n: it[0], t: it[1], e: it[2] });
+      if (kd === 'meme') { f.k = 'post'; f.tone = 'joke'; } else if (kd === 'news') f.k = 'news'; else if (kd === 'ad') f.k = 'ad'; else if (kd === 'live') { f.k = 'live'; f.likes = soRn(300, 3000); } else if (kd === 'poll') soPoll(f, it[3]);
+      if (kd !== 'ad' && kd !== 'live') soCm(f, soRn(0, 2));
+      soPush(f);
+    }
+  }
+  /* posts that react to what is actually happening in your store today */
+  function soStore() {
+    const sn = SAVE.soSeen; if (sn.d !== soDays()) { sn.d = soDays(); sn.k = []; }
+    const once = (k, fn) => { if (sn.k.indexOf(k) >= 0) return; sn.k.push(k); fn(); };
+    const rv = (G.stats && G.stats.reviews) || [];
+    if ((G.stats && G.stats.lost) > 0) once('lost', () => soPush(soCm(soMk({ k: 'store', n: pickOne(['鄰居阿姨', '上班族小陳', '路過的人']), t: '剛剛在那間手機配件店等超久,最後直接走掉了 🙄', e: '😤' }), 2)));
+    const good = rv.filter((r) => r.stars >= 5), bad = rv.filter((r) => r.stars > 0 && r.stars <= 2);
+    if (good.length) once('good', () => soPush(soCm(soMk({ k: 'store', n: pickOne(['附近上班族', '大學生小林', '常客阿姨']), t: '推薦那間手機配件店 ⭐⭐⭐⭐⭐「' + String(pickOne(good).text).slice(0, 30) + '」', e: '👍', likes: soRn(10, 60) }), 2)));
+    if (bad.length) once('bad', () => soPush(soCm(soMk({ k: 'store', n: pickOne(['路人', '匿名網友']), t: '今天買東西體驗不太好:「' + String(pickOne(bad).text).slice(0, 30) + '」', e: '👎' }), 3)));
+    if (G.stats && G.stats.count >= 10) once('busy', () => soPush(soMk({ k: 'store', n: '連鎖公司', t: '【公告】感謝各門市今日努力,本日營運數據已更新', e: '📈' })));
+  }
+  function soDaily() {
+    if (SAVE.soDay === soDays()) return;
+    SAVE.soDay = soDays();
+    SAVE.feed = SAVE.feed.filter((f) => !(f.k === 'story' && soDays() - f.d >= 2));
+    const ids = Object.keys(SO_ARCS).filter((id) => (SAVE.soArc[id] || 0) < SO_ARCS[id].ch.length).sort(() => Math.random() - 0.5).slice(0, 2);
+    ids.forEach(soArcPost); soVariety(3);
+  }
+  function soBoost() {   // your own posts collect likes and comments after a while
+    SAVE.feed.forEach((f) => { if (f.mine && !f.rx && (soDays() > f.d || (G.gt - f.g) > 60)) { f.rx = true; f.likes += soRn(3, 14); const close = Object.keys(SAVE.soFriend).filter((k) => SAVE.soFriend[k] >= 2); (close.length ? close.sort(() => Math.random() - 0.5).slice(0, 2) : []).forEach((n) => f.cm.push({ n: n, t: pickOne(SO_CM) })); soCm(f, 1); } });
+  }
+  function soOpen() { soDaily(); soStore(); soBoost(); saveGame(); renderFeed(); }
+  function soTag(n) { const c = SAVE.soFriend[n] || 0; return c >= 6 ? ' 💖摯友' : c >= 3 ? ' 💛好友' : c >= 1 ? ' 🙂認識' : ''; }
+  function soAgo(f) {
+    if (!f.d) return f.ago + ' 分鐘前';
+    const dd = soDays() - f.d; if (dd === 0) { const m = Math.max(1, Math.round((G.gt - f.g) * 0.825)); return m < 60 ? m + ' 分鐘前' : Math.floor(m / 60) + ' 小時前'; }
+    return dd === 1 ? '昨天' : dd + ' 天前';
+  }
   function renderFeed() {
-    $('#phSoList').innerHTML = feedList().map((f, i) => '<div class="pm"><div class="pf"><b>' + esc(f.n) + '</b><span>' + f.ago + ' 分鐘前</span></div><div style="font-size:30px;text-align:center">' + f.e + '</div>' + esc(f.t) + (f.c ? '<div class="sub" style="margin-top:4px;font-size:12px;opacity:.75">💬 ' + esc(f.c) + '</div>' : '') + '<div class="rp"><button type="button" class="btn small" data-like="' + i + '">' + (f.liked ? '♥ ' : '♡ ') + f.likes + '</button></div></div>').join('');
+    const sfx = { story: '⏳ 限時動態', news: '📰 新聞', ad: '📣 廣告', live: '🔴 直播', store: '🏪 提到你們店' };
+    $('#phSoList').innerHTML = feedList().map((f, i) => {
+      let h = '<div class="pm' + (f.mine ? ' co' : '') + '"><div class="pf"><b>' + esc(f.n) + (f.mine ? '' : soTag(f.n)) + '</b><span>' + (sfx[f.k] ? sfx[f.k] + ' · ' : '') + soAgo(f) + '</span></div><div style="font-size:30px;text-align:center">' + f.e + '</div>' + esc(f.t);
+      if (f.po) {
+        const tot = f.po.v.reduce((a, b) => a + b, 0) || 1;
+        h += '<div class="so-poll">' + f.po.o.map((o, qi) => '<button type="button" class="so-opt' + (f.po.m === qi ? ' on' : '') + '" data-vote="' + i + '|' + qi + '"' + (f.po.m >= 0 ? ' disabled' : '') + '><i style="width:' + (f.po.m >= 0 ? Math.round(f.po.v[qi] / tot * 100) : 0) + '%"></i><span>' + esc(o) + '</span><em>' + (f.po.m >= 0 ? Math.round(f.po.v[qi] / tot * 100) + '%' : '') + '</em></button>').join('') + '</div>';
+      }
+      if (f.cm.length) h += '<div class="so-cm">' + f.cm.slice(-3).map((m) => '<div><b>' + esc(m.n) + '</b> ' + esc(m.t) + '</div>').join('') + '</div>';
+      else if (f.c) h += '<div class="sub" style="margin-top:4px;font-size:12px;opacity:.75">💬 ' + esc(f.c) + '</div>';
+      h += '<div class="rp"><button type="button" class="btn small" data-like="' + i + '">' + (f.liked ? '♥ ' : '♡ ') + f.likes + '</button>' + (f.k === 'ad' || f.k === 'live' ? '' : '<button type="button" class="btn small" data-reply="' + i + '">💬 回覆</button>') + '</div>';
+      if (PH.soReply === i) {
+        const t3 = ['care', 'roast', 'joke'];
+        h += '<div class="rp so-ropt">' + t3.map((t) => '<button type="button" class="btn small" data-say="' + i + '|' + t + '|' + SO_RP[t].indexOf(pickOne(SO_RP[t])) + '">' + esc(SO_RP[t][soRn(0, SO_RP[t].length - 1)]) + '</button>').join('') + '</div>';
+      }
+      return h + '</div>';
+    }).join('');
   }
   function moreFeed(n) {
-    for (let i = 0; i < n; i++) { const f = pickOne(FEED); SAVE.feed.unshift({ n: f[0], t: f[1], e: f[2], ago: Math.floor(1 + Math.random() * 59), likes: Math.floor(Math.random() * 60), liked: false, c: Math.random() < 0.6 ? pickOne(FEED)[0] + ':' + pickOne(COMMENT) : '' }); }
-    SAVE.feed = SAVE.feed.slice(0, 30); saveGame(); renderFeed();
+    soVariety(Math.min(5, n)); soStore(); SAVE.feed = SAVE.feed.slice(0, 40); saveGame(); renderFeed();
   }
   $('#phSoList').addEventListener('click', (e) => {
-    const b = e.target.closest && e.target.closest('[data-like]'); if (!b) return;
-    const f = SAVE.feed[+b.dataset.like]; if (!f) return;
-    f.liked = !f.liked; f.likes += f.liked ? 1 : -1; saveGame(); renderFeed(); beep(900, 0.04);
+    const lb = e.target.closest && e.target.closest('[data-like]');
+    if (lb) { const f = SAVE.feed[+lb.dataset.like]; if (!f) return; f.liked = !f.liked; f.likes += f.liked ? 1 : -1; saveGame(); renderFeed(); beep(900, 0.04); return; }
+    const rb = e.target.closest && e.target.closest('[data-reply]');
+    if (rb) { const i = +rb.dataset.reply; PH.soReply = PH.soReply === i ? -1 : i; renderFeed(); return; }
+    const vb = e.target.closest && e.target.closest('[data-vote]');
+    if (vb) { const [i, q] = vb.dataset.vote.split('|').map(Number), f = SAVE.feed[i]; if (!f || !f.po || f.po.m >= 0) return; f.po.m = q; f.po.v[q]++; if (f.arc) SAVE.soAns[f.arc] = q; saveGame(); renderFeed(); beep(900, 0.04); return; }
+    const sb = e.target.closest && e.target.closest('[data-say]');
+    if (sb) {
+      const [i, tone] = sb.dataset.say.split('|'), f = SAVE.feed[+i]; if (!f) return;
+      f.cm.push({ n: '你', t: sb.textContent });
+      const back = pickOne(SO_BACK[tone]); if (!f.mine) f.cm.push({ n: f.n, t: back });
+      if (!f.mine && SO_ARCS[f.arc || '']) { const up = tone === 'care' ? 2 : 1; if (tone === 'roast' && Math.random() < 0.2) { SAVE.soFriend[f.n] = Math.max(0, (SAVE.soFriend[f.n] || 0) - 1); toast(f.n + ' 好像有點不開心'); } else SAVE.soFriend[f.n] = Math.min(30, (SAVE.soFriend[f.n] || 0) + up); }
+      f.cm = f.cm.slice(-8); PH.soReply = -1; saveGame(); renderFeed(); beep(700, 0.05);
+    }
   });
+  const SO_MY = () => [['今天好累,好想下班 😮‍💨', '😮‍💨'], ['今天店裡來了個很有個性的客人', '🧐'], [SAVE.phoneBest ? '疊疊貨箱最高 ' + SAVE.phoneBest + ' 層,不服來戰' : '最近迷上一個小遊戲', '🎮'], ['終於吃到午餐了 🍱', '🍱'], ['站了一整天,腳好痠', '🦶']];
+  function soCompose() {
+    const el = $('#phSoCompose'); if (!el.hidden) { el.hidden = true; return; }
+    el.innerHTML = '<div class="sub" style="margin:2px 2px 6px">要發什麼?</div><div class="rp">' + SO_MY().map((m, i) => '<button type="button" class="btn small" data-my="' + i + '">' + esc(m[0]) + '</button>').join('') + '</div>'; el.hidden = false;
+  }
+  $('#phSoCompose').addEventListener('click', (e) => {
+    const b = e.target.closest && e.target.closest('[data-my]'); if (!b) return;
+    const m = SO_MY()[+b.dataset.my]; if (!m) return;
+    soPush(soMk({ n: SAVE.name || '我', t: m[0], e: m[1], mine: true, likes: soRn(0, 3) }));
+    $('#phSoCompose').hidden = true; saveGame(); renderFeed(); toast('已發文,晚點看看大家的反應'); beep(900, 0.04);
+  });
+  $('#phSoNew').addEventListener('click', soCompose);
   $('#phAppSocial').addEventListener('click', () => phShow('social'));
   $('#phSoBack').addEventListener('click', () => phShow('home'));
   $('#phSoMore').addEventListener('click', () => moreFeed(5));
