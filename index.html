@@ -610,7 +610,7 @@ img { -webkit-user-drag: none; user-drag: none; }
         <textarea id="saveCode" rows="3" hidden spellcheck="false" placeholder="存檔碼貼在這裡,再按一次「匯入存檔碼」"></textarea><div class="sub" id="saveMsg"></div></div>
       <div class="controls" id="controls"></div>
       <p class="legal">配件品牌、商品與人物都是虛構的遊戲設定。手機型號使用真實型號。</p>
-      <p class="legal" id="verLine" style="margin-top:2px;opacity:.7">版本 v197 · 2026-10-17</p>
+      <p class="legal" id="verLine" style="margin-top:2px;opacity:.7">版本 v198 · 2026-10-17</p>
     </div>
   </div>
 
@@ -2247,14 +2247,15 @@ function startScene() {
     const dtt = fp.target - fp.t; fp.t += Math.max(-dt * 2.2, Math.min(dt * 2.2, dtt));
     if (snap && fp.target === 0) fp.t = 0;
     if (fp.t > 0) {
-      const bx = fp.mode === 'cart' ? $('#rsDock .sheet-box') : $('#checkout .sheet-box'); if (bx && !(fp.mode === 'cart' ? $('#rsDock') : $('#checkout')).hidden) { fp.dockH = bx.offsetHeight || fp.dockH; fp.dockW = bx.offsetWidth || fp.dockW; }
-      const side = fp.dockW > 0 && fp.dockW < W * 0.8;   // landscape: the panel is a right-hand half, the shop is shown in the left half
+      const bx = fp.mode === 'cart' ? $('#rsDock .sheet-box') : $('#checkout .sheet-box'); if (bx && !(fp.mode === 'cart' ? $('#rsDock') : $('#checkout')).hidden) { fp.dockH = bx.offsetHeight || fp.dockH; fp.dockW = bx.offsetWidth || fp.dockW; fp.dockL = bx.getBoundingClientRect().left; }
+      const side = fp.dockW > 0 && fp.dockW < W * 0.8 && fp.dockL > W * 0.25;   // landscape: the panel is a right-hand half, the shop is shown in the left half
       const k = fp.t * fp.t * (3 - 2 * fp.t);
       const PP = fp.mode === 'cart' ? fp.cPos : FP_POS, LL = fp.mode === 'cart' ? fp.cLook : FP_LOOK;
       camera.position.lerp(PP, k);
       lx += (LL.x - lx) * k; ly += (LL.y - ly) * k; lz += (LL.z - lz) * k;
       camera.fov = 40 + ((side ? Math.max(45, Math.min(92, 2 * Math.atan(Math.tan(29 * Math.PI / 180) / Math.max(0.5, (W - fp.dockW) / H)) * 180 / Math.PI)) : fpFov()) - 40) * k;
-      camera.setViewOffset(W, H, side ? fp.dockW * 0.5 * k : 0, side ? 0 : fp.dockH * (fp.mode === 'cart' ? 0.5 : 0.4) * k, W, H);   // portrait checkout: the window's top edge sits right on the counter's front edge camera.updateProjectionMatrix(); fp.on = true;
+      camera.setViewOffset(W, H, side ? fp.dockW * 0.5 * k : 0, side ? 0 : fp.dockH * (fp.mode !== 'cart' && W <= 720 && H > W ? 0.4 : 0.5) * k, W, H);
+      camera.updateProjectionMatrix(); fp.on = true;   // portrait phone checkout: the window's top edge sits right on the counter's front edge
     } else if (fp.on) { camera.clearViewOffset(); camera.fov = 40; camera.updateProjectionMatrix(); fp.on = false; }
     camera.lookAt(lx, ly, lz);
     player.visible = fp.t < 0.5;
