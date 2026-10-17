@@ -610,7 +610,7 @@ img { -webkit-user-drag: none; user-drag: none; }
         <textarea id="saveCode" rows="3" hidden spellcheck="false" placeholder="存檔碼貼在這裡,再按一次「匯入存檔碼」"></textarea><div class="sub" id="saveMsg"></div></div>
       <div class="controls" id="controls"></div>
       <p class="legal">配件品牌、商品與人物都是虛構的遊戲設定。手機型號使用真實型號。</p>
-      <p class="legal" id="verLine" style="margin-top:2px;opacity:.7">版本 v196 · 2026-10-17</p>
+      <p class="legal" id="verLine" style="margin-top:2px;opacity:.7">版本 v197 · 2026-10-17</p>
     </div>
   </div>
 
@@ -2150,7 +2150,7 @@ function startScene() {
   window.addEventListener('keydown', (e) => {
     if (typing(e) || state.modal || !state.started) return;
     if ((e.code === 'KeyQ' || e.code === 'KeyG') && !e.repeat && !e.ctrlKey && !e.metaKey) { $('#btnGreet').click(); return; }
-    if ((e.code === 'KeyR' || e.code === 'KeyP') && !e.repeat && !e.ctrlKey && !e.metaKey) { $('#btnPhone').click(); return; }
+    if ((e.code === 'KeyR' || e.code === 'KeyP') && !e.repeat && !e.ctrlKey && !e.metaKey) { e._ph = true; $('#btnPhone').click(); return; }
     if (e.code === 'KeyE' || e.code === 'Enter') { if (active) { e.preventDefault(); openInteract(active); } return; }
     if (['KeyW', 'KeyA', 'KeyS', 'KeyD', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].indexOf(e.code) >= 0) { keys.add(e.code); e.preventDefault(); }
   });
@@ -5179,7 +5179,7 @@ function startScene() {
   $('#phAppStack').addEventListener('click', () => phShow('game'));
   $('#phAppMsg').addEventListener('click', () => phShow('msgs'));
   $('#phMsgBack').addEventListener('click', () => phShow('home'));
-  window.addEventListener('keydown', (e) => { if ((e.key === 'Escape' || ((e.code === 'KeyR' || e.code === 'KeyP') && !e.repeat && !e.ctrlKey && !e.metaKey && !/INPUT|TEXTAREA/.test((e.target && e.target.tagName) || ''))) && PH.open && !PH.call) closePhone(); });
+  window.addEventListener('keydown', (e) => { if (e._ph) return; if ((e.key === 'Escape' || ((e.code === 'KeyR' || e.code === 'KeyP') && !e.repeat && !e.ctrlKey && !e.metaKey && !/INPUT|TEXTAREA/.test((e.target && e.target.tagName) || ''))) && PH.open && !PH.call) closePhone(); });
   function phoneStep(dt) {
     const s = G.shop; if (!s) return;
     if (PH.open) { phTick(); phWhere(); }
