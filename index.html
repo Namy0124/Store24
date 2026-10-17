@@ -623,7 +623,7 @@ img { -webkit-user-drag: none; user-drag: none; }
         <textarea id="saveCode" rows="3" hidden spellcheck="false" placeholder="存檔碼貼在這裡,再按一次「匯入存檔碼」"></textarea><div class="sub" id="saveMsg"></div></div>
       <div class="controls" id="controls"></div>
       <p class="legal">配件品牌、商品與人物都是虛構的遊戲設定。手機型號使用真實型號。</p>
-      <p class="legal" id="verLine" style="margin-top:2px;opacity:.7">版本 v206 · 2026-10-17</p>
+      <p class="legal" id="verLine" style="margin-top:2px;opacity:.7">版本 v207 · 2026-10-17</p>
     </div>
   </div>
 
@@ -2607,6 +2607,7 @@ function startScene() {
       }
     }
     if (c.st === 'asking' && c === G.cust && !c.nag && !G.co && G.gt - c.readyAt > 55 * (1 + 0.4 * moodLv())) { c.nag = true; c.say = pickOne(SAY.impatient); }
+    if (c.flow && c.flow !== 'vip' && c.st === 'walkIn' && !(c.path && c.path.length) && !c.then) { c.idleT = (c.idleT || 0) + dt; if (c.idleT > 4) { c.idleT = 0; c.toCounter = true; goTo(c, QX, QZ, atCounter); } } else c.idleT = 0;   // safety net: a customer who ends up standing around with nothing to do heads for the counter
     if (moving) c.walkT += dt * 9;
     { const ph = Math.floor(c.walkT / Math.PI); if (moving && ph !== c.stepPh) { c.stepPh = ph; const dd = Math.hypot(c.g.position.x - player.position.x, c.g.position.z - player.position.z); SFX.step(0.5 / (1 + dd * 0.4)); } }
     const sw = moving ? Math.sin(c.walkT) * 0.7 : 0;
