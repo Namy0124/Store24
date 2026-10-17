@@ -334,7 +334,7 @@ button, .btn, [data-co] { touch-action: manipulation; -webkit-tap-highlight-colo
 @media (min-width: 721px) and (min-height: 640px) { .sheet.dock .sheet-box { max-height: 66%; } }
 /* desktop / tablet: the money steps fit without scrolling (item rows fold away, keys and spacing tighten, the window may reach a bit higher) */
 @media (min-width: 721px) and (min-height: 560px) {
-  .sheet.dock .sheet-box { max-height: 76%; }
+  .sheet.dock .sheet-box { max-height: 72%; }
   .pos.st-pay .pos-head, .pos.st-change .pos-head { display: none; }
   .pos.st-pay .pos-line, .pos.st-change .pos-line, .pos.st-invoice .pos-line, .pos.st-pay .pos-th, .pos.st-change .pos-th, .pos.st-invoice .pos-th { display: none; }
   .pos.st-pay .steps, .pos.st-change .steps, .pos.st-invoice .steps { margin-bottom: 6px; }
@@ -623,7 +623,7 @@ img { -webkit-user-drag: none; user-drag: none; }
         <textarea id="saveCode" rows="3" hidden spellcheck="false" placeholder="存檔碼貼在這裡,再按一次「匯入存檔碼」"></textarea><div class="sub" id="saveMsg"></div></div>
       <div class="controls" id="controls"></div>
       <p class="legal">配件品牌、商品與人物都是虛構的遊戲設定。手機型號使用真實型號。</p>
-      <p class="legal" id="verLine" style="margin-top:2px;opacity:.7">版本 v201 · 2026-10-17</p>
+      <p class="legal" id="verLine" style="margin-top:2px;opacity:.7">版本 v202 · 2026-10-17</p>
     </div>
   </div>
 
@@ -2266,7 +2266,7 @@ function startScene() {
       const phoneP = W <= 720 && H > W, PP = fp.mode === 'cart' ? fp.cPos : FP_POS, LL = fp.mode === 'cart' ? fp.cLook : (side || phoneP ? FP_LOOK : FP_LOOK_D);
       camera.position.lerp(PP, k);
       lx += (LL.x - lx) * k; ly += (LL.y - ly) * k; lz += (LL.z - lz) * k;
-      camera.fov = 40 + ((side ? Math.max(45, Math.min(92, 2 * Math.atan(Math.tan(29 * Math.PI / 180) / Math.max(0.5, (W - fp.dockW) / H)) * 180 / Math.PI)) : (fp.mode === 'cart' || phoneP ? fpFov() : Math.max(fpFov(), 64))) - 40) * k;
+      camera.fov = 40 + ((side ? Math.max(45, Math.min(92, 2 * Math.atan(Math.tan(29 * Math.PI / 180) / Math.max(0.5, (W - fp.dockW) / H)) * 180 / Math.PI)) : (fp.mode === 'cart' || phoneP ? fpFov() : Math.max(fpFov(), 80))) - 40) * k;
       camera.setViewOffset(W, H, side ? fp.dockW * 0.5 * k : 0, side ? 0 : fp.dockH * (fp.mode !== 'cart' && W <= 720 && H > W ? 0.4 : 0.5) * k, W, H);
       camera.updateProjectionMatrix(); fp.on = true;   // portrait phone checkout: the window's top edge sits right on the counter's front edge
     } else if (fp.on) { camera.clearViewOffset(); camera.fov = 40; camera.updateProjectionMatrix(); fp.on = false; }
