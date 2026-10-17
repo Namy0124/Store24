@@ -627,7 +627,7 @@ img { -webkit-user-drag: none; user-drag: none; }
         <textarea id="saveCode" rows="3" hidden spellcheck="false" placeholder="存檔碼貼在這裡,再按一次「匯入存檔碼」"></textarea><div class="sub" id="saveMsg"></div></div>
       <div class="controls" id="controls"></div>
       <p class="legal">配件品牌、商品與人物都是虛構的遊戲設定。手機型號使用真實型號。</p>
-      <p class="legal" id="verLine" style="margin-top:2px;opacity:.7">版本 v212 · 2026-10-17</p>
+      <p class="legal" id="verLine" style="margin-top:2px;opacity:.7">版本 v213 · 2026-10-17</p>
     </div>
   </div>
 
@@ -3093,7 +3093,7 @@ function startScene() {
   };
   const EB_TIP = { good: '4 星以上的好評結局', mid: '3 星普通結局', bad: '2 星以下差評結局', paid: '你曾經自掏腰包處理', call: '你曾經打電話問過店長' };
   function dexDetail(v) {
-    let h = '<button class="btn small" type="button" data-dxback="1">‹ 回圖鑑</button>';
+    let h = '<button class="btn small" type="button" data-dxback="1">‹ 返回</button>';
     if (dexView.r !== undefined) {
       const r = v.regs[dexView.r]; if (!r) { dexView = null; return dexRender(); }
       h += '<div class="dx-t" style="margin-top:10px"><h3><span>🤝 ' + esc(r.n) + (r.v >= 2 && r.chat ? ' <span class="dx-b on">話癆</span>' : '') + '</span></h3><div class="sub">熟客 · 來過 ' + r.v + ' 次</div><div class="dx-bar"><i style="width:' + Math.round(Math.min(8, Math.abs(r.f)) / 8 * 100) + '%"></i></div>';
@@ -3112,12 +3112,8 @@ function startScene() {
     h += '<div class="dx-e"><b>這類客人的好感度</b><div class="sub">' + favWord(f) + '(' + f + ')' + (f >= 3 ? ' · 評價有加成' : f <= -3 ? ' · 評價會被扣分' : '') + '</div></div></div>';
     dexBody.innerHTML = h;
   }
-  function dexRender() {
-    const v = V(); let total = 0, got = 0, h = '';
-    if (dexView) { dexDetail(v); return; }
-    Object.keys(SCN).forEach((t) => Object.keys(SCN[t]).forEach((k) => { total++; if (v.seen[t + k]) got++; }));
-    h += '<div class="dx-sum">已收集劇情 ' + got + ' / ' + total + '。遇到的客人會記錄在這裡,好感度會影響這類客人給你的評價。</div>';
-    Object.keys(DEXT).forEach((t) => {
+  function dexTypeHtml(v, t) {
+    let h = '';
       const f = v.fav[t], pct = Math.round((Math.abs(f) / (f < 0 ? 5 : 8)) * 100);
       h += '<div class="dx-t"><h3><span>' + DEXT[t][0] + ' ' + DEXT[t][1] + '</span><span>好感度:' + favWord(f) + ' (' + f + ')</span></h3><div class="dx-bar' + (f < 0 ? ' neg' : '') + '"><i style="width:' + pct + '%"></i></div>';
       h += '<div class="sub">' + (f >= 3 ? '🔓 這類客人比較客氣,評價有加成。' : f <= -3 ? '⚠ 這類客人比較挑剔,評價會被扣分。' : '好感度達 3 以上可解鎖評價加成;低於 -3 則會被挑剔。') + '</div>';
@@ -3130,14 +3126,26 @@ function startScene() {
         h += v.regs.length ? v.regs.map((r, ri) => '<div class="dx-e tap" data-dxr="' + ri + '" role="button" tabindex="0"><b>' + esc(r.n) + (r.v >= 2 && r.chat ? ' <span class="dx-b on">話癆</span>' : '') + '</b><div class="sub">來過 ' + r.v + ' 次 · 好感度 ' + r.f + (r.b ? ' · 上次買:' + esc(r.b) : '') + (r.f >= 5 ? ' · 💝 會帶飲料來' : '') + '</div></div>').join('') : '<div class="dx-e lock"><b>還沒有熟客</b></div>';
       }
       h += '</div>';
+    return h;
+  }
+  function dexRender() {
+    const v = V(); let total = 0, got = 0, h = '';
+    if (dexView && (dexView.k !== undefined || dexView.r !== undefined)) { dexDetail(v); return; }
+    if (dexView && dexView.t && DEXT[dexView.t]) { dexBody.innerHTML = '<button class="btn small" type="button" data-dxback="1">‹ 返回</button><div style="margin-top:10px">' + dexTypeHtml(v, dexView.t) + '</div>'; return; }
+    Object.keys(SCN).forEach((t) => Object.keys(SCN[t]).forEach((k) => { total++; if (v.seen[t + k]) got++; }));
+    h += '<div class="dx-sum">點一種客人,看他的好感度、遇過的劇情和處理方式。已收集劇情 ' + got + ' / ' + total + '。</div>';
+    Object.keys(DEXT).forEach((t) => {
+      const f = v.fav[t], pct = Math.round((Math.abs(f) / (f < 0 ? 5 : 8)) * 100), ks = Object.keys(SCN[t]), met = ks.filter((k) => v.seen[t + k]).length;
+      h += '<div class="dx-t dx-type tap" data-dxt="' + t + '" role="button" tabindex="0"><h3><span>' + DEXT[t][0] + ' ' + DEXT[t][1] + '</span><span>›</span></h3><div class="sub">好感度:' + favWord(f) + '(' + f + ') · 劇情 ' + met + '/' + ks.length + (t === 'reg' ? ' · 熟客 ' + v.regs.length + ' 位' : '') + '</div><div class="dx-bar' + (f < 0 ? ' neg' : '') + '"><i style="width:' + pct + '%"></i></div></div>';
     });
     if (v.paid) h += '<div class="sub">累計自掏腰包:' + fmtN(v.paid) + '</div>';
     dexBody.innerHTML = h;
   }
   dexBody.addEventListener('click', (e) => {
-    if (e.target.closest('[data-dxback]')) { dexView = null; dexRender(); dexBody.scrollTop = 0; return; }
+    if (e.target.closest('[data-dxback]')) { dexView = dexView && (dexView.k !== undefined || dexView.r !== undefined) ? { t: dexView.t || 'reg' } : null; dexRender(); dexBody.scrollTop = 0; return; }
+    const ty = e.target.closest('[data-dxt]'); if (ty) { dexView = { t: ty.dataset.dxt }; dexRender(); dexBody.scrollTop = 0; return; }
     const a = e.target.closest('[data-dx]'), b = e.target.closest('[data-dxr]');
-    if (a) { const [t, k] = a.dataset.dx.split('|'); dexView = { t: t, k: k }; dexRender(); dexBody.scrollTop = 0; } else if (b) { dexView = { r: +b.dataset.dxr }; dexRender(); dexBody.scrollTop = 0; }
+    if (a) { const [t, k] = a.dataset.dx.split('|'); dexView = { t: t, k: k }; dexRender(); dexBody.scrollTop = 0; } else if (b) { dexView = { t: 'reg', r: +b.dataset.dxr }; dexRender(); dexBody.scrollTop = 0; }
   });
   function dexOpen() { dexView = null; if (state.modal === 'phone') closePhone(); dexPrev = state.modal; dexEl.hidden = false; state.modal = 'dex'; dexRender(); }
   function dexClose() { dexEl.hidden = true; state.modal = dexPrev === 'dex' ? null : dexPrev; dexPrev = null; }
@@ -5393,7 +5401,7 @@ function startScene() {
       f.cm = f.cm.slice(-8); PH.soReply = -1; saveGame(); renderFeed(); beep(700, 0.05);
     }
   });
-  const SO_MY = () => [['今天好累,好想下班 😮‍💨', '😮‍💨'], ['今天店裡來了個很有個性的客人', '🧐'], [SAVE.phoneBest ? '疊疊貨箱最高 ' + SAVE.phoneBest + ' 層,不服來戰' : '最近迷上一個小遊戲', '🎮'], ['終於吃到午餐了 🍱', '🍱'], ['站了一整天,腳好痠', '🦶']];
+  const SO_MY = () => [['今天好累,好想下班 😮‍💨', '😮‍💨'], ['今天店裡來了個很有個性的客人', '🧐'], [SAVE.phoneBest ? '疊疊貨箱最高 ' + SAVE.phoneBest + ' 層,不服來戰' : '最近迷上一個小遊戲', '🎮'], ['終於吃到午餐了 🍱', '🍱'], ['好想回家…', '🏠']];
   function soCompose() {
     const el = $('#phSoCompose'); if (!el.hidden) { el.hidden = true; return; }
     el.innerHTML = '<div class="sub" style="margin:2px 2px 6px">要發什麼?</div><div class="rp">' + SO_MY().map((m, i) => '<button type="button" class="btn small" data-my="' + i + '">' + esc(m[0]) + '</button>').join('') + '</div>'; el.hidden = false;
