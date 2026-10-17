@@ -623,7 +623,7 @@ img { -webkit-user-drag: none; user-drag: none; }
         <textarea id="saveCode" rows="3" hidden spellcheck="false" placeholder="存檔碼貼在這裡,再按一次「匯入存檔碼」"></textarea><div class="sub" id="saveMsg"></div></div>
       <div class="controls" id="controls"></div>
       <p class="legal">配件品牌、商品與人物都是虛構的遊戲設定。手機型號使用真實型號。</p>
-      <p class="legal" id="verLine" style="margin-top:2px;opacity:.7">版本 v204 · 2026-10-17</p>
+      <p class="legal" id="verLine" style="margin-top:2px;opacity:.7">版本 v205 · 2026-10-17</p>
     </div>
   </div>
 
@@ -2404,7 +2404,7 @@ function startScene() {
   function layoutLine() {
     G.line.forEach((c, i) => {
       if (c.spot === i) return; c.spot = i;
-      goTo(c, QX - 1.05 * (i + 1), QZ + (i % 2 ? 0.25 : -0.1), (cc) => { face(cc, 9, QZ); });
+      goTo(c, QX - 0.8 * (i + 1), QZ + 0.95 * (i + 1), (cc) => { face(cc, 9, QZ); });   // a diagonal line so people don't hide behind each other from the camera
     });
   }
   function joinLine(c) {
@@ -2549,6 +2549,12 @@ function startScene() {
     }
   }
   function atCounter(c) {
+    /* first come, first served: whoever reaches the counter first is served, even if another customer was spawned earlier but is still shopping */
+    if (G.cust && G.cust !== c && c.flow !== 'vip' && !G.co && !G.tutorial && G.cust.flow !== 'vip' && (G.cust.st === 'browse' || G.cust.st === 'walkIn' || G.cust.st === 'calling')) {
+      const o = G.cust;
+      if (o.st === 'calling') { removeCallable(o); o.say = '算了,我去櫃檯問。'; o.ignored = true; o.st = 'walkIn'; goTo(o, QX, QZ, atCounter); }
+      o.pend = true; if (G.pend.indexOf(o) < 0) G.pend.push(o); G.cust = null;
+    }
     if (G.cust && G.cust !== c && G.cust.st !== 'leaving' && c.flow !== 'vip') { if (G.line.length < LINE_MAX || G.line.indexOf(c) >= 0) { joinLine(c); return; } }
     if (G.cust !== c) { dropQ(c); G.cust = c; G.co = null; }
     face(c, 9, QZ); SFX.ding();
