@@ -582,7 +582,7 @@ img { -webkit-user-drag: none; user-drag: none; }
     <div id="joy" hidden><div class="joy-base"><div class="joy-knob"></div></div></div>
     <div class="hud-bottom gutter">
       <div class="carry" id="carry" hidden><span></span><button class="btn small" id="carryDrop" type="button">放回去</button></div>
-      <div class="greet" style="flex-direction:row"><button class="btn small" id="btnGreet" type="button" aria-label="招呼語">👋<span class="lb"> 招呼語</span></button><button class="btn small" id="btnMusic" type="button" aria-label="音樂">🎵<span class="lb"> 音樂</span></button><button class="btn small" id="btnPhone" type="button" aria-label="手機">📱<span class="lb"> 手機</span><i class="bd" id="phBadge" hidden></i></button></div>
+      <div class="greet" style="flex-direction:row"><button class="btn small" id="btnGreet" type="button" aria-label="招呼語" title="快捷鍵 G">👋<span class="lb"> 招呼語</span></button><button class="btn small" id="btnMusic" type="button" aria-label="音樂">🎵<span class="lb"> 音樂</span></button><button class="btn small" id="btnPhone" type="button" aria-label="手機" title="快捷鍵 P">📱<span class="lb"> 手機</span><i class="bd" id="phBadge" hidden></i></button></div>
       <button class="interact alt" id="btnLog" type="button" hidden>📋 店務表</button>
       <button class="interact" id="btnInteract" type="button" hidden></button>
       <div class="hint" id="hint"></div>
@@ -610,7 +610,7 @@ img { -webkit-user-drag: none; user-drag: none; }
         <textarea id="saveCode" rows="3" hidden spellcheck="false" placeholder="存檔碼貼在這裡,再按一次「匯入存檔碼」"></textarea><div class="sub" id="saveMsg"></div></div>
       <div class="controls" id="controls"></div>
       <p class="legal">配件品牌、商品與人物都是虛構的遊戲設定。手機型號使用真實型號。</p>
-      <p class="legal" id="verLine" style="margin-top:2px;opacity:.7">版本 v191 · 2026-10-17</p>
+      <p class="legal" id="verLine" style="margin-top:2px;opacity:.7">版本 v192 · 2026-10-17</p>
     </div>
   </div>
 
@@ -1459,8 +1459,8 @@ document.addEventListener('keydown', (e) => {
 /* ---------- title / HUD ---------- */
 $('#controls').innerHTML = isTouch
   ? '<div>點地板:店員走過去</div><div>手指在畫面上按住拖曳:出現搖桿,放開就消失</div><div>點商品區或收銀台:自動走過去並打開</div>'
-  : '<div>WASD 或方向鍵:走動</div><div>走近商品區或收銀台,按 E 互動</div><div>也可以直接點地板或商品區</div>';
-$('#hint').textContent = isTouch ? '點地板移動 · 點商品區查看商品' : 'WASD / 方向鍵走動 · E 互動 · 點地板移動';
+  : '<div>WASD 或方向鍵:走動</div><div>走近商品區或收銀台,按 E 互動</div><div>G:打招呼 · P:拿手機</div><div>也可以直接點地板或商品區</div>';
+$('#hint').textContent = isTouch ? '點地板移動 · 點商品區查看商品' : 'WASD / 方向鍵走動 · E 互動 · G 打招呼 · P 手機';
 $('#storeName').value = storeName;
 function currentStoreName() { return storeName || '24HR 門市'; }
 $('#btnAdminTitle').addEventListener('click', openAdmin);
@@ -2149,6 +2149,8 @@ function startScene() {
   }
   window.addEventListener('keydown', (e) => {
     if (typing(e) || state.modal || !state.started) return;
+    if (e.code === 'KeyG' && !e.repeat && !e.ctrlKey && !e.metaKey) { $('#btnGreet').click(); return; }
+    if (e.code === 'KeyP' && !e.repeat && !e.ctrlKey && !e.metaKey) { $('#btnPhone').click(); return; }
     if (e.code === 'KeyE' || e.code === 'Enter') { if (active) { e.preventDefault(); openInteract(active); } return; }
     if (['KeyW', 'KeyA', 'KeyS', 'KeyD', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].indexOf(e.code) >= 0) { keys.add(e.code); e.preventDefault(); }
   });
