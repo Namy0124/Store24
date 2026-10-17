@@ -623,7 +623,7 @@ img { -webkit-user-drag: none; user-drag: none; }
         <textarea id="saveCode" rows="3" hidden spellcheck="false" placeholder="存檔碼貼在這裡,再按一次「匯入存檔碼」"></textarea><div class="sub" id="saveMsg"></div></div>
       <div class="controls" id="controls"></div>
       <p class="legal">配件品牌、商品與人物都是虛構的遊戲設定。手機型號使用真實型號。</p>
-      <p class="legal" id="verLine" style="margin-top:2px;opacity:.7">版本 v205 · 2026-10-17</p>
+      <p class="legal" id="verLine" style="margin-top:2px;opacity:.7">版本 v206 · 2026-10-17</p>
     </div>
   </div>
 
@@ -3736,6 +3736,18 @@ function startScene() {
     }
   }
   window.addEventListener('resize', () => { if (G.co) fitCo(); });
+  /* desktop: type the received amount on the keyboard (digits / numpad, Backspace to erase, Enter to confirm, Delete to clear) */
+  window.addEventListener('keydown', (e) => {
+    if (!G.co || G.co.step !== 'pay' || $('#checkout').hidden || e.ctrlKey || e.metaKey || e.altKey || /^(INPUT|TEXTAREA|SELECT)$/.test((e.target && e.target.tagName) || '')) return;
+    let sel = null;
+    if (/^[0-9]$/.test(e.key)) sel = '[data-co="k"][data-v="' + e.key + '"]';
+    else if (e.key === 'Backspace') sel = '[data-co="kb"]';
+    else if (e.key === 'Delete') sel = '[data-co="kc"]';
+    else if (e.key === 'Enter') sel = '[data-co="recv"]';
+    if (!sel) return;
+    const b = coBody.querySelector(sel); if (!b) return;
+    e.preventDefault(); if (!e.repeat || e.key === 'Backspace') b.click();
+  });
   try { new ResizeObserver(() => { if (G.co && !$('#checkout').hidden) fitCo(); }).observe($('#checkout .sheet-box')); } catch (e) {}
   /* ---------- 代貼保護貼: peel, wipe, lint-roll, align, squeegee, fish out leftover dust ---------- */
   const apEl = $('#applySheet'), apCv = $('#apCv');
