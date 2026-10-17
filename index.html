@@ -401,7 +401,7 @@ button, .btn, [data-co] { touch-action: manipulation; -webkit-tap-highlight-colo
 .dx-t h3 { margin: 0 0 4px; font-size: 17px; display: flex; justify-content: space-between; gap: 8px; }
 .dx-bar { height: 8px; border-radius: 4px; background: var(--panel-soft); overflow: hidden; margin: 6px 0 4px; } .dx-bar i { display: block; height: 100%; background: var(--accent); }
 .dx-bar.neg i { background: var(--danger); }
-.dx-e { border-top: 1px solid var(--line); padding: 8px 0; } .dx-e.lock { color: var(--muted); }
+.dx-e { border-top: 1px solid var(--line); padding: 8px 0; } .dx-e.lock { color: var(--muted); } .dx-e.tap { cursor: pointer; } .dx-e.tap:active { background: var(--panel-soft); }
 .dx-e b { display: block; } .dx-e .sub { font-size: 13px; color: var(--muted); }
 .dx-b { display: inline-block; font-size: 12px; border: 1px solid var(--line); border-radius: 10px; padding: 0 7px; margin: 2px 4px 0 0; color: var(--muted); } .dx-b.on { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
 .jump-menu { position: absolute; top: 56px; right: 16px; z-index: 15; background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 10px; box-shadow: var(--shadow); display: flex; flex-direction: column; gap: 6px; min-width: 190px; pointer-events: auto; }
@@ -623,7 +623,7 @@ img { -webkit-user-drag: none; user-drag: none; }
         <textarea id="saveCode" rows="3" hidden spellcheck="false" placeholder="存檔碼貼在這裡,再按一次「匯入存檔碼」"></textarea><div class="sub" id="saveMsg"></div></div>
       <div class="controls" id="controls"></div>
       <p class="legal">配件品牌、商品與人物都是虛構的遊戲設定。手機型號使用真實型號。</p>
-      <p class="legal" id="verLine" style="margin-top:2px;opacity:.7">版本 v209 · 2026-10-17</p>
+      <p class="legal" id="verLine" style="margin-top:2px;opacity:.7">版本 v210 · 2026-10-17</p>
     </div>
   </div>
 
@@ -3043,8 +3043,37 @@ function startScene() {
   const EB = { good: '好評', mid: '普通', bad: '差評', paid: '自掏腰包', call: '問過店長' };
   const favWord = (n) => n >= 5 ? '很高' : n >= 2 ? '不錯' : n > -2 ? '普通' : n > -4 ? '偏低' : '很差';
   const dexEl = $('#dexSheet'), dexBody = $('#dexBody'); let dexPrev = null;
+  let dexView = null;
+  const DX_TIP = {
+    haggle: { dear: '店裡不給折扣。有禮貌地婉拒不會扣分;如果你答應,折扣要自己掏腰包,而且會引來更多要求。', net: '網路價和店裡的保固、服務不同,可以說明。想跟價的話,價差由你自己補。', round: '抹零的零頭要你自己出,堅持原價最安全。', member: '你沒印象就不用給會員價,客氣說明店裡沒有這種優惠。', persist: '他會問了又問,結帳前還會再問一次,立場要一致。', staff: '前同事的承諾查不到也沒有根據,不用理會,有禮貌地說明即可。', price: '先確認系統價格,可以給他看。如果你補差價,會被記成自掏腰包。', again: '你上次破例過,所以他又來了。這次要不要堅持,好感度和評價都會受影響。' },
+    ret: { ok: '核對發票、七日內、商品狀態。帶電商品憑發票可以換,同價直接換,不同價補差額。', late: '超過七日:態度好的客人可以幫他換同款,態度差的婉拒。', noinv: '沒有發票就不能換,請他回去找找看。', old: '舊發票要回總公司,店裡處理不了,請他聯絡總公司。', cash: '只能換貨,不能退現金。', nonelec: '殼、膜、支架、音源、雜項不能換,但如果沒拆封,你可以自己決定要不要換同款。' },
+    ask: { specs: '他會拿兩樣商品一直比,保持耐心、用重點推薦,能幫他縮小範圍。', photo: '你可以同意、婉拒,或趁機介紹其他商品。' },
+    reg: { intro: '新面孔,住在附近,對他好一點可能變成熟客。', chat: '熟客找你聊天,話癆會停不下來,記得顧到後面的客人。', last: '記得他上次買什麼,關心一下會提升好感。', complain: '他回來抱怨上次的服務,好好處理能把好感拉回來。' }
+  };
+  const EB_TIP = { good: '4 星以上的好評結局', mid: '3 星普通結局', bad: '2 星以下差評結局', paid: '你曾經自掏腰包處理', call: '你曾經打電話問過店長' };
+  function dexDetail(v) {
+    let h = '<button class="btn small" type="button" data-dxback="1">‹ 回圖鑑</button>';
+    if (dexView.r !== undefined) {
+      const r = v.regs[dexView.r]; if (!r) { dexView = null; return dexRender(); }
+      h += '<div class="dx-t" style="margin-top:10px"><h3><span>🤝 ' + esc(r.n) + (r.v >= 2 && r.chat ? ' <span class="dx-b on">話癆</span>' : '') + '</span></h3><div class="sub">熟客 · 來過 ' + r.v + ' 次</div><div class="dx-bar"><i style="width:' + Math.round(Math.min(8, Math.abs(r.f)) / 8 * 100) + '%"></i></div>';
+      h += '<div class="dx-e"><b>好感度</b><div class="sub">' + favWord(r.f) + '(' + r.f + ')' + (r.f >= 5 ? ' · 💝 會帶飲料來' : r.f >= 3 ? ' · 🔓 比較客氣' : r.f <= -3 ? ' · ⚠ 比較挑剔' : '') + '</div></div>';
+      h += '<div class="dx-e"><b>上次買的</b><div class="sub">' + (r.b ? esc(r.b) : '還沒記錄') + '</div></div>';
+      h += '<div class="dx-e"><b>個性</b><div class="sub">' + (r.chat ? '愛聊天,常停不下來。' : '安靜客氣。') + '</div></div></div>';
+      dexBody.innerHTML = h; return;
+    }
+    const t = dexView.t, k = dexView.k, d = SCN[t] && SCN[t][k], sn = v.seen[t + k];
+    if (!d || !sn) { dexView = null; return dexRender(); }
+    const f = v.fav[t];
+    h += '<div class="dx-t" style="margin-top:10px"><h3><span>' + DEXT[t][0] + ' ' + esc(d[0]) + '</span></h3><div class="sub">' + DEXT[t][1] + ' · 遇過 ' + sn.n + ' 次</div>';
+    h += '<div class="dx-e"><b>狀況</b><div class="sub">' + esc(d[1]) + '</div></div>';
+    h += '<div class="dx-e"><b>怎麼處理</b><div class="sub">' + esc((DX_TIP[t] && DX_TIP[t][k]) || '依客人的態度和店裡的規定判斷。') + '</div></div>';
+    h += '<div class="dx-e"><b>已達成的結局</b><div>' + Object.keys(EB).map((e) => '<span class="dx-b' + (sn.e.indexOf(e) >= 0 ? ' on' : '') + '">' + EB[e] + '</span>').join('') + '</div><div class="sub">' + sn.e.map((e) => EB_TIP[e]).filter(Boolean).join('、') + (sn.e.length ? '' : '還沒有結局記錄') + '</div></div>';
+    h += '<div class="dx-e"><b>這類客人的好感度</b><div class="sub">' + favWord(f) + '(' + f + ')' + (f >= 3 ? ' · 評價有加成' : f <= -3 ? ' · 評價會被扣分' : '') + '</div></div></div>';
+    dexBody.innerHTML = h;
+  }
   function dexRender() {
     const v = V(); let total = 0, got = 0, h = '';
+    if (dexView) { dexDetail(v); return; }
     Object.keys(SCN).forEach((t) => Object.keys(SCN[t]).forEach((k) => { total++; if (v.seen[t + k]) got++; }));
     h += '<div class="dx-sum">已收集劇情 ' + got + ' / ' + total + '。遇到的客人會記錄在這裡,好感度會影響這類客人給你的評價。</div>';
     Object.keys(DEXT).forEach((t) => {
@@ -3054,17 +3083,22 @@ function startScene() {
       Object.keys(SCN[t]).forEach((k) => {
         const sn = v.seen[t + k], d = SCN[t][k];
         if (!sn) { h += '<div class="dx-e lock"><b>？？？</b><div class="sub">還沒遇到。</div></div>'; return; }
-        h += '<div class="dx-e"><b>' + esc(d[0]) + ' <span class="sub">遇過 ' + sn.n + ' 次</span></b><div class="sub">' + esc(d[1]) + '</div>' + Object.keys(EB).map((e) => '<span class="dx-b' + (sn.e.indexOf(e) >= 0 ? ' on' : '') + '">' + EB[e] + '</span>').join('') + '<span class="sub"> 結局 ' + sn.e.filter((e) => e !== 'call').length + '/4</span></div>';
+        h += '<div class="dx-e tap" data-dx="' + t + '|' + k + '" role="button" tabindex="0"><b>' + esc(d[0]) + ' <span class="sub">遇過 ' + sn.n + ' 次 · 點開看詳情 ›</span></b><div class="sub">' + esc(d[1]) + '</div>' + Object.keys(EB).map((e) => '<span class="dx-b' + (sn.e.indexOf(e) >= 0 ? ' on' : '') + '">' + EB[e] + '</span>').join('') + '<span class="sub"> 結局 ' + sn.e.filter((e) => e !== 'call').length + '/4</span></div>';
       });
       if (t === 'reg') {
-        h += v.regs.length ? v.regs.map((r) => '<div class="dx-e"><b>' + esc(r.n) + (r.v >= 2 && r.chat ? ' <span class="dx-b on">話癆</span>' : '') + '</b><div class="sub">來過 ' + r.v + ' 次 · 好感度 ' + r.f + (r.b ? ' · 上次買:' + esc(r.b) : '') + (r.f >= 5 ? ' · 💝 會帶飲料來' : '') + '</div></div>').join('') : '<div class="dx-e lock"><b>還沒有熟客</b></div>';
+        h += v.regs.length ? v.regs.map((r, ri) => '<div class="dx-e tap" data-dxr="' + ri + '" role="button" tabindex="0"><b>' + esc(r.n) + (r.v >= 2 && r.chat ? ' <span class="dx-b on">話癆</span>' : '') + '</b><div class="sub">來過 ' + r.v + ' 次 · 好感度 ' + r.f + (r.b ? ' · 上次買:' + esc(r.b) : '') + (r.f >= 5 ? ' · 💝 會帶飲料來' : '') + '</div></div>').join('') : '<div class="dx-e lock"><b>還沒有熟客</b></div>';
       }
       h += '</div>';
     });
     if (v.paid) h += '<div class="sub">累計自掏腰包:' + fmtN(v.paid) + '</div>';
     dexBody.innerHTML = h;
   }
-  function dexOpen() { if (state.modal === 'phone') closePhone(); dexPrev = state.modal; dexEl.hidden = false; state.modal = 'dex'; dexRender(); }
+  dexBody.addEventListener('click', (e) => {
+    if (e.target.closest('[data-dxback]')) { dexView = null; dexRender(); dexBody.scrollTop = 0; return; }
+    const a = e.target.closest('[data-dx]'), b = e.target.closest('[data-dxr]');
+    if (a) { const [t, k] = a.dataset.dx.split('|'); dexView = { t: t, k: k }; dexRender(); dexBody.scrollTop = 0; } else if (b) { dexView = { r: +b.dataset.dxr }; dexRender(); dexBody.scrollTop = 0; }
+  });
+  function dexOpen() { dexView = null; if (state.modal === 'phone') closePhone(); dexPrev = state.modal; dexEl.hidden = false; state.modal = 'dex'; dexRender(); }
   function dexClose() { dexEl.hidden = true; state.modal = dexPrev === 'dex' ? null : dexPrev; dexPrev = null; }
   $('#dexClose').addEventListener('click', dexClose);
   $('#phAppDex').addEventListener('click', dexOpen);
