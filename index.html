@@ -627,7 +627,7 @@ img { -webkit-user-drag: none; user-drag: none; }
         <textarea id="saveCode" rows="3" hidden spellcheck="false" placeholder="存檔碼貼在這裡,再按一次「匯入存檔碼」"></textarea><div class="sub" id="saveMsg"></div></div>
       <div class="controls" id="controls"></div>
       <p class="legal">配件品牌、商品與人物都是虛構的遊戲設定。手機型號使用真實型號。</p>
-      <p class="legal" id="verLine" style="margin-top:2px;opacity:.7">版本 v216 · 2026-10-17</p>
+      <p class="legal" id="verLine" style="margin-top:2px;opacity:.7">版本 v217 · 2026-10-18</p>
     </div>
   </div>
 
@@ -4635,6 +4635,42 @@ function startScene() {
     parts.legL.rotation.x = parts.legR.rotation.x = 0;
     if (rows !== DLC.lastRows) { DLC.lastRows = rows; if (rows > 0) SFX.paper(); }
   }
+  /* the clerk holds the phone up (right hand) when the phone is open, and the 店務表 clipboard (left hand) with a pen (right hand) when the log is open */
+  let HOLD = null;
+  function holdBuild() {
+    if (HOLD) return HOLD;
+    const p = new T.Group(); const pb = new T.Mesh(new T.BoxGeometry(0.1, 0.19, 0.014), mat(0x1B1F23)); p.add(pb);
+    const ps = new T.Mesh(new T.PlaneGeometry(0.085, 0.165), new T.MeshBasicMaterial({ color: 0x8FDDE6 })); ps.position.z = 0.0085; p.add(ps);
+    p.rotation.x = -Math.PI / 2 + 0.22; p.position.set(0, -0.5, 0.03); p.visible = false; parts.armR.add(p);
+    const cv = document.createElement('canvas'); cv.width = 128; cv.height = 168; const x = cv.getContext('2d');
+    x.fillStyle = '#fff'; x.fillRect(0, 0, 128, 168); x.fillStyle = '#0B7A82'; x.fillRect(0, 0, 128, 18); x.fillStyle = '#fff'; x.font = 'bold 12px sans-serif'; x.fillText('店務表', 8, 14);
+    x.strokeStyle = '#9fb3b1'; for (let r = 0; r < 7; r++) for (let c = 0; c < 5; c++) x.strokeRect(6 + c * 23, 26 + r * 19, 23, 19);
+    const tex = new T.CanvasTexture(cv);
+    const s = new T.Group(); s.add(new T.Mesh(new T.BoxGeometry(0.3, 0.38, 0.025), mat(0x8A5A32)));
+    const paper = new T.Mesh(new T.PlaneGeometry(0.26, 0.34), new T.MeshBasicMaterial({ map: tex })); paper.position.z = 0.015; s.add(paper);
+    s.position.set(0.06, -0.38, 0.2); s.rotation.set(-0.35, 0.15, 0); s.visible = false; parts.armL.add(s);
+    const pen = new T.Mesh(new T.CylinderGeometry(0.012, 0.012, 0.16, 6), mat(0xE5534B)); pen.position.set(0, -0.5, 0.06); pen.rotation.set(0.5, 0, 0.5); pen.visible = false; parts.armR.add(pen);
+    HOLD = { p: p, s: s, pen: pen, k: 0, t: 0 }; return HOLD;
+  }
+  function holdPose(now) {
+    if (DLC) return;
+    const want = PH.open ? 'p' : (SB.open ? 's' : null);
+    if (!want && (!HOLD || HOLD.k <= 0)) return;
+    const H = holdBuild(), dt = Math.min(0.1, Math.max(0, (now - H.t) / 1000)); H.t = now;
+    if (want) H.mode = want;
+    H.k = Math.max(0, Math.min(1, H.k + (want ? 1 : -1) * dt * 5));
+    const k = H.k, e = k * k * (3 - 2 * k), sec = now / 1000, lerp = (a, b) => a + (b - a) * e;
+    if (k <= 0) { H.p.visible = H.s.visible = H.pen.visible = false; player.rotation.x = 0; parts.armR.rotation.z = 0; return; }
+    H.p.visible = H.mode === 'p'; H.s.visible = H.pen.visible = H.mode === 's';
+    if (H.mode === 'p') {
+      parts.armR.rotation.x = lerp(parts.armR.rotation.x, -1.2); parts.armR.rotation.z = -0.12 * e;
+      H.p.position.y = -0.5 + 0.01 * Math.sin(sec * 9); player.rotation.x = 0.12 * e;
+    } else {
+      parts.armL.rotation.x = lerp(parts.armL.rotation.x, -1.15);
+      parts.armR.rotation.x = lerp(parts.armR.rotation.x, -1.05 + Math.sin(sec * 13) * 0.05); parts.armR.rotation.z = (-0.25 + Math.sin(sec * 6.5) * 0.1) * e;
+      player.rotation.x = 0.18 * e;
+    }
+  }
   function dlvPause(msg) { if (!DLC) return; G.dlvP = DLC; DLC = null; $('#dlvBar').hidden = true; parts.armR.rotation.z = 0; if (msg) toast(msg); renderTodo(); }
   function dlvCheck() {
     const I = SAVE.inv; if (!I.sent || !I.sent.here) { toast('沒有要點的貨'); return; }
@@ -5532,7 +5568,7 @@ function startScene() {
     const sw = moving ? Math.sin(walkT) * 0.7 : 0;
     parts.legL.rotation.x = sw; parts.legR.rotation.x = -sw; parts.armL.rotation.x = -sw; parts.armR.rotation.x = sw;
     player.position.y = moving ? Math.abs(Math.sin(walkT)) * 0.05 : Math.sin(now / 600) * 0.012;
-    dlvPose(now);
+    dlvPose(now); holdPose(now);
 
     /* nearest interactable */
     active = null; let bestD = 1.4, ringStand = null, ringD = 3.5;
