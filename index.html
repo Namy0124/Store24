@@ -627,7 +627,7 @@ img { -webkit-user-drag: none; user-drag: none; }
         <textarea id="saveCode" rows="3" hidden spellcheck="false" placeholder="存檔碼貼在這裡,再按一次「匯入存檔碼」"></textarea><div class="sub" id="saveMsg"></div></div>
       <div class="controls" id="controls"></div>
       <p class="legal">配件品牌、商品與人物都是虛構的遊戲設定。手機型號使用真實型號。</p>
-      <p class="legal" id="verLine" style="margin-top:2px;opacity:.7">版本 v214 · 2026-10-17</p>
+      <p class="legal" id="verLine" style="margin-top:2px;opacity:.7">版本 v215 · 2026-10-17</p>
     </div>
   </div>
 
@@ -2636,8 +2636,8 @@ function startScene() {
     if (!(c.path && c.path.length) && c.then) { const f = c.then; c.then = null; f(c); }
     if (c.st === 'browse') { c.t -= dt; if (c.t <= 0) { c.say = ''; c.st = 'walkIn'; if (c.browser) browseNext(c); else selfNext(c); } }
     if (c.st === 'calling' && G.gt - c.callAt > 40 * (1 + 0.4 * moodLv())) { removeCallable(c); c.ignored = true; c.st = 'walkIn'; c.say = '算了,我去櫃檯問。'; goTo(c, QX, QZ, atCounter); }
-    if ((c.st === 'asking' || c.st === 'ready' || c.st === 'queued') && !G.tutorial && c.flow !== 'vip') {   // the longer they wait the angrier they get (opening the checkout does not stop the clock)
-      const w = (G.gt - c.readyAt) / (1 + 0.3 * moodLv()), cw = c === G.cust ? G.co : null;
+    if ((c.st === 'asking' || c.st === 'ready' || c.st === 'queued') && c.flow !== 'vip') {   // the longer they wait the angrier they get (opening the checkout does not stop the clock)
+      const w = (G.gt - c.readyAt) / (1 + 0.3 * moodLv()) / (G.tutorial ? 2.15 : 1), cw = c === G.cust ? G.co : null;   // tutorial day: the same ladder but about twice as patient (walks out after ~10 minutes)
       c.em = w > 220 ? '🤬' : w > 140 ? '😠' : w > 60 ? '😒' : '';
       if (w > 60 && !c.grumble) { c.grumble = true; c.say = pickOne(SAY.grumble); }
       if (w > 140) angryFace(c);
@@ -4007,7 +4007,7 @@ function startScene() {
   }
   function finishSale() {
     const co = G.co, c = G.cust;
-    const wait = Math.max(0, G.gt - c.readyAt - 40) / (1 + 0.3 * moodLv());   // whole time at the counter, with a little allowance for ringing it up
+    const wait = Math.max(0, G.gt - c.readyAt - 40) / (1 + 0.3 * moodLv()) / (G.tutorial ? 2.15 : 1);   // whole time at the counter, with a little allowance for ringing it up
     const waitPen = wait <= 60 ? 0 : wait <= 90 ? 0.5 : wait <= 130 ? 1 : wait <= 170 ? 2 : wait <= 210 ? 3 : 4;   // one star from here on
     let iss = shopIssues(c)[0];
     if (wait > 240) { iss = { text: '等了超久,如果可以我連一星都不想給。', say: '等這麼久…', pen: 0 }; angryFace(c); }
