@@ -627,7 +627,7 @@ img { -webkit-user-drag: none; user-drag: none; }
         <textarea id="saveCode" rows="3" hidden spellcheck="false" placeholder="存檔碼貼在這裡,再按一次「匯入存檔碼」"></textarea><div class="sub" id="saveMsg"></div></div>
       <div class="controls" id="controls"></div>
       <p class="legal">配件品牌、商品與人物都是虛構的遊戲設定。手機型號使用真實型號。</p>
-      <p class="legal" id="verLine" style="margin-top:2px;opacity:.7">版本 v220 · 2026-10-18</p>
+      <p class="legal" id="verLine" style="margin-top:2px;opacity:.7">版本 v221 · 2026-10-18</p>
     </div>
   </div>
 
@@ -2461,7 +2461,7 @@ function startScene() {
     if (!db.products.length) { G.nextAt = G.gt + 8; return; }
     if ((G.tutorial || G.vipDue) && primaryCount() > 0) { G.nextAt = G.gt + 5; return; }   // never replace someone who is still being served
     G.nextAt = Math.max(G.nextAt, G.gt - 30) + Math.max(6, expo(gapAvg()));
-    { const nth = G.nSp = (G.nSp || 0) + 1; if (G.vipPlan && G.vipPlan.length && nth >= G.vipPlan[0] && primaryCount() === 0) { G.vipPlan.shift(); spawnVip(); return; } }
+    { const nth = G.nSp = (G.nSp || 0) + 1; if (G.vipPlan && G.vipPlan.length && nth >= G.vipPlan[0]) { if (primaryCount() === 0) { G.vipPlan.shift(); G.vipDue = false; spawnVip(); return; } G.vipDue = true; G.nSp = nth - 1; G.nextAt = G.gt + 4; return; } }   // a special customer is due: hold the next ordinary customer until the counter and queue are empty, so they are never skipped
     const pr = buildPerson(); pr.g.position.set(0, 0, 5.9); pr.g.rotation.y = Math.PI; scene.add(pr.g); SFX.chime();
     const r = G.tutorial && !G.tutSelf ? 0.5 : Math.random() * (G.tutorial ? 0.65 : 1); if (G.tutorial) G.tutSelf = true;
     const kind = r < 0.35 ? 'ask' : r < 0.65 ? 'self' : 'look';
@@ -4905,8 +4905,8 @@ function startScene() {
     if (G.dayNo === 1) { G.dust = {}; ZONES.forEach((z) => { G.dust[z.id] = 0; }); G.dust[ZONES[G.zone].id] = 15; } else ZONES.forEach((z) => { G.dust[z.id] = Math.min(50, (G.dust[z.id] || 0) + (() => { const q = Math.random(); return q < 0.25 ? 1 : q < 0.65 ? 2 : 3; })()); });
     { const zid = ZONES[G.zone].id; G.dust[zid] = Math.max(G.dust[zid] || 0, 15); }
     G.shop = freshShop(); G.shop.zoneStart = Math.max(1, G.dust[ZONES[G.zone].id] || 0); G.shop.msgs = (SAVE.msgs || []).map((m) => Object.assign({}, m)); G.shop.msgSeq = G.shop.msgs.reduce((a, m) => Math.max(a, m.id || 0), 0); rollDayTarget(); if (G.tutorial) { G.target = 5; G.ticketMult = 1; } G.nextAt = 1e9; G.nextBrowse = 1e9; G.lastMin = -1;
-    G.nSp = 0; G.vipPen = 0; G.vipPlan = []; if (G.dayNo % 4 === 0) SAVE.vip.pre = Math.max(0, SAVE.vip.pre - 1);
-    if (!G.tutorial) { const r0 = Math.random(), nv = r0 < 0.3 ? 0 : r0 < 0.75 ? 1 : 2, hi = Math.max(4, G.target - 2); for (let k = 0; k < nv; k++) G.vipPlan.push(2 + Math.floor(Math.random() * (hi - 1))); G.vipPlan.sort((a, b) => a - b); }
+    G.nSp = 0; G.vipDue = false; G.vipPen = 0; G.vipPlan = []; if (G.dayNo % 4 === 0) SAVE.vip.pre = Math.max(0, SAVE.vip.pre - 1);
+    if (!G.tutorial) { const r0 = Math.random(), nv = G.dayNo <= 2 ? 1 : r0 < 0.15 ? 0 : r0 < 0.6 ? 1 : 2, hi = Math.max(4, G.target - 2); for (let k = 0; k < nv; k++) G.vipPlan.push(2 + Math.floor(Math.random() * (hi - 1))); G.vipPlan.sort((a, b) => a - b); }
     endRing(); updateBadges();
     setLights(false); setAc(false); FX.doorTarget = 0; FX.doorT = 0; invNewDay(); shelfRefresh();
     CART_ORDER.forEach((k) => placeCart(CARTS[k], false)); spawnDirt(); unregister('zone'); G.tool = null; renderCarry(); refreshVerbs(); renderStat(); renderTodo();
