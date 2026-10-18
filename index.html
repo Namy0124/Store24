@@ -627,7 +627,7 @@ img { -webkit-user-drag: none; user-drag: none; }
         <textarea id="saveCode" rows="3" hidden spellcheck="false" placeholder="存檔碼貼在這裡,再按一次「匯入存檔碼」"></textarea><div class="sub" id="saveMsg"></div></div>
       <div class="controls" id="controls"></div>
       <p class="legal">配件品牌、商品與人物都是虛構的遊戲設定。手機型號使用真實型號。</p>
-      <p class="legal" id="verLine" style="margin-top:2px;opacity:.7">版本 v213 · 2026-10-17</p>
+      <p class="legal" id="verLine" style="margin-top:2px;opacity:.7">版本 v214 · 2026-10-17</p>
     </div>
   </div>
 
@@ -2151,7 +2151,7 @@ function startScene() {
     targetYaw = Math.atan2(it.cx - player.position.x, it.cz - player.position.z);
     if (it.kind === 'shelf') {
       if (gameApi && gameApi.upShelf && gameApi.upShelf(it)) return;
-      if (CARTS[it.cat] && !CARTS[it.cat].placed) { toast('這台花車還沒推到定位,按住它拖到黃色框裡'); return; }
+      if (CARTS[it.cat] && !CARTS[it.cat].placed && !(typeof isClosing === 'function' && isClosing())) { toast('這台花車還沒推到定位,按住它拖到黃色框裡'); return; }   // after closing time the stored carts can still be opened, so customers still in the shop can be served
       const waiting = G.cust && G.cust.flow === 'ask' && (G.cust.st === 'asking' || G.cust.st === 'ready');
       if (G.tool && !waiting) { if (gameApi) gameApi.brush(it.cat); return; }
       if (G.tool) { G.tool = null; if (gameApi) gameApi.dropTool(); toast('客人在等,先把撢子放下'); }
