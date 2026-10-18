@@ -627,7 +627,7 @@ img { -webkit-user-drag: none; user-drag: none; }
         <textarea id="saveCode" rows="3" hidden spellcheck="false" placeholder="存檔碼貼在這裡,再按一次「匯入存檔碼」"></textarea><div class="sub" id="saveMsg"></div></div>
       <div class="controls" id="controls"></div>
       <p class="legal">配件品牌、商品與人物都是虛構的遊戲設定。手機型號使用真實型號。</p>
-      <p class="legal" id="verLine" style="margin-top:2px;opacity:.7">版本 v221 · 2026-10-18</p>
+      <p class="legal" id="verLine" style="margin-top:2px;opacity:.7">版本 v222 · 2026-10-18</p>
     </div>
   </div>
 
@@ -4294,14 +4294,26 @@ function startScene() {
     for (let k = clickMeshes.length - 1; k >= 0; k--) if (clickMeshes[k].userData.iid === id) clickMeshes.splice(k, 1);
     if (it.grp) scene.remove(it.grp);
   }
+  const floorDirt = () => interactables.filter((x) => x.kind === 'dirt').length;
+  function makeDirt(p) {
+    const id = 'dirt' + (G.dirtSeq = (G.dirtSeq == null ? -1 : G.dirtSeq) + 1);
+    const g = new T.Group(); g.position.set(p[0], 0, p[1]); scene.add(g);
+    box(0.3, 0.03, 0.22, 0x8A7F73, 0, 0.02, 0, g); box(0.16, 0.04, 0.14, 0x6F665C, 0.12, 0.03, 0.08, g); box(0.12, 0.03, 0.1, 0xA89C8C, -0.1, 0.025, -0.07, g);
+    const it = { id: id, kind: 'dirt', name: '地上的髒污', verb: '掃', stands: [{ x: p[0], z: p[1] }], cx: p[0], cz: p[1], grp: g };
+    register(g, it); byId[it.id] = it;
+  }
   function spawnDirt() {
-    [0, 1, 2].forEach((i) => unregister('dirt' + i));
-    DIRT_SPOTS.slice().sort(() => Math.random() - 0.5).slice(0, 3).forEach((p, i) => {
-      const g = new T.Group(); g.position.set(p[0], 0, p[1]); scene.add(g);
-      box(0.3, 0.03, 0.22, 0x8A7F73, 0, 0.02, 0, g); box(0.16, 0.04, 0.14, 0x6F665C, 0.12, 0.03, 0.08, g); box(0.12, 0.03, 0.1, 0xA89C8C, -0.1, 0.025, -0.07, g);
-      const it = { id: 'dirt' + i, kind: 'dirt', name: '地上的髒污', verb: '掃', stands: [{ x: p[0], z: p[1] }], cx: p[0], cz: p[1], grp: g };
-      register(g, it); byId[it.id] = it;
-    });
+    interactables.filter((x) => x.kind === 'dirt').forEach((x) => unregister(x.id));
+    G.dirtSeq = -1;
+    DIRT_SPOTS.slice().sort(() => Math.random() - 0.5).slice(0, 3).forEach(makeDirt);
+    G.nextDirt = 70 + Math.random() * 40;
+  }
+  /* the floor keeps getting dirtier while the shop is open: a new spot every minute or so (a little faster in the evening), up to all the spots on the map */
+  function stepDirt() {
+    const s = G.shop; if (!s || !s.door || isClosing() || G.tutorial || G.gt < (G.nextDirt || 1e9)) return;
+    const free = DIRT_SPOTS.filter((p) => !interactables.some((x) => x.kind === 'dirt' && Math.abs(x.cx - p[0]) < 0.3 && Math.abs(x.cz - p[1]) < 0.3));
+    if (free.length) makeDirt(pickOne(free));
+    G.nextDirt = G.gt + (G.gt > BIZ_SEC * 0.5 ? 55 : 80) + Math.random() * 30;
   }
   function spawnZone() {
     unregister('zone'); const z = ZONES[G.zone];
@@ -4339,7 +4351,7 @@ function startScene() {
       const d = G.dust[cat] || 0;
       if (d >= DUST_BAD ? Math.random() < 0.5 : d >= DUST_MILD && Math.random() < 0.25) out.push({ pen: 0.5, text: pickOne(['商品好髒,灰塵都沒擦。', '東西放很久了嗎?好髒。', '你們的' + dustName(cat).replace(/陳列牆|花車/, '') + '好髒喔…']), say: '這邊的東西好髒喔…' });
     });
-    if (s.swept < 3 && m > 60 && Math.random() < 0.3) out.push({ pen: 0.5, text: '地板有點髒,沒在掃嗎?', say: '地板好髒…' });
+    { const fd = floorDirt(); if (fd >= 2 && m > 30 && Math.random() < Math.min(0.65, 0.1 * fd)) out.push({ pen: fd >= 6 ? 1 : 0.5, text: fd >= 6 ? '地上到處都是髒東西,到底多久沒掃了?' : '地板有點髒,沒在掃嗎?', say: '地板好髒…' }); }
     if (!s.ac && m > 40 && Math.random() < 0.3) out.push({ pen: 0.5, text: '冷氣沒開,有點悶。', say: '好悶喔…' });
     return out.slice(0, 1);
   }
@@ -4370,7 +4382,7 @@ function startScene() {
       else if (!isClosing()) toast('營業中不能關' + nm);
       else if (!s.posClosed) toast('先完成 POS 日結,再關' + nm);
       else { s[key] = false; (key === 'light' ? setLights : setAc)(false); if (key === 'light') SFX.lightSwitch(false); else SFX.acBeep(false); toast('關' + nm); }
-    } else if (it.kind === 'dirt') { unregister(it.id); s.swept++; SFX.sweep(); toast(s.swept >= 3 ? '地板掃乾淨了' : '掃掉一處髒污(' + s.swept + '/3)'); }
+    } else if (it.kind === 'dirt') { unregister(it.id); s.swept++; SFX.sweep(); { const fl = floorDirt(); toast(fl === 0 ? '地板掃乾淨了' : '掃掉一處髒污(地上還有 ' + fl + ' 處)'); } }
     else if (it.kind === 'duster') { G.tool = G.tool ? null : 'duster'; toast(G.tool ? '拿起雞毛撢子。走到貨架前就可以刷灰塵' : '撢子放回去了'); renderCarry(); }
     else if (it.kind === 'log') openSheet();
     else if (it.kind === 'boxes') upUseBox();
@@ -5019,7 +5031,7 @@ function startScene() {
     nextArrow.visible = true; nextArrow.position.set(t.it.cx, (ARROW_Y[t.it.kind] || 2.5) + Math.sin(now / 280) * 0.12, t.it.cz);
   }
   function stepShop(dt) {
-    const s = G.shop; stepNext(performance.now());
+    const s = G.shop; stepNext(performance.now()); stepDirt();
     FX.doorT += Math.max(-dt * 1.6, Math.min(dt * 1.6, FX.doorTarget - FX.doorT));
     if (FX.cubby) {
       const dx = player.position.x - 9.15, dz = player.position.z - 0.7, near = Math.hypot(dx * 0.8, dz) < 2.2;
