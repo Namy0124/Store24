@@ -627,7 +627,7 @@ img { -webkit-user-drag: none; user-drag: none; }
         <textarea id="saveCode" rows="3" hidden spellcheck="false" placeholder="存檔碼貼在這裡,再按一次「匯入存檔碼」"></textarea><div class="sub" id="saveMsg"></div></div>
       <div class="controls" id="controls"></div>
       <p class="legal">配件品牌、商品與人物都是虛構的遊戲設定。手機型號使用真實型號。</p>
-      <p class="legal" id="verLine" style="margin-top:2px;opacity:.7">版本 v222 · 2026-10-18</p>
+      <p class="legal" id="verLine" style="margin-top:2px;opacity:.7">版本 v223 · 2026-10-18</p>
     </div>
   </div>
 
@@ -2452,16 +2452,18 @@ function startScene() {
     const i = G.line.indexOf(c); if (i >= 0) G.line.splice(i, 1);
     G.cust = c; G.co = null; c.st = 'walkIn'; c.say = ''; layoutLine();
     goTo(c, QX, QZ, (cc) => {
-      face(cc, 9, QZ); SFX.ding(); cc.st = cc.flow === 'ask' ? 'asking' : 'ready';
+      face(cc, 9, QZ); SFX.ding();
+      if (cc.flow === 'vip') { cc.st = 'vip'; cc.readyAt = G.gt; cc.say = ''; vipOpen(cc); return; }
+      cc.st = cc.flow === 'ask' ? 'asking' : 'ready';
       cc.say = cc.flow === 'ask' ? (cc.askIdx ? pickOne(SAY.ask).replace('{item}', itemText(cc.items[cc.askIdx])) : (cc.lineTxt || askLine(cc))) : pickOne(SAY.self);
       renderOrder();
     });
   }
   function spawnCustomer() {
     if (!db.products.length) { G.nextAt = G.gt + 8; return; }
-    if ((G.tutorial || G.vipDue) && primaryCount() > 0) { G.nextAt = G.gt + 5; return; }   // never replace someone who is still being served
+    if (G.tutorial && primaryCount() > 0) { G.nextAt = G.gt + 5; return; }   // never replace someone who is still being served
     G.nextAt = Math.max(G.nextAt, G.gt - 30) + Math.max(6, expo(gapAvg()));
-    { const nth = G.nSp = (G.nSp || 0) + 1; if (G.vipPlan && G.vipPlan.length && nth >= G.vipPlan[0]) { if (primaryCount() === 0) { G.vipPlan.shift(); G.vipDue = false; spawnVip(); return; } G.vipDue = true; G.nSp = nth - 1; G.nextAt = G.gt + 4; return; } }   // a special customer is due: hold the next ordinary customer until the counter and queue are empty, so they are never skipped
+    { const nth = G.nSp = (G.nSp || 0) + 1; if (G.vipPlan && G.vipPlan.length && nth >= G.vipPlan[0]) { G.vipPlan.shift(); spawnVip0(); return; } }   // a special customer walks in like anyone else and queues if the counter is busy
     const pr = buildPerson(); pr.g.position.set(0, 0, 5.9); pr.g.rotation.y = Math.PI; scene.add(pr.g); SFX.chime();
     const r = G.tutorial && !G.tutSelf ? 0.5 : Math.random() * (G.tutorial ? 0.65 : 1); if (G.tutorial) G.tutSelf = true;
     const kind = r < 0.35 ? 'ask' : r < 0.65 ? 'self' : 'look';
@@ -2591,12 +2593,12 @@ function startScene() {
   }
   function atCounter(c) {
     /* first come, first served: whoever reaches the counter first is served, even if another customer was spawned earlier but is still shopping */
-    if (G.cust && G.cust !== c && c.flow !== 'vip' && !G.co && !G.tutorial && G.cust.flow !== 'vip' && (G.cust.st === 'browse' || G.cust.st === 'walkIn' || G.cust.st === 'calling')) {
+    if (G.cust && G.cust !== c && !G.co && !G.tutorial && G.cust.flow !== 'vip' && (G.cust.st === 'browse' || G.cust.st === 'walkIn' || G.cust.st === 'calling')) {
       const o = G.cust;
       if (o.st === 'calling') { removeCallable(o); o.say = '算了,我去櫃檯問。'; o.ignored = true; o.st = 'walkIn'; goTo(o, QX, QZ, atCounter); }
       o.pend = true; if (G.pend.indexOf(o) < 0) G.pend.push(o); G.cust = null;
     }
-    if (G.cust && G.cust !== c && G.cust.st !== 'leaving' && c.flow !== 'vip') { if (G.line.length < LINE_MAX || G.line.indexOf(c) >= 0) { joinLine(c); return; } }
+    if (G.cust && G.cust !== c && G.cust.st !== 'leaving') { if (G.line.length < LINE_MAX || G.line.indexOf(c) >= 0) { joinLine(c); return; } }
     if (G.cust !== c) { dropQ(c); G.cust = c; G.co = null; }
     face(c, 9, QZ); SFX.ding();
     if (c.flow === 'vip') { c.st = 'vip'; c.readyAt = G.gt; c.say = ''; vipOpen(c); return; }
@@ -2636,7 +2638,7 @@ function startScene() {
     if (!(c.path && c.path.length) && c.then) { const f = c.then; c.then = null; f(c); }
     if (c.st === 'browse') { c.t -= dt; if (c.t <= 0) { c.say = ''; c.st = 'walkIn'; if (c.browser) browseNext(c); else selfNext(c); } }
     if (c.st === 'calling' && G.gt - c.callAt > 40 * (1 + 0.4 * moodLv())) { removeCallable(c); c.ignored = true; c.st = 'walkIn'; c.say = '算了,我去櫃檯問。'; goTo(c, QX, QZ, atCounter); }
-    if ((c.st === 'asking' || c.st === 'ready' || c.st === 'queued') && c.flow !== 'vip') {   // the longer they wait the angrier they get (opening the checkout does not stop the clock)
+    if ((c.st === 'asking' || c.st === 'ready' || c.st === 'queued')) {   // the longer they wait the angrier they get (opening the checkout does not stop the clock)
       const w = (G.gt - c.readyAt) / (1 + 0.3 * moodLv()) / (G.tutorial ? 2.15 : 1), cw = c === G.cust ? G.co : null;   // tutorial day: the same ladder but about twice as patient (walks out after ~10 minutes)
       c.em = w > 220 ? '🤬' : w > 140 ? '😠' : w > 60 ? '😒' : '';
       if (w > 60 && !c.grumble) { c.grumble = true; c.say = pickOne(SAY.grumble); }
@@ -2649,7 +2651,7 @@ function startScene() {
       }
     }
     if (c.st === 'asking' && c === G.cust && !c.nag && !G.co && G.gt - c.readyAt > 55 * (1 + 0.4 * moodLv())) { c.nag = true; c.say = pickOne(SAY.impatient); }
-    if (c.flow && c.flow !== 'vip' && c.st === 'walkIn' && !(c.path && c.path.length) && !c.then) { c.idleT = (c.idleT || 0) + dt; if (c.idleT > 4) { c.idleT = 0; c.toCounter = true; goTo(c, QX, QZ, atCounter); } } else c.idleT = 0;   // safety net: a customer who ends up standing around with nothing to do heads for the counter
+    if (c.flow && c.st === 'walkIn' && !(c.path && c.path.length) && !c.then) { c.idleT = (c.idleT || 0) + dt; if (c.idleT > 4) { c.idleT = 0; c.toCounter = true; goTo(c, QX, QZ, atCounter); } } else c.idleT = 0;   // safety net: a customer who ends up standing around with nothing to do heads for the counter
     if (moving) c.walkT += dt * 9;
     { const ph = Math.floor(c.walkT / Math.PI); if (moving && ph !== c.stepPh) { c.stepPh = ph; const dd = Math.hypot(c.g.position.x - player.position.x, c.g.position.z - player.position.z); SFX.step(0.5 / (1 + dd * 0.4)); } }
     const sw = moving ? Math.sin(c.walkT) * 0.7 : 0;
@@ -3066,7 +3068,8 @@ function startScene() {
   function spawnVip0() {
     const pr = buildPerson(); pr.g.position.set(0, 0, 5.9); pr.g.rotation.y = Math.PI; scene.add(pr.g); SFX.chime();
     const c = { g: pr.g, parts: pr.parts, flow: 'vip', look: false, callout: false, st: 'walkIn', path: [], then: null, walkT: 0, say: '', items: [], stops: [], t: 0, readyAt: 0, yaw: Math.PI, nag: false, askIdx: 0, got: [], upfront: false, ignored: false };
-    G.cust = c; G.co = null; goTo(c, QX, QZ, atCounter);
+    if (primaryCount() > 0) { c.pend = true; G.pend.push(c); } else { G.cust = c; G.co = null; }
+    goTo(c, QX, QZ, atCounter);
   }
   function vipLogSale(co) {
     const v = V();
@@ -4917,7 +4920,7 @@ function startScene() {
     if (G.dayNo === 1) { G.dust = {}; ZONES.forEach((z) => { G.dust[z.id] = 0; }); G.dust[ZONES[G.zone].id] = 15; } else ZONES.forEach((z) => { G.dust[z.id] = Math.min(50, (G.dust[z.id] || 0) + (() => { const q = Math.random(); return q < 0.25 ? 1 : q < 0.65 ? 2 : 3; })()); });
     { const zid = ZONES[G.zone].id; G.dust[zid] = Math.max(G.dust[zid] || 0, 15); }
     G.shop = freshShop(); G.shop.zoneStart = Math.max(1, G.dust[ZONES[G.zone].id] || 0); G.shop.msgs = (SAVE.msgs || []).map((m) => Object.assign({}, m)); G.shop.msgSeq = G.shop.msgs.reduce((a, m) => Math.max(a, m.id || 0), 0); rollDayTarget(); if (G.tutorial) { G.target = 5; G.ticketMult = 1; } G.nextAt = 1e9; G.nextBrowse = 1e9; G.lastMin = -1;
-    G.nSp = 0; G.vipDue = false; G.vipPen = 0; G.vipPlan = []; if (G.dayNo % 4 === 0) SAVE.vip.pre = Math.max(0, SAVE.vip.pre - 1);
+    G.nSp = 0; G.vipPen = 0; G.vipPlan = []; if (G.dayNo % 4 === 0) SAVE.vip.pre = Math.max(0, SAVE.vip.pre - 1);
     if (!G.tutorial) { const r0 = Math.random(), nv = G.dayNo <= 2 ? 1 : r0 < 0.15 ? 0 : r0 < 0.6 ? 1 : 2, hi = Math.max(4, G.target - 2); for (let k = 0; k < nv; k++) G.vipPlan.push(2 + Math.floor(Math.random() * (hi - 1))); G.vipPlan.sort((a, b) => a - b); }
     endRing(); updateBadges();
     setLights(false); setAc(false); FX.doorTarget = 0; FX.doorT = 0; invNewDay(); shelfRefresh();
