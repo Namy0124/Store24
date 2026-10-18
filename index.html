@@ -627,7 +627,7 @@ img { -webkit-user-drag: none; user-drag: none; }
         <textarea id="saveCode" rows="3" hidden spellcheck="false" placeholder="存檔碼貼在這裡,再按一次「匯入存檔碼」"></textarea><div class="sub" id="saveMsg"></div></div>
       <div class="controls" id="controls"></div>
       <p class="legal">配件品牌、商品與人物都是虛構的遊戲設定。手機型號使用真實型號。</p>
-      <p class="legal" id="verLine" style="margin-top:2px;opacity:.7">版本 v215 · 2026-10-17</p>
+      <p class="legal" id="verLine" style="margin-top:2px;opacity:.7">版本 v216 · 2026-10-17</p>
     </div>
   </div>
 
@@ -4182,32 +4182,36 @@ function startScene() {
       return { t: '結帳 4/4:發票', b: '詢問客人要不要統編或載具,照右邊的按鈕完成。', sel: '.pos-right' };
     } }],
     erp: [
-      { t: '庫存與叫貨', b: '這是 POS 的庫存系統:看庫存、到「叫貨」分頁選商品與數量。叫的貨會在之後的下午由貨運人員送到店裡。', sel: '[data-itab="order"]' },
-      { t: '到貨單與公司公告', b: '貨點完之後,到「到貨」分頁核對數量,按「點收入庫」才算進庫存。「公司公告」會整理公司大群的消息。', sel: '[data-itab="slip"]' }
+      { t: '庫存與叫貨', b: '這是 POS 的庫存系統:看庫存、到「叫貨」分頁選商品與數量。叫的貨會在之後的下午由貨運人員送到店裡。現在點一下「叫貨」分頁。', sel: '[data-itab="order"]', done: () => INV.tab === 'order' || INV.tab === 'slip' },
+      { t: '到貨單與公司公告', b: '貨點完之後,到「到貨」分頁核對數量,按「點收入庫」才算進庫存。「公司公告」會整理公司大群的消息。現在點一下「到貨」分頁。', sel: '[data-itab="slip"]', done: () => INV.tab === 'slip' }
     ],
     dlv: [
-      { t: '貨到了:點貨', b: '貨運人員把箱子放在店裡。走到箱子旁邊點「點貨」,對照貨單清點。可以中途離開去服務客人,進度不會重算。', sel: null },
-      { t: '點完之後', b: '點完貨,到 POS 的「庫存 → 到貨」按「點收入庫」,再用箱子整理上架。', sel: null }
+      { t: '貨到了:點貨', b: '貨運人員把箱子放在店裡。走到箱子旁邊點「點貨」,對照貨單清點。可以中途離開去服務客人,進度不會重算。', sel: null, done: () => !!DLC || !!(SAVE.inv && SAVE.inv.slip) },
+      { t: '點完之後', b: '點完貨,到 POS 的「庫存 → 到貨」按「點收入庫」,再用箱子整理上架。', sel: null, done: () => !DLC && !(SAVE.inv && SAVE.inv.slip) }
     ],
     unpack: [
-      { t: '拆箱整理', b: '先把箱子裡的商品分類,再帶到各貨架。整理完的商品才會出現在對應的架上。', sel: '#upBody' }
+      { t: '拆箱整理', b: '先把箱子裡的商品分類,再帶到各貨架。整理完的商品才會出現在對應的架上。整理完關閉視窗,提示就會消失。', sel: '#upBody' }
     ],
     restock: [
-      { t: '上架補貨', b: '把下方的商品往上拖到貨架(花車)。先親手放幾件,剩下的可以按「補完」一次放好。', sel: '#rsBody' }
+      { t: '上架補貨', b: '把下方的商品往上拖到貨架(花車)。先親手放幾件,剩下的可以按「補完」一次放好。完成後關閉視窗,提示就會消失。', sel: '#rsBody' }
     ],
     vip: [
-      { t: '特殊客人', b: '有些客人會殺價、退貨或問問題。看他說什麼,從選項挑回應;回應得好可以有好評和獎勵,不好會有客訴。', sel: '#vipBody' }
+      { t: '特殊客人', b: '有些客人會殺價、退貨或問問題。看他說什麼,從選項挑回應;回應得好可以有好評和獎勵,不好會有客訴。處理完這位客人,提示就會消失。', sel: '#vipBody' }
     ],
     phone: [
-      { t: '手機:訊息與圖鑑', b: '手機有訊息、圖鑑和小遊戲。空檔去休息室玩(賣場有監視器),疊到 8 層以上心情會變好,客人比較有耐心、好評多一點。', sel: '#phone' }
+      { t: '手機:訊息與圖鑑', b: '手機有訊息、圖鑑和小遊戲。空檔去休息室玩(賣場有監視器),疊到 8 層以上心情會變好,客人比較有耐心、好評多一點。點一個 App 試試。', sel: '#phone', done: () => PH.screen !== 'home' }
     ]
   };
+  const TIP_END = { checkout: () => !G.co || state.modal !== 'checkout', erp: () => state.modal !== 'inv', unpack: () => state.modal !== 'up', restock: () => state.modal !== 'restock', vip: () => state.modal !== 'vip', phone: () => !PH.open };
   let TP = null;
   const tipEl = $('#tipLayer'), tipCard = $('#tipCard'), tipRing = $('#tipRing'), tipArrow = $('#tipArrow');
   function tipRender() {
-    const L = TIPS[TP.key], st0 = L[TP.i], st = st0.dyn ? Object.assign({}, st0, st0.dyn()) : st0; $('#tipN').textContent = '教學提示' + (L.length > 1 ? ' ' + (TP.i + 1) + '/' + L.length : '');
-    $('#tipT').textContent = st.t; $('#tipB').textContent = st.b; $('#tipNext').textContent = TP.i < L.length - 1 ? '下一步' : '知道了';
-    tipEl.classList.add('through'); $('#tipNext').hidden = false; $('#tipOff').hidden = TP.key === 'greet';   // never blocks: the player keeps playing while the tip is up
+    const L = TIPS[TP.key];
+    if (TIP_END[TP.key] && TIP_END[TP.key]()) { tipEnd(); return; }   // there is no "got it" button: a tip goes away when the player does what it asks (or leaves that screen)
+    for (let g0 = 0; TP && L[TP.i].done && L[TP.i].done() && g0 < 6; g0++) { if (TP.i < L.length - 1) TP.i++; else { tipEnd(); return; } }
+    const st0 = L[TP.i], st = st0.dyn ? Object.assign({}, st0, st0.dyn()) : st0; $('#tipN').textContent = '教學提示' + (L.length > 1 ? ' ' + (TP.i + 1) + '/' + L.length : '');
+    $('#tipT').textContent = st.t; $('#tipB').textContent = st.b; $('#tipNext').textContent = '';
+    tipEl.classList.add('through'); $('#tipNext').hidden = true; $('#tipOff').hidden = TP.key === 'greet';   // never blocks: the player keeps playing while the tip is up
     tipRing.style.display = 'none'; tipArrow.style.display = 'none'; tipCard.classList.remove('top');
     const el = st.sel ? document.querySelector(st.sel) : null; const r = el && typeof el.getBoundingClientRect === 'function' && el.offsetParent !== null ? el.getBoundingClientRect() : null;
     if (r && r.width > 4 && r.height > 4) {
