@@ -627,7 +627,7 @@ img { -webkit-user-drag: none; user-drag: none; }
         <textarea id="saveCode" rows="3" hidden spellcheck="false" placeholder="存檔碼貼在這裡,再按一次「匯入存檔碼」"></textarea><div class="sub" id="saveMsg"></div></div>
       <div class="controls" id="controls"></div>
       <p class="legal">配件品牌、商品與人物都是虛構的遊戲設定。手機型號使用真實型號。</p>
-      <p class="legal" id="verLine" style="margin-top:2px;opacity:.7">版本 v217 · 2026-10-18</p>
+      <p class="legal" id="verLine" style="margin-top:2px;opacity:.7">版本 v218 · 2026-10-18</p>
     </div>
   </div>
 
@@ -4799,7 +4799,7 @@ function startScene() {
       if (s.countFor !== s.drawer) { s.count = drawerCounts(s.drawer); s.countFor = s.drawer; s.step = 'count'; }
       const exp = FLOAT_CASH + st.revenue;
       if (s.step === 'count') {
-        h += '<p class="sub">點錢:數一數錢櫃裡每種面額有幾張(個),用下面的計算機加總,再按「確認金額」。</p>';
+        h += '<p class="sub">點錢:數一數錢櫃裡每種面額有幾張(個),用下面的計算機加總,再按「確認金額」。(電腦可直接用鍵盤:數字、+ − × ÷、Backspace 退格、Delete 清除、Enter 確認)</p>';
         h += '<div class="den-grid">' + DEN.map((d) => '<div class="den"><span class="dv">' + d + '</span><b>× ' + s.count[d] + '</b></div>').join('') + '</div>';
         const ev = calcEval(s.keyed);
         h += '<div class="co-l" style="margin-top:12px">計算機</div><div class="kp-disp">' + esc(s.keyed ? s.keyed.replace(/\*/g, '×').replace(/\//g, '÷').replace(/-/g, '−') : '0') + '</div><div class="calc-res">' + (ev !== null && /[-+*\/]/.test(s.keyed) ? '= ' + ev.toLocaleString('en-US') : '&nbsp;') + '</div>';
@@ -4835,6 +4835,21 @@ function startScene() {
     else if (a === 'posoff') { if (G.cust) return; s.posClosed = true; closeClose(); toast('POS 已日結關機。接著關燈、關冷氣、鎖門'); renderTodo(); refreshVerbs(); return; }
     renderClose();
   }
+  /* desktop: keyboard for the closing count (digits and + - * / . , Backspace, Delete = C, = to add up, Enter = confirm / next) */
+  window.addEventListener('keydown', (e) => {
+    if (clEl.hidden || state.modal !== 'close' || !G.shop || e.ctrlKey || e.metaKey || e.altKey || /^(INPUT|TEXTAREA|SELECT)$/.test((e.target && e.target.tagName) || '')) return;
+    const s = G.shop; let b = null;
+    if (!s.counted && s.step === 'count') {
+      const k = e.key;
+      if (/^[0-9+\-*\/.]$/.test(k)) b = clBody.querySelector('[data-cl="k"][data-v="' + k + '"]');
+      else if (k === 'Backspace') b = clBody.querySelector('[data-cl="kb"]');
+      else if (k === 'Delete') b = clBody.querySelector('[data-cl="kc"]');
+      else if (k === '=') b = clBody.querySelector('[data-cl="eq"]');
+      else if (k === 'Enter') b = clBody.querySelector('[data-cl="cnt"]');
+    } else if (e.key === 'Enter') b = clBody.querySelector('.btn.primary:not([disabled])');
+    if (!b) return;
+    e.preventDefault(); if (!e.repeat || e.key === 'Backspace') b.click();
+  });
   function lockDoor() {
     const s = G.shop, miss = [];
     if (!s.posClosed) miss.push('POS 還沒日結'); if (s.light) miss.push('燈還沒關'); if (s.ac) miss.push('冷氣還沒關'); if (cartsPlaced() > 0) miss.push('花車還沒收'); if (!s.signed) miss.push('每日店務表還沒簽名'); if (G.cust || G.crowd.length || G.pend.length || G.line.length || G.exit.length) miss.push('店裡還有客人');
