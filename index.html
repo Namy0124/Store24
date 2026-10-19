@@ -157,6 +157,10 @@ button, .btn, [data-co] { touch-action: manipulation; -webkit-tap-highlight-colo
 .dc-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin: 10px 0; } .dc-slot { aspect-ratio: 3 / 4; border: 2px dashed #B9C9CC; border-radius: 10px; background: #F2F5F6; display: flex; align-items: center; justify-content: center; color: #6a8a90; font-size: 13px; padding: 0; overflow: hidden; position: relative; } .dc-slot.on { border-style: solid; border-color: #C9A66B; } .dc-slot img { width: 100%; height: 100%; object-fit: cover; display: block; } .dc-slot i { position: absolute; right: 4px; bottom: 4px; font-style: normal; font-size: 11px; background: rgba(0,0,0,.55); color: #fff; padding: 1px 6px; border-radius: 8px; }
 .dc-own { display: flex; align-items: center; gap: 10px; padding: 8px 0; border-top: 1px solid #E3EAEC; } .dc-own img { width: 42px; height: 56px; object-fit: cover; border-radius: 4px; flex: none; } .dc-own .tx { flex: 1; min-width: 0; font-size: 14px; }
 .sh-card .em img { width: 44px; height: 58px; object-fit: cover; border-radius: 4px; display: block; }
+#decoBar { position: fixed; left: 0; right: 0; bottom: 0; z-index: 60; background: var(--panel, #fff); border-radius: 16px 16px 0 0; box-shadow: 0 -4px 18px rgba(0,0,0,.25); padding: 10px 14px calc(10px + env(safe-area-inset-bottom, 0px)); display: flex; flex-direction: column; gap: 8px; max-width: 640px; margin: 0 auto; }
+.db-row { display: flex; align-items: center; gap: 8px; } .db-bonus { font-size: 12px; color: #0B7A82; font-weight: 700; margin-right: auto; } .db-tabs { display: flex; gap: 6px; margin-right: auto; } .db-tabs button { border: 1px solid #C5D0D2; background: #fff; border-radius: 999px; padding: 5px 12px; font-size: 13px; font-weight: 700; color: #3b5a60; } .db-tabs button.on { background: #0B7A82; border-color: #0B7A82; color: #fff; } .db-pan { display: flex; gap: 6px; }
+.db-strip { display: flex; gap: 8px; overflow-x: auto; min-height: 76px; align-items: center; } .db-card { flex: none; width: 54px; height: 72px; border: 2px solid #C5D0D2; border-radius: 8px; position: relative; padding: 0; background: #fff; overflow: hidden; } .db-card.on { border-color: #F2B200; box-shadow: 0 0 0 2px #F2B20066; } .db-card img { width: 100%; height: 100%; object-fit: cover; display: block; } .db-card i { position: absolute; right: 2px; bottom: 2px; font-style: normal; font-size: 11px; background: rgba(0,0,0,.6); color: #fff; padding: 0 5px; border-radius: 8px; } .db-empty { font-size: 12px; color: #6a8a90; }
+.db-msg { font-size: 12.5px; color: #3b5a60; min-height: 18px; display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
 .sh-bal { margin-left: auto; font-size: 12px; font-weight: 800; color: #0B7A82; }
 .sh-tabs { display: flex; gap: 4px; padding: 6px 8px 0; border-bottom: 1px solid #D5DDDF; } .sh-tabs button { flex: 1; border: 0; background: transparent; padding: 6px 2px; font-size: 12px; color: #6a8a90; border-bottom: 3px solid transparent; font-weight: 700; } .sh-tabs button.on { color: #0B7A82; border-bottom-color: #0B7A82; }
 .sh-card { background: #fff; border-radius: 12px; padding: 8px 10px; display: flex; gap: 10px; align-items: center; box-shadow: 0 1px 3px rgba(0,0,0,.08); } .sh-card .em { font-size: 30px; width: 44px; text-align: center; flex: none; } .sh-card .em svg { width: 44px; height: 44px; display: block; } .sh-card .tx { flex: 1; min-width: 0; } .sh-card .nm { font-weight: 800; font-size: 13px; } .sh-card .ds { font-size: 11px; color: #6a8a90; line-height: 1.35; margin: 1px 0; } .sh-card .pr { font-weight: 800; color: #D9534F; font-size: 13px; }
@@ -598,6 +602,7 @@ img { -webkit-user-drag: none; user-drag: none; }
       <div class="chip stat" id="stat">營業額 NT$ 0 · 0 位</div>
       <button class="btn" id="btnAdmin" type="button" hidden>總公司後台</button>
       <button class="btn" id="btnJump" type="button" hidden>⏩ 跳轉</button>
+      <button class="btn" id="btnDeco" type="button" hidden>🎨 布置</button>
     </div>
     <div id="jumpMenu" class="jump-menu" hidden></div>
     <div class="hud-col gutter">
@@ -635,7 +640,7 @@ img { -webkit-user-drag: none; user-drag: none; }
         <textarea id="saveCode" rows="3" hidden spellcheck="false" placeholder="存檔碼貼在這裡,再按一次「匯入存檔碼」"></textarea><div class="sub" id="saveMsg"></div></div>
       <div class="controls" id="controls"></div>
       <p class="legal">配件品牌、商品與人物都是虛構的遊戲設定。手機型號使用真實型號。</p>
-      <p class="legal" id="verLine" style="margin-top:2px;opacity:.7">版本 v228 · 2026-10-18</p>
+      <p class="legal" id="verLine" style="margin-top:2px;opacity:.7">版本 v229 · 2026-10-18</p>
     </div>
   </div>
 
@@ -685,11 +690,11 @@ img { -webkit-user-drag: none; user-drag: none; }
       <div class="sheet-body gutter" id="invBody"></div>
     </div>
   </div>
-  <div id="decoSheet" class="sheet" hidden role="dialog" aria-modal="true" aria-labelledby="decoTitle">
-    <div class="sheet-box">
-      <div class="sheet-head gutter"><h2 id="decoTitle">店面布置</h2><button class="btn small" id="decoClose" type="button">關閉</button></div>
-      <div class="sheet-body gutter" id="decoBody"></div>
-    </div>
+  <div id="decoBar" hidden role="dialog" aria-label="店面布置">
+    <div class="db-row"><b>🎨 布置模式</b><span class="db-bonus" id="dbBonus"></span><button class="btn small primary" id="dbDone" type="button">完成</button></div>
+    <div class="db-row"><div class="db-tabs" id="dbWalls"></div><span class="db-pan"><button class="btn small" id="dbL" type="button" aria-label="往左看">◀</button><button class="btn small" id="dbR" type="button" aria-label="往右看">▶</button></span></div>
+    <div class="db-strip" id="dbStrip"></div>
+    <div class="db-msg" id="dbMsg"></div>
   </div>
   <div id="vipSheet" class="sheet" hidden role="dialog" aria-modal="true" aria-labelledby="vipTitle">
     <div class="sheet-box">
@@ -939,7 +944,7 @@ function cleanVip(o) {
   if (o.seen && typeof o.seen === 'object') Object.keys(o.seen).slice(0, 40).forEach((k) => { const x = o.seen[k] || {}; v.seen[String(k).slice(0, 20)] = { n: Math.max(0, Math.min(999, Math.floor(+x.n || 0))), e: (Array.isArray(x.e) ? x.e : []).filter((t) => ['good', 'mid', 'bad', 'paid', 'call'].indexOf(t) >= 0).filter((t, i, a) => a.indexOf(t) === i) }; });
   return v;
 }
-const blankSave = () => ({ vip: blankVip(), inv: blankInv(), v: 1, name: '', msgs: [], feed: [], soDay: 0, soArc: {}, soAns: {}, soFriend: {}, soSeen: { d: 0, k: [] }, phoneBest: 0, phoneTop: [], wallet: 1000, brushLv: 1, deco: { slots: [null, null, null, null, null, null] }, shop: { cart: {}, orders: [], bag: {} }, days: 0, tutorialDone: false, tips: {}, tipsOff: false, dust: null, zone: 0, mgrId: null, history: [] });
+const blankSave = () => ({ vip: blankVip(), inv: blankInv(), v: 1, name: '', msgs: [], feed: [], soDay: 0, soArc: {}, soAns: {}, soFriend: {}, soSeen: { d: 0, k: [] }, phoneBest: 0, phoneTop: [], wallet: 1000, brushLv: 1, deco: { items: [] }, shop: { cart: {}, orders: [], bag: {} }, days: 0, tutorialDone: false, tips: {}, tipsOff: false, dust: null, zone: 0, mgrId: null, history: [] });
 const invNum = (v, mx) => Math.max(0, Math.min(mx || 9999, Math.floor(+v || 0)));
 function cleanInv(o) {
   const inv = blankInv(); if (!o || typeof o !== 'object') return inv;
@@ -979,7 +984,10 @@ function cleanSave(o) {
   if (!s.phoneTop.length && s.phoneBest) s.phoneTop = [{ s: s.phoneBest, d: 0 }];
   s.inv = cleanInv(o.inv);
   s.brushLv = Math.max(1, Math.min(10, Math.floor(+o.brushLv || 1)));
-  s.deco = { slots: [0, 1, 2, 3, 4, 5].map((i) => { const v = o.deco && Array.isArray(o.deco.slots) ? o.deco.slots[i] : null; return typeof v === 'string' && v ? v.slice(0, 24) : null; }) };
+  { const od = o.deco || {}, items = [];
+    if (Array.isArray(od.items)) od.items.slice(0, 16).forEach((it) => { if (it && typeof it.id === 'string' && ['b', 'l', 'r'].indexOf(it.w) >= 0) items.push({ id: it.id.slice(0, 24), w: it.w, u: Math.round(Math.max(-10, Math.min(10, +it.u || 0)) * 100) / 100, y: Math.round(Math.max(0, Math.min(4, +it.y || 1)) * 100) / 100 }); });
+    else if (Array.isArray(od.slots)) od.slots.forEach((id, i) => { if (typeof id === 'string' && id) items.push({ id: id.slice(0, 24), w: 'b', u: (i % 3 - 1) * 0.6, y: i < 3 ? 2.2 : 1.3 }); });
+    s.deco = { items: items }; }
   s.wallet = o.wallet == null ? 1000 : Math.max(0, Math.min(99999999, Math.floor(+o.wallet || 0)));
   { const so = o.shop && typeof o.shop === 'object' ? o.shop : {}, qmap = (m, mx) => { const r = {}; if (m && typeof m === 'object') Object.keys(m).slice(0, 80).forEach((k) => { const q = Math.max(0, Math.min(mx, Math.floor(+m[k] || 0))); if (q) r[String(k).slice(0, 24)] = q; }); return r; };
     s.shop = { cart: qmap(so.cart, 99), bag: qmap(so.bag, 999), orders: (Array.isArray(so.orders) ? so.orders : []).slice(-30).map((r) => ({ id: Math.max(1, Math.floor(+r.id || 1)), items: qmap(r.items, 99), total: Math.max(0, Math.floor(+r.total || 0)), d: Math.max(0, Math.floor(+r.d || 0)), arrive: Math.max(0, Math.floor(+r.arrive || 0)), got: !!r.got, seen: !!r.seen })).filter((r) => Object.keys(r.items).length) }; }
@@ -2070,7 +2078,7 @@ function startScene() {
   }
   refreshBrush();
 
-  /* ---------- 店面布置: idol photocards bought in the phone shop can be pasted on the board on the back wall; each one raises the chance a customer adds one more item ---------- */
+  /* ---------- 店面布置 (Animal-Crossing style): photocards bought in the phone shop can be pasted anywhere on the blank parts of three walls; each one raises the chance a customer adds one more item ---------- */
   const CARD_IMG = 'data:image/jpeg;base64,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';
   const CARDS = [{ id: 'card1', name: '韓系偶像小卡 #01', tag: '★ 01', price: 180, appeal: 0.05, img: CARD_IMG }];
   const cardById = (id) => CARDS.find((c) => c.id === id);
@@ -2083,23 +2091,28 @@ function startScene() {
     if (typeof Image !== 'undefined') { const im = new Image(); im.onload = () => { paint(im); tex.needsUpdate = true; }; im.src = c.img; }
     CARD_TEX[id] = tex; return tex;
   }
-  const DECO = { cards: [] };
-  (function () {
-    const g = new T.Group(); scene.add(g);
-    box(3.6, 2.8, 0.08, 0x8A6A3A, 0, 1.8, -6.46, g); box(3.4, 2.6, 0.06, 0xC9A66B, 0, 1.8, -6.42, g);
-    for (let i = 0; i < 6; i++) {
-      const x = (i % 3 - 1) * 1.08, y = i < 3 ? 2.41 : 1.19;
-      box(0.82, 1.08, 0.01, 0xB48F55, x, y, -6.385, g);
-      const cg = new T.Group(); cg.position.set(x, y, -6.37); box(0.78, 1.04, 0.02, 0xFFFFFF, 0, 0, 0, cg);
-      const pl = new T.Mesh(new T.PlaneGeometry(0.76, 1.02), new T.MeshBasicMaterial({ color: 0xFFFFFF })); pl.position.z = 0.012; cg.add(pl);
-      cg.visible = false; g.add(cg); DECO.cards.push({ g: cg, pl: pl, id: null });
-    }
-    register(g, { id: 'deco', kind: 'deco', name: '店面布置牆', verb: '布置', stands: [{ x: 0, z: -5.3 }], cx: 0, cz: -6.4, grp: g });
-  })();
-  function refreshDeco3D() {
-    DECO.cards.forEach((c, i) => { const id = SAVE.deco.slots[i]; c.g.visible = !!id; if (id && c.id !== id) { c.pl.material.map = cardTex(id); c.pl.material.needsUpdate = true; c.id = id; } if (!id) c.id = null; });
+  /* the blank parts of the walls: u = position along the wall (x on the back wall, z on the side walls), y = height; a card is CW x CH metres */
+  const CW = 0.42, CH = 0.56, DECO_MAX = 12;
+  const DWALL = {
+    b: { name: '後牆', u0: -1.7, u1: 1.7, y0: 0.5, y1: 2.95, at: (u, y) => ({ x: u, y: y, z: -6.29 }), ry: 0, plane: [0, 0, 1, 6.29], cam: (p) => ({ pos: [p, 1.75, -0.6], look: [p, 1.7, -6.3] }), pan: [0, 0] },
+    l: { name: '左牆', u0: -5.6, u1: 2.4, y0: 0.5, y1: 2.9, at: (u, y) => ({ x: -8.82, y: y, z: u }), ry: Math.PI / 2, plane: [1, 0, 0, 8.82], cam: (p) => ({ pos: [-1.0, 1.75, p], look: [-8.8, 1.7, p] }), pan: [-3.2, 0] },
+    r: { name: '右牆', u0: -5.6, u1: -1.2, y0: 0.5, y1: 2.9, at: (u, y) => ({ x: 8.82, y: y, z: u }), ry: -Math.PI / 2, plane: [-1, 0, 0, 8.82], cam: (p) => ({ pos: [1.6, 1.75, p], look: [8.8, 1.7, p] }), pan: [-3.4, -3.4] }
+  };
+  const DECO = { mode: false, k: 0, wall: 'b', pan: 0, sel: null, meshes: [], ghost: null, on: false };
+  const decoGroup = new T.Group(); scene.add(decoGroup);
+  function cardMesh(id, sel) {
+    const g = new T.Group(); box(CW + 0.03, CH + 0.03, 0.012, sel ? 0xF2B200 : 0xFFFFFF, 0, 0, 0, g);
+    const pl = new T.Mesh(new T.PlaneGeometry(CW, CH), new T.MeshBasicMaterial({ map: cardTex(id) })); pl.position.z = 0.008; g.add(pl); return g;
   }
-  const decoBonus = () => Math.min(0.5, SAVE.deco.slots.reduce((a, id) => a + (id && cardById(id) ? cardById(id).appeal : 0), 0));
+  function placeAt(g, w, u, y) { const W2 = DWALL[w], p = W2.at(u, y); g.position.set(p.x, p.y, p.z); g.rotation.y = W2.ry; }
+  function refreshDeco3D() {
+    DECO.meshes.forEach((m) => decoGroup.remove(m)); DECO.meshes = [];
+    SAVE.deco.items.forEach((it, i) => { if (!cardById(it.id)) return; const g = cardMesh(it.id, DECO.sel && DECO.sel.kind === 'item' && DECO.sel.i === i); placeAt(g, it.w, it.u, it.y); decoGroup.add(g); DECO.meshes.push(g); });
+  }
+  const decoBonus = () => Math.min(0.5, SAVE.deco.items.reduce((a, it) => a + (cardById(it.id) ? cardById(it.id).appeal : 0), 0));
+  const decoSnap = (v) => Math.round(v * 20) / 20;
+  function decoClamp(w, u, y) { const Z = DWALL[w]; return { u: decoSnap(Math.max(Z.u0 + CW / 2, Math.min(Z.u1 - CW / 2, u))), y: decoSnap(Math.max(Z.y0 + CH / 2, Math.min(Z.y1 - CH / 2, y))) }; }
+  function decoFree(w, u, y, skip) { return !SAVE.deco.items.some((it, i) => i !== skip && it.w === w && Math.abs(it.u - u) < CW + 0.03 && Math.abs(it.y - y) < CH + 0.03); }
   refreshDeco3D();
 
 
@@ -2276,7 +2289,7 @@ function startScene() {
       openShelf(it.cat);
     }
     else if (it.kind === 'call') { if (gameApi) gameApi.respond(); }
-    else if (['door', 'swL', 'swA', 'dirt', 'duster', 'log', 'boxes', 'dlv', 'deco'].indexOf(it.kind) >= 0) { if (gameApi) gameApi.shopAct(it); }
+    else if (['door', 'swL', 'swA', 'dirt', 'duster', 'log', 'boxes', 'dlv'].indexOf(it.kind) >= 0) { if (gameApi) gameApi.shopAct(it); }
     else if (gameApi) gameApi.cashier();
   }
   function goInteract(it) {
@@ -2307,12 +2320,13 @@ function startScene() {
   let down = null;
   cv.addEventListener('pointerdown', (e) => { down = { x: e.clientX, y: e.clientY, t: performance.now() }; });
   cv.addEventListener('pointerup', (e) => {
-    if (!down || !state.started || (state.modal && state.modal !== 'checkout')) { down = null; return; }
+    if (!down || !state.started || (state.modal && state.modal !== 'checkout' && state.modal !== 'deco')) { down = null; return; }
     const moved = Math.hypot(e.clientX - down.x, e.clientY - down.y), dt = performance.now() - down.t; down = null;
     if (moved > 12 || dt > 700) return;
     const r = cv.getBoundingClientRect();
     ndc.set(((e.clientX - r.left) / r.width) * 2 - 1, -((e.clientY - r.top) / r.height) * 2 + 1);
     raycaster.setFromCamera(ndc, camera);
+    if (state.modal === 'deco') { decoTap(e); return; }
     if (state.modal === 'checkout') { const act = pickAct(); if (act) coAct(act.a, act); return; }
     const hits = raycaster.intersectObjects(clickMeshes, false);
     const top = hits.find((h) => h.object.userData.iid === 'callcust') || hits[0];
@@ -2402,8 +2416,17 @@ function startScene() {
       camera.setViewOffset(W, H, side ? fp.dockW * 0.5 * k : 0, side ? 0 : fp.dockH * (fp.mode !== 'cart' && W <= 720 && H > W ? 0.4 : 0.5) * k, W, H);
       camera.updateProjectionMatrix(); fp.on = true;   // portrait phone checkout: the window's top edge sits right on the counter's front edge
     } else if (fp.on) { camera.clearViewOffset(); camera.fov = 40; camera.updateProjectionMatrix(); fp.on = false; }
+    { const tk = DECO.mode ? 1 : 0; DECO.k += Math.max(-dt * 2.5, Math.min(dt * 2.5, tk - DECO.k));
+      if (DECO.k > 0.001) {
+        const kk = DECO.k * DECO.k * (3 - 2 * DECO.k), V = decoView(), Z = DWALL[DECO.wall], zw = Z.u1 - Z.u0, dist = Math.abs(DECO.wall === 'b' ? V.pos[2] - V.look[2] : V.pos[0] - V.look[0]);
+        camera.position.x += (V.pos[0] - camera.position.x) * kk; camera.position.y += (V.pos[1] - camera.position.y) * kk; camera.position.z += (V.pos[2] - camera.position.z) * kk;
+        lx += (V.look[0] - lx) * kk; ly += (V.look[1] - ly) * kk; lz += (V.look[2] - lz) * kk;
+        const barH = dbBar.hidden ? 0 : dbBar.offsetHeight, usable = Math.max(120, H - barH), asp = W / Math.max(1, usable), want = 2 * Math.atan(Math.tan(Math.atan(0.5 * Math.min(zw, DECO.wall === 'b' ? 3.6 : 4.4) * 1.12 / dist)) / asp) * 180 / Math.PI;
+        camera.fov = 40 + (Math.max(40, Math.min(85, want)) - 40) * kk; camera.setViewOffset(W, H, 0, barH * 0.5 * kk, W, H); camera.updateProjectionMatrix(); DECO.on = true;
+      } else if (DECO.on) { camera.clearViewOffset(); camera.fov = 40; camera.updateProjectionMatrix(); DECO.on = false; }
+    }
     camera.lookAt(lx, ly, lz);
-    player.visible = fp.t < 0.5;
+    player.visible = fp.t < 0.5 && DECO.k < 0.5;
   }
   window.addEventListener('resize', resize); window.addEventListener('orientationchange', () => setTimeout(resize, 250));
   try { if (typeof ResizeObserver !== 'undefined') new ResizeObserver(() => resize()).observe(cv); } catch (e) { /* older browsers: the per-frame check below covers it */ }
@@ -4279,7 +4302,7 @@ function startScene() {
     closeCheckout: closeCheckout,
     jump: jumpDays, untilWd: untilWd,
     shelf: { fill: (c) => SHELF_F[c], refresh: shelfRefresh, say: shelfSay, cats: () => Object.keys(SHELVES), info: (c) => ({ n: SHELVES[c].n, ms: SHELVES[c].ms.length }) },
-    deco: { open: openDeco, close: closeDeco, act: decoAct, bonus: decoBonus, slots: () => SAVE.deco.slots, render: renderDeco },
+    deco: { open: decoOpen, close: decoClose, bonus: decoBonus, items: () => SAVE.deco.items, pick: (id) => { DECO.sel = { kind: 'new', id: id }; }, pickItem: (i) => { DECO.sel = { kind: 'item', i: i }; }, place: decoPlace, take: decoTake, free: decoFree, clamp: decoClamp, wall: (w) => { DECO.wall = w; }, mode: () => DECO.mode, max: DECO_MAX },
     shop: { bag: () => SAVE.shop.bag, brushLv: () => SAVE.brushLv, names: () => BRUSHES.map((b) => b.n), listed: () => shopListed(), brushName: brushName, act: (a, v) => phShopAct(a, v), render: shopRender, deliver: shopDeliver, items: () => SHOP_ITEMS, state: () => SAVE.shop, wallet: () => SAVE.wallet, tab: () => SHP.tab },
     vip: { dex: dexOpen, dexClose: dexClose, open: spawnVip, state: () => VP, pick: vipPick, call: vipCall, callNow: vipCallNow, end: vipClose, data: () => SAVE.vip, plan: () => G.vipPlan, pen: () => G.vipPen, build: (t, k) => { const m = { haggle: HG, ret: RT, ask: AS, reg: RG }[t]; return k === 'intro' || t === 'reg' ? m[k](regOf(V())) : m[k](); }, kinds: () => ({ haggle: Object.keys(HG), ret: Object.keys(RT), ask: Object.keys(AS), reg: Object.keys(RG) }) },
     respond: respondCall,
@@ -4514,7 +4537,6 @@ function startScene() {
     } else if (it.kind === 'dirt') { unregister(it.id); s.swept++; SFX.sweep(); { const fl = floorDirt(); toast(fl === 0 ? '地板掃乾淨了' : '掃掉一處髒污(地上還有 ' + fl + ' 處)'); } }
     else if (it.kind === 'duster') { G.tool = G.tool ? null : 'duster'; toast(G.tool ? '拿起「' + brushName(SAVE.brushLv) + '」。走到貨架前就可以刷灰塵(一次刷掉 ' + (SAVE.brushLv || 1) + ' 點)' : '清潔刷放回去了'); renderCarry(); }
     else if (it.kind === 'log') openSheet();
-    else if (it.kind === 'deco') openDeco();
     else if (it.kind === 'boxes') upUseBox();
     else if (it.kind === 'dlv') dlvCheck();
     refreshVerbs(); renderTodo();
@@ -5493,7 +5515,7 @@ function startScene() {
   const nextBrushLv = () => (SAVE.brushLv || 1) + 1 + pendingBrush();
   const SHOP_ITEMS = [];
   for (let lv = 2; lv <= 10; lv++) SHOP_ITEMS.push({ id: 'brush' + lv, brush: lv, name: '清潔刷升級:「' + BRUSHES[lv - 1].n + '」', emoji: '🧹', icon: brushSvg(lv), price: BRUSH_PRICE[lv], desc: '清潔力 ' + (lv - 1) + ' → ' + lv + ':刷貨架一次可以刷掉 ' + lv + ' 點灰塵,外觀也會換新。下單隔天送到,自動換上。', show: () => lv === nextBrushLv() });
-  CARDS.forEach((c) => SHOP_ITEMS.push({ id: c.id, card: true, name: c.name, emoji: '🎴', icon: '<img src="' + c.img + '" alt="">', price: c.price, desc: '韓系偶像小卡。到貨後可以貼在店裡後牆中間的布置牆上,每張讓客人多買一件的機率 +' + Math.round(c.appeal * 100) + '%。' }));
+  CARDS.forEach((c) => SHOP_ITEMS.push({ id: c.id, card: true, name: c.name, emoji: '🎴', icon: '<img src="' + c.img + '" alt="">', price: c.price, desc: '韓系偶像小卡。到貨後按「🎨 布置」,可以貼在店裡後牆、左牆、右牆的空白處,每張讓客人多買一件的機率 +' + Math.round(c.appeal * 100) + '%。' }));
   const shopListed = () => SHOP_ITEMS.filter((x) => !x.show || x.show());
   const shopItem = (id) => SHOP_ITEMS.find((x) => x.id === id);
   const SHP = { tab: 'shop', confirm: false };
@@ -5524,7 +5546,8 @@ function startScene() {
     } else {
       const bl = SAVE.brushLv || 1; h = '<div class="sh-card"><div class="em">' + brushSvg(bl) + '</div><div class="tx"><div class="nm">' + esc(brushName(bl)) + '</div><div class="ds">清潔刷 Lv.' + bl + (bl >= 10 ? '(最高等級)' : '') + ' · 一次刷掉 ' + bl + ' 點灰塵</div></div></div>';
       const ids = Object.keys(S.bag).filter((k) => S.bag[k] > 0 && shopItem(k));
-      h += ids.length ? ids.map((k) => { const it = shopItem(k); return '<div class="sh-card"><div class="em">' + (it.icon || it.emoji) + '</div><div class="tx"><div class="nm">' + esc(it.name) + ' ×' + S.bag[k] + '</div><div class="ds">' + esc(it.card ? '到店裡後牆中間的布置牆,按 E 或點牆面就能貼上。' : (it.desc || '')) + '</div></div>' + (it.use ? '<button type="button" class="btn small primary" data-sh="use" data-v="' + esc(k) + '">使用</button>' : '') + '</div>'; }).join('') : '<div class="sh-empty">還沒有道具<br>訂單送達後會放在這裡</div>';
+      if (ids.some((k) => shopItem(k).card)) h += '<button type="button" class="btn primary" data-sh="deco" style="width:100%">🎨 去布置店面(貼小卡)</button>';
+      h += ids.length ? ids.map((k) => { const it = shopItem(k); return '<div class="sh-card"><div class="em">' + (it.icon || it.emoji) + '</div><div class="tx"><div class="nm">' + esc(it.name) + ' ×' + S.bag[k] + '</div><div class="ds">' + esc(it.card ? '到手機外的「🎨 布置」按鈕,選一張小卡再點牆面空位就能貼上。' : (it.desc || '')) + '</div></div>' + (it.use ? '<button type="button" class="btn small primary" data-sh="use" data-v="' + esc(k) + '">使用</button>' : '') + '</div>'; }).join('') : '<div class="sh-empty">還沒有道具<br>訂單送達後會放在這裡</div>';
     }
     $('#phShBody').innerHTML = h;
   }
@@ -5543,6 +5566,7 @@ function startScene() {
       const id = S.orders.reduce((m, o) => Math.max(m, o.id), 0) + 1; S.orders.push({ id: id, items: items, total: tot, d: G.dayNo, arrive: G.dayNo + 1, got: false });
       S.orders = S.orders.slice(-30); S.cart = {}; SHP.tab = 'orders'; beep(1200, 0.08); toast('下單成功,明天會送到店裡');
     }
+    else if (a === 'deco') { closePhone(); setTimeout(() => { if (!decoOpen()) toast('現在不能布置'); }, 560); return; }
     else if (a === 'use') { const it = shopItem(v); if (!it || !it.use || !(S.bag[v] > 0)) return; if (it.use() !== false) { S.bag[v]--; if (S.bag[v] <= 0) delete S.bag[v]; } }
     saveGame(); shopRender();
   }
@@ -5559,28 +5583,75 @@ function startScene() {
   $('#phShTabs').addEventListener('click', (e) => { const b = e.target.closest('[data-sh]'); if (b) phShopAct(b.dataset.sh, b.dataset.v); });
   $('#phShBody').addEventListener('click', (e) => { const b = e.target.closest('[data-sh]'); if (b && !b.disabled) phShopAct(b.dataset.sh, b.dataset.v); });
 
-  /* ---------- 店面布置 window: slots on the wall board, the cards you own, and the effect ---------- */
-  const dcEl = $('#decoSheet'), dcBody = $('#decoBody');
-  function renderDeco() {
-    const D = SAVE.deco, bn = decoBonus(), own = CARDS.filter((c) => (SAVE.shop.bag[c.id] || 0) > 0), freeSlot = D.slots.indexOf(null) >= 0;
-    let h = '<div class="day-card"><b>客人多買一件的機率 +' + Math.round(bn * 100) + '%</b><div class="sub">每張小卡 +' + Math.round(CARDS[0].appeal * 100) + '%,牆上最多 6 張。客人進來時有這個機率,會在原本要買的東西以外多拿一件(客單不會暴增)。點牆上的小卡可以取下來。</div></div>';
-    h += '<div class="dc-grid">' + D.slots.map((id, i) => id && cardById(id) ? '<button type="button" class="dc-slot on" data-dc="take" data-i="' + i + '"><img src="' + cardById(id).img + '" alt=""><i>取下</i></button>' : '<button type="button" class="dc-slot" data-dc="none">空位</button>').join('') + '</div>';
-    h += own.length ? '<b>我的小卡</b>' + own.map((c) => '<div class="dc-own"><img src="' + c.img + '" alt=""><div class="tx">' + esc(c.name) + ' ×' + SAVE.shop.bag[c.id] + '</div><button type="button" class="btn small primary" data-dc="put" data-id="' + esc(c.id) + '"' + (freeSlot ? '' : ' disabled') + '>' + (freeSlot ? '貼上' : '沒有空位') + '</button></div>').join('') : '<p class="sub">你還沒有小卡。在手機「購物」買小卡,隔天送到店裡就會出現在這裡。</p>';
-    dcBody.innerHTML = h;
+  /* ---------- 布置模式: pick a card, then tap a blank spot on the wall (the game shows the wall from the front); tap a pasted card to move or take it off ---------- */
+  const dbBar = $('#decoBar');
+  const decoView = () => { const Z = DWALL[DECO.wall], c = Z.cam(DECO.pan); return c; };
+  function decoRender() {
+    const D = SAVE.deco, bag = SAVE.shop.bag, own = CARDS.filter((c) => (bag[c.id] || 0) > 0);
+    $('#dbBonus').textContent = '客人多買一件的機率 +' + Math.round(decoBonus() * 100) + '%(' + D.items.length + '/' + DECO_MAX + ' 張)';
+    $('#dbL').parentNode.style.display = DECO.wall === 'b' ? 'none' : '';
+    $('#dbWalls').innerHTML = Object.keys(DWALL).map((k) => '<button type="button" data-db="wall" data-v="' + k + '" class="' + (DECO.wall === k ? 'on' : '') + '">' + DWALL[k].name + '</button>').join('');
+    $('#dbStrip').innerHTML = own.length ? own.map((c) => '<button type="button" class="db-card' + (DECO.sel && DECO.sel.kind === 'new' && DECO.sel.id === c.id ? ' on' : '') + '" data-db="pick" data-v="' + esc(c.id) + '"><img src="' + c.img + '" alt=""><i>×' + bag[c.id] + '</i></button>').join('') : '<div class="db-empty">背包裡沒有小卡。到手機「購物」買小卡,隔天送到就能貼。</div>';
+    const sel = DECO.sel;
+    $('#dbMsg').innerHTML = sel && sel.kind === 'item' ? '已選取牆上的小卡:點牆面的空位可以搬過去 <button type="button" class="btn small danger" data-db="take">取下</button> <button type="button" class="btn small" data-db="none">取消選取</button>' : sel && sel.kind === 'new' ? '點牆面的空位貼上(綠色框 = 可以貼,紅色 = 位置被佔住)' : (own.length ? '先選一張小卡,再點牆面;或點牆上的小卡來搬動' : '點牆上的小卡可以搬動或取下');
   }
-  function openDeco() { if (state.modal) return; dcEl.hidden = false; state.modal = 'deco'; renderDeco(); }
-  function closeDeco() { dcEl.hidden = true; if (state.modal === 'deco') state.modal = null; }
-  function decoAct(a, d) {
-    const D = SAVE.deco, bag = SAVE.shop.bag;
-    if (a === 'take') { const i = +d.i, id = D.slots[i]; if (!id) return; D.slots[i] = null; bag[id] = (bag[id] || 0) + 1; }
-    else if (a === 'put') { const id = d.id, i = D.slots.indexOf(null); if (!cardById(id) || !(bag[id] > 0) || i < 0) return; bag[id]--; if (bag[id] <= 0) delete bag[id]; D.slots[i] = id; SFX.paper && SFX.paper(); toast('貼上了:' + cardById(id).name); }
-    else return;
-    refreshDeco3D(); saveGame(); renderDeco();
+  let decoGhostOn = false;
+  function decoGhost(w, u, y, ok) {
+    if (!DECO.ghost) { DECO.ghost = new T.Group(); const m = new T.Mesh(new T.PlaneGeometry(CW + 0.06, CH + 0.06), new T.MeshBasicMaterial({ color: 0x3DB88A, transparent: true, opacity: 0.55 })); DECO.ghost.add(m); DECO.ghost.userData.m = m; scene.add(DECO.ghost); }
+    DECO.ghost.userData.m.material.color.setHex(ok ? 0x3DB88A : 0xE5534B); placeAt(DECO.ghost, w, u, y); DECO.ghost.visible = true; decoGhostOn = true;
   }
-  dcBody.addEventListener('click', (e) => { const b = e.target.closest('[data-dc]'); if (b && !b.disabled) decoAct(b.dataset.dc, b.dataset); });
-  $('#decoClose').addEventListener('click', closeDeco);
-  dcEl.addEventListener('pointerdown', (e) => { if (e.target === dcEl) closeDeco(); });
-  window.addEventListener('keydown', (e) => { if (e.key === 'Escape' && state.modal === 'deco') closeDeco(); });
+  const decoHit = (e) => {   // pointer -> { u, y } on the current wall
+    const r = cv.getBoundingClientRect(); ndc.set(((e.clientX - r.left) / r.width) * 2 - 1, -((e.clientY - r.top) / r.height) * 2 + 1);
+    raycaster.setFromCamera(ndc, camera); const Z = DWALL[DECO.wall], pl = new T.Plane(new T.Vector3(Z.plane[0], Z.plane[1], Z.plane[2]), Z.plane[3]), p = new T.Vector3();
+    if (!raycaster.ray.intersectPlane(pl, p)) return null;
+    return { u: DECO.wall === 'b' ? p.x : p.z, y: p.y };
+  };
+  function decoOpen() {
+    if (!state.started || state.modal || !G.shop) return false;
+    DECO.mode = true; DECO.sel = null; DECO.pan = DWALL[DECO.wall].pan[0] ? 0 : 0; state.modal = 'deco'; dbBar.hidden = false; decoRender(); refreshDeco3D(); return true;
+  }
+  function decoClose() { if (!DECO.mode) return; DECO.mode = false; DECO.sel = null; dbBar.hidden = true; if (DECO.ghost) DECO.ghost.visible = false; decoGhostOn = false; if (state.modal === 'deco') state.modal = null; refreshDeco3D(); }
+  function decoPlace(w, u, y) {   // paste the picked card / move the picked card; returns true when done
+    const c = decoClamp(w, u, y), D = SAVE.deco, sel = DECO.sel;
+    if (!sel) return false;
+    if (sel.kind === 'new') {
+      if (D.items.length >= DECO_MAX) { toast('牆上最多貼 ' + DECO_MAX + ' 張'); return false; }
+      if (!((SAVE.shop.bag[sel.id] || 0) > 0)) return false;
+      if (!decoFree(w, c.u, c.y, -1)) { toast('這裡已經有小卡了'); return false; }
+      SAVE.shop.bag[sel.id]--; if (SAVE.shop.bag[sel.id] <= 0) { delete SAVE.shop.bag[sel.id]; DECO.sel = null; }
+      D.items.push({ id: sel.id, w: w, u: c.u, y: c.y }); SFX.paper && SFX.paper(); toast('貼上了');
+    } else {
+      if (!decoFree(w, c.u, c.y, sel.i)) { toast('這裡已經有小卡了'); return false; }
+      const it = D.items[sel.i]; it.w = w; it.u = c.u; it.y = c.y; DECO.sel = null; SFX.paper && SFX.paper();
+    }
+    saveGame(); refreshDeco3D(); decoRender(); return true;
+  }
+  function decoTake() { const sel = DECO.sel; if (!sel || sel.kind !== 'item') return; const it = SAVE.deco.items[sel.i]; if (!it) return; SAVE.deco.items.splice(sel.i, 1); SAVE.shop.bag[it.id] = (SAVE.shop.bag[it.id] || 0) + 1; DECO.sel = null; saveGame(); refreshDeco3D(); decoRender(); toast('取下來放回背包了'); }
+  function decoTap(e) {
+    const h = decoHit(e); if (!h) return;
+    const idx = SAVE.deco.items.findIndex((it) => it.w === DECO.wall && Math.abs(it.u - h.u) <= CW / 2 && Math.abs(it.y - h.y) <= CH / 2);
+    if (idx >= 0 && !(DECO.sel && DECO.sel.kind === 'item' && DECO.sel.i === idx)) { DECO.sel = { kind: 'item', i: idx }; refreshDeco3D(); decoRender(); return; }
+    if (!DECO.sel) { if (idx >= 0) return; toast('先在下方選一張小卡'); return; }
+    decoPlace(DECO.wall, h.u, h.y);
+  }
+  cv.addEventListener('pointermove', (e) => {
+    if (!DECO.mode || !DECO.sel) { if (DECO.ghost && decoGhostOn) { DECO.ghost.visible = false; decoGhostOn = false; } return; }
+    const h = decoHit(e); if (!h) return; const c = decoClamp(DECO.wall, h.u, h.y);
+    decoGhost(DECO.wall, c.u, c.y, decoFree(DECO.wall, c.u, c.y, DECO.sel.kind === 'item' ? DECO.sel.i : -1));
+  });
+  dbBar.addEventListener('click', (e) => {
+    const b = e.target.closest('[data-db]'); if (!b) return; const a = b.dataset.db;
+    if (a === 'wall') { DECO.wall = b.dataset.v; DECO.pan = 0; }
+    else if (a === 'pick') { DECO.sel = DECO.sel && DECO.sel.kind === 'new' && DECO.sel.id === b.dataset.v ? null : { kind: 'new', id: b.dataset.v }; }
+    else if (a === 'take') { decoTake(); return; }
+    else if (a === 'none') { DECO.sel = null; refreshDeco3D(); }
+    decoRender();
+  });
+  $('#dbL').addEventListener('click', () => { const Z = DWALL[DECO.wall]; DECO.pan = Math.max(Z.u0 + 1.2, DECO.pan - 1.5); if (DECO.wall === 'b') DECO.pan = 0; });
+  $('#dbR').addEventListener('click', () => { const Z = DWALL[DECO.wall]; DECO.pan = Math.min(Z.u1 - 1.2, DECO.pan + 1.5); if (DECO.wall === 'b') DECO.pan = 0; });
+  $('#dbDone').addEventListener('click', decoClose);
+  $('#btnDeco').addEventListener('click', () => { if (G.cust && (G.cust.st === 'asking' || G.cust.st === 'ready' || G.co)) { toast('客人在等,先招呼完再布置'); return; } if (!decoOpen()) toast('現在不能布置'); });
+  window.addEventListener('keydown', (e) => { if (e.key === 'Escape' && DECO.mode) decoClose(); });
   const FEED = [['小宇','今天的手搖杯 🧋 半糖少冰','🧋'],['Amy','週末去海邊!水好藍','🌊'],['阿豪','新買的耳機音質超讚','🎧'],['Joyce','加班第三天…','💻'],['大雄','貓咪又在我鍵盤上睡著','🐱'],['小美','午餐吃什麼好,求推薦','🍜'],['Kevin','演唱會搶票失敗,崩潰','🎤'],['Sandy','今天天氣好舒服','☀️'],['阿傑','健身房打卡 💪 今天練腿','🏋️'],['Mia','新出的甜點店好好吃','🍰'],['志明','颱風天不用上班真爽','🌀'],['小琪','終於看完那部影集,結局好扯','📺'],
     ['阿翔','新手機到貨!膜還沒貼','📱'],['婷婷','咖啡續命第二杯','☕'],['老王','釣魚一整天,一條都沒有','🎣'],['Eric','跟朋友打球,累癱','🏀'],['小雨','下雨天好想睡覺','🌧️'],['Lisa','週末市集買到好可愛的小物','🧸'],['阿德','騎車去環島第一天','🏍️'],['Tina','新髮型,覺得如何?','💇'],['宗翰','宵夜吃鹽酥雞,罪惡','🍗'],['怡君','追星成功!拿到簽名','⭐'],['小安','考試考完了,終於解脫','📚'],['阿凱','跟老婆去看夜景','🌃'],['Cindy','家裡的植物又開花了','🌸'],['大衛','今天發薪水!請大家吃飯','💰'],['Rita','早起跑步,空氣超好','🏃'],['阿宏','剛剛看到一隻超大蟑螂…','🪳'],['小萱','做了第一次蛋糕,賣相普通','🎂'],['泰瑞','通勤路上又塞車','🚗'],
     ['門市討論版','今天有人遇到客人砍價嗎?','💬'],['連鎖公司','【公告】本週店長會議改線上舉行','📢'],['生活日報','颱風假要不要放?各縣市最新消息','📰'],['手機評測','新旗艦機拍照實測,夜景大進步','📷'],['熱門影片','貓咪跟狗狗的日常,超療癒','🎬'],['小編','雙11快到了,你的購物車準備好了嗎?','🛒']];
@@ -5858,6 +5929,7 @@ function startScene() {
       const b = $('#btnInteract');
       if (active) { b.textContent = (isTouch ? '' : '按 E ') + active.verb + active.name; b.hidden = false; } else b.hidden = true;
     }
+    { const bd = $('#btnDeco'); const showD = !!(state.started && G.shop && !state.modal && !PH.open); if (bd.hidden === showD) bd.hidden = !showD; }
     { const nearC = state.started && !state.modal && G.shop && Math.hypot(player.position.x - 7.9, player.position.z - 3.4) < 2.8; const bl = $('#btnLog'); if (bl.hidden === nearC) bl.hidden = !nearC; }
     if (ringStand) { hintRing.visible = true; hintRing.position.x = ringStand.x; hintRing.position.z = ringStand.z; const k = 1 + Math.sin(now / 250) * 0.08; hintRing.scale.set(k, k, k); } else hintRing.visible = false;
     if (tapT > 0) { tapT -= dt; tapRing.material.opacity = Math.max(0, tapT / 0.7); if (tapT <= 0) tapRing.visible = false; }
