@@ -156,7 +156,7 @@ button, .btn, [data-co] { touch-action: manipulation; -webkit-tap-highlight-colo
 .pm-head { display: flex; align-items: center; gap: 10px; padding: 6px 10px; border-bottom: 1px solid #D5DDDF; }
 .sh-bal { margin-left: auto; font-size: 12px; font-weight: 800; color: #0B7A82; }
 .sh-tabs { display: flex; gap: 4px; padding: 6px 8px 0; border-bottom: 1px solid #D5DDDF; } .sh-tabs button { flex: 1; border: 0; background: transparent; padding: 6px 2px; font-size: 12px; color: #6a8a90; border-bottom: 3px solid transparent; font-weight: 700; } .sh-tabs button.on { color: #0B7A82; border-bottom-color: #0B7A82; }
-.sh-card { background: #fff; border-radius: 12px; padding: 8px 10px; display: flex; gap: 10px; align-items: center; box-shadow: 0 1px 3px rgba(0,0,0,.08); } .sh-card .em { font-size: 30px; width: 40px; text-align: center; flex: none; } .sh-card .tx { flex: 1; min-width: 0; } .sh-card .nm { font-weight: 800; font-size: 13px; } .sh-card .ds { font-size: 11px; color: #6a8a90; line-height: 1.35; margin: 1px 0; } .sh-card .pr { font-weight: 800; color: #D9534F; font-size: 13px; }
+.sh-card { background: #fff; border-radius: 12px; padding: 8px 10px; display: flex; gap: 10px; align-items: center; box-shadow: 0 1px 3px rgba(0,0,0,.08); } .sh-card .em { font-size: 30px; width: 44px; text-align: center; flex: none; } .sh-card .em svg { width: 44px; height: 44px; display: block; } .sh-card .tx { flex: 1; min-width: 0; } .sh-card .nm { font-weight: 800; font-size: 13px; } .sh-card .ds { font-size: 11px; color: #6a8a90; line-height: 1.35; margin: 1px 0; } .sh-card .pr { font-weight: 800; color: #D9534F; font-size: 13px; }
 .sh-card .btn { padding: 6px 8px; font-size: 12px; flex: none; } .sh-qty { display: flex; align-items: center; gap: 6px; flex: none; } .sh-qty button { width: 26px; height: 26px; border-radius: 50%; border: 1px solid #C5D0D2; background: #fff; font-size: 15px; line-height: 1; } .sh-qty b { min-width: 16px; text-align: center; font-size: 13px; }
 .sh-sum { background: #fff; border-radius: 12px; padding: 10px; font-size: 13px; display: flex; flex-direction: column; gap: 6px; } .sh-sum .row { display: flex; justify-content: space-between; } .sh-sum .btn { width: 100%; } .sh-empty { text-align: center; color: #6a8a90; font-size: 13px; padding: 28px 8px; } .sh-st { font-size: 11px; font-weight: 700; padding: 2px 6px; border-radius: 8px; background: #FFF1CC; color: #8a6200; } .sh-st.ok { background: #D8F3E6; color: #1b7a4b; }
 .pm-list { flex: 1; overflow-y: auto; padding: 8px; display: flex; flex-direction: column; gap: 8px; }
@@ -632,7 +632,7 @@ img { -webkit-user-drag: none; user-drag: none; }
         <textarea id="saveCode" rows="3" hidden spellcheck="false" placeholder="存檔碼貼在這裡,再按一次「匯入存檔碼」"></textarea><div class="sub" id="saveMsg"></div></div>
       <div class="controls" id="controls"></div>
       <p class="legal">配件品牌、商品與人物都是虛構的遊戲設定。手機型號使用真實型號。</p>
-      <p class="legal" id="verLine" style="margin-top:2px;opacity:.7">版本 v226 · 2026-10-18</p>
+      <p class="legal" id="verLine" style="margin-top:2px;opacity:.7">版本 v227 · 2026-10-18</p>
     </div>
   </div>
 
@@ -2019,6 +2019,34 @@ function startScene() {
     else if (b.shape === 'glow') { add(new T.SphereGeometry(0.17, 14, 12), glow(b.c, 0.35), 0, hy - 0.04, 0); const o = add(new T.SphereGeometry(0.1, 12, 10), glow(0xFFFFFF, 0.95), 0, hy - 0.04, 0); o.scale.set(1, 1.3, 1); [0.12, -0.12].forEach((x) => add(new T.SphereGeometry(0.018, 6, 6), glow(0xFFFFFF), x, hy + 0.02, 0.1)); }
     else { [[0xFF6FB5, 0.1], [0xFFD24C, 0.04], [0x6FD3FF, -0.02]].forEach((p) => { const o = add(new T.SphereGeometry(0.12, 12, 10), mat(p[0]), 0, hy - 0.06 + p[1] * 0, 0); o.position.y = hy + p[1] - 0.06; o.scale.set(1.0 - (0.1 - p[1]) * 1.2, 0.8, 1.0 - (0.1 - p[1]) * 1.2); }); add(new T.SphereGeometry(0.075, 12, 10), glow(0xFFF3A8, 0.9), 0, top + 0.12, 0); const r = add(new T.TorusGeometry(0.14, 0.012, 6, 20), glow(0xFFF3A8, 0.8), 0, top + 0.12, 0); r.rotation.x = Math.PI / 2; }
     return g;
+  }
+  /* flat 2D icons of the ten brushes (used by the phone shop); the same look as the 3D models */
+  const hexc = (n) => '#' + n.toString(16).padStart(6, '0');
+  function brushSvg(lv) {
+    lv = Math.max(1, Math.min(10, lv || 1));
+    const b = BRUSHES[lv - 1], hc = hexc(b.hc), c = hexc(b.c), c2 = b.c2 ? hexc(b.c2) : c, id = 'bs' + lv;
+    const top = b.shape === 'double' ? 14 : b.shape === 'legend' ? 13 : 6, len = (b.shape === 'double' ? 10 : b.shape === 'legend' ? 4 : 14) + b.hl * 26, hb = top + len;
+    let d = '<defs><radialGradient id="' + id + '" cx="35%" cy="30%" r="80%"><stop offset="0" stop-color="#fff" stop-opacity=".75"/><stop offset=".45" stop-color="' + c + '"/><stop offset="1" stop-color="' + c + '"/></radialGradient></defs>';
+    d += '<rect x="29" y="' + top + '" width="6" height="' + len + '" rx="3" fill="' + hc + '" stroke="#0003" stroke-width="1"/>';
+    if (b.tele) d += '<rect x="27" y="' + top + '" width="10" height="' + (len * 0.4) + '" rx="3" fill="#6F7B80" stroke="#0003"/><rect x="27" y="' + (top + len * 0.4) + '" width="10" height="3" fill="#E5534B"/>';
+    if (b.shape !== 'double' && b.shape !== 'legend') d += '<circle cx="32" cy="4" r="2.4" fill="none" stroke="#3a2a14" stroke-width="1.6"/>';
+    if (b.shape === 'feather') [-1, 0, 1].forEach((i) => { d += '<ellipse cx="' + (32 + i * 7) + '" cy="' + (hb + 12) + '" rx="5" ry="13" fill="' + c + '" stroke="#0003" transform="rotate(' + (i * 18) + ' ' + (32 + i * 7) + ' ' + hb + ')"/>'; });
+    else if (b.shape === 'puff') { d += '<ellipse cx="32" cy="' + (hb + 13) + '" rx="13" ry="16" fill="url(#' + id + ')" stroke="#0003"/>'; if (b.ring) d += '<ellipse cx="32" cy="' + (hb + 1) + '" rx="9" ry="3" fill="none" stroke="#E0B020" stroke-width="2.6"/>'; }
+    else if (b.shape === 'strands') for (let i = -3; i <= 3; i++) d += '<line x1="32" y1="' + hb + '" x2="' + (32 + i * 4.4) + '" y2="' + (hb + 25) + '" stroke="' + c + '" stroke-width="3.2" stroke-linecap="round"/>';
+    else if (b.shape === 'flat') {
+      d += '<rect x="13" y="' + hb + '" width="38" height="6" rx="2" fill="#444B50"/><rect x="13" y="' + (hb + 6) + '" width="38" height="15" rx="3" fill="' + c + '" stroke="#0003"/>';
+      for (let i = 0; i < 8; i++) d += '<line x1="' + (17 + i * 4.6) + '" y1="' + (hb + 9) + '" x2="' + (17 + i * 4.6) + '" y2="' + (hb + 19) + '" stroke="#fff" stroke-opacity=".4" stroke-width="1.2"/>';
+      if (b.motor) d += '<rect x="25" y="' + (hb - 13) + '" width="14" height="13" rx="3" fill="#2B3138"/><circle cx="35" cy="' + (hb - 7) + '" r="2.2" fill="#6FFFB0"/>';
+    } else if (b.shape === 'double') d += '<ellipse cx="32" cy="9" rx="10" ry="8" fill="' + c + '" stroke="#0003"/><ellipse cx="32" cy="' + (hb + 11) + '" rx="12" ry="13" fill="' + c2 + '" stroke="#0003"/><path d="M24 ' + (hb + 6) + ' q8 -5 16 0" stroke="#fff" stroke-opacity=".5" stroke-width="2" fill="none"/>';
+    else if (b.shape === 'glow') {
+      d += '<circle cx="32" cy="' + (hb + 13) + '" r="18" fill="' + c + '" fill-opacity=".35"/><ellipse cx="32" cy="' + (hb + 13) + '" rx="10" ry="13" fill="#fff" fill-opacity=".95"/>';
+      [[12, hb + 3], [52, hb + 22], [50, hb + 2]].forEach((p) => { d += '<path d="M' + p[0] + ' ' + (p[1] - 4) + ' v8 M' + (p[0] - 4) + ' ' + p[1] + ' h8" stroke="#BFEFFF" stroke-width="1.8" stroke-linecap="round"/>'; });
+    } else {
+      d += '<ellipse cx="32" cy="' + (hb + 16) + '" rx="15" ry="7.5" fill="#FF6FB5" stroke="#0003"/><ellipse cx="32" cy="' + (hb + 10) + '" rx="12.5" ry="7" fill="#FFD24C" stroke="#0003"/><ellipse cx="32" cy="' + (hb + 4) + '" rx="10" ry="6.5" fill="#6FD3FF" stroke="#0003"/>';
+      d += '<circle cx="32" cy="7" r="9" fill="none" stroke="#FFE98A" stroke-width="1.8" stroke-opacity=".9"/><circle cx="32" cy="7" r="5" fill="#FFF3A8"/>';
+      [[12, 14], [52, 10], [50, 34]].forEach((p) => { d += '<path d="M' + p[0] + ' ' + (p[1] - 4) + ' v8 M' + (p[0] - 4) + ' ' + p[1] + ' h8" stroke="#FFD24C" stroke-width="1.8" stroke-linecap="round"/>'; });
+    }
+    return '<svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><g transform="rotate(26 32 32) translate(3.5 2) scale(.9)">' + d + '</g></svg>';
   }
   const BR = { wall: null, hand: null, hLv: 0 };
   function refreshBrush() {
@@ -5414,7 +5442,7 @@ function startScene() {
   const pendingBrush = () => SAVE.shop.orders.reduce((a, o) => a + (o.got ? 0 : Object.keys(o.items).filter((k) => /^brush\d+$/.test(k)).length), 0);
   const nextBrushLv = () => (SAVE.brushLv || 1) + 1 + pendingBrush();
   const SHOP_ITEMS = [];
-  for (let lv = 2; lv <= 10; lv++) SHOP_ITEMS.push({ id: 'brush' + lv, brush: lv, name: '清潔刷升級:「' + BRUSHES[lv - 1].n + '」', emoji: '🧹', price: BRUSH_PRICE[lv], desc: '清潔力 ' + (lv - 1) + ' → ' + lv + ':刷貨架一次可以刷掉 ' + lv + ' 點灰塵,外觀也會換新。下單隔天送到,自動換上。', show: () => lv === nextBrushLv() });
+  for (let lv = 2; lv <= 10; lv++) SHOP_ITEMS.push({ id: 'brush' + lv, brush: lv, name: '清潔刷升級:「' + BRUSHES[lv - 1].n + '」', emoji: '🧹', icon: brushSvg(lv), price: BRUSH_PRICE[lv], desc: '清潔力 ' + (lv - 1) + ' → ' + lv + ':刷貨架一次可以刷掉 ' + lv + ' 點灰塵,外觀也會換新。下單隔天送到,自動換上。', show: () => lv === nextBrushLv() });
   const shopListed = () => SHOP_ITEMS.filter((x) => !x.show || x.show());
   const shopItem = (id) => SHOP_ITEMS.find((x) => x.id === id);
   const SHP = { tab: 'shop', confirm: false };
@@ -5429,12 +5457,12 @@ function startScene() {
     $('#phShTabs').innerHTML = tabs.map((t) => '<button type="button" data-sh="tab" data-v="' + t[0] + '" class="' + (SHP.tab === t[0] ? 'on' : '') + '">' + t[1] + '</button>').join('');
     let h = '';
     if (SHP.tab === 'shop') {
-      h = shopListed().length ? shopListed().map((it) => '<div class="sh-card"><div class="em">' + it.emoji + '</div><div class="tx"><div class="nm">' + esc(it.name) + '</div><div class="ds">' + esc(it.desc || '') + '</div><div class="pr">' + fmtN(it.price) + '</div></div><button type="button" class="btn small primary" data-sh="add" data-v="' + esc(it.id) + '">' + (S.cart[it.id] ? '再加一個(' + S.cart[it.id] + ')' : '加入購物車') + '</button></div>').join('') : '<div class="sh-empty">目前沒有可以買的商品<br>清潔刷已經升到最高等級了</div>';
+      h = shopListed().length ? shopListed().map((it) => '<div class="sh-card"><div class="em">' + (it.icon || it.emoji) + '</div><div class="tx"><div class="nm">' + esc(it.name) + '</div><div class="ds">' + esc(it.desc || '') + '</div><div class="pr">' + fmtN(it.price) + '</div></div><button type="button" class="btn small primary" data-sh="add" data-v="' + esc(it.id) + '">' + (S.cart[it.id] ? '再加一個(' + S.cart[it.id] + ')' : '加入購物車') + '</button></div>').join('') : '<div class="sh-empty">目前沒有可以買的商品<br>清潔刷已經升到最高等級了</div>';
     } else if (SHP.tab === 'cart') {
       const ids = Object.keys(S.cart).filter((k) => shopItem(k));
       if (!ids.length) h = '<div class="sh-empty">購物車是空的<br>去商城逛逛吧</div>';
       else {
-        h = ids.map((k) => { const it = shopItem(k); return '<div class="sh-card"><div class="em">' + it.emoji + '</div><div class="tx"><div class="nm">' + esc(it.name) + '</div><div class="pr">' + fmtN(it.price) + '</div></div><div class="sh-qty"><button type="button" data-sh="dec" data-v="' + esc(k) + '">−</button><b>' + S.cart[k] + '</b><button type="button" data-sh="inc" data-v="' + esc(k) + '">＋</button></div></div>'; }).join('');
+        h = ids.map((k) => { const it = shopItem(k); return '<div class="sh-card"><div class="em">' + (it.icon || it.emoji) + '</div><div class="tx"><div class="nm">' + esc(it.name) + '</div><div class="pr">' + fmtN(it.price) + '</div></div><div class="sh-qty"><button type="button" data-sh="dec" data-v="' + esc(k) + '">−</button><b>' + S.cart[k] + '</b><button type="button" data-sh="inc" data-v="' + esc(k) + '">＋</button></div></div>'; }).join('');
         const tot = shopCartTotal(), short = tot > SAVE.wallet;
         h += '<div class="sh-sum"><div class="row"><span>商品合計</span><b>' + fmtN(tot) + '</b></div><div class="row"><span>錢包餘額</span><b>' + fmtN(SAVE.wallet) + '</b></div>' + (short ? '<div style="color:#D9534F;font-size:12px">餘額不夠,少了 ' + fmtN(tot - SAVE.wallet) + '</div>' : '<div style="color:#6a8a90;font-size:12px">今天下單,明天到貨(送到店裡)</div>') + '<button type="button" class="btn ' + (SHP.confirm ? 'danger' : 'primary') + '" data-sh="pay"' + (short ? ' disabled' : '') + '>' + (SHP.confirm ? '再按一次確認付款 ' + fmtN(tot) : '結帳') + '</button></div>';
       }
@@ -5443,9 +5471,9 @@ function startScene() {
       h = os.length ? os.map((o) => '<div class="sh-card"><div class="tx"><div class="nm">訂單 #' + o.id + ' <span class="sh-st' + (o.got ? ' ok' : '') + '">' + (o.got ? '已送達' : '配送中') + '</span></div><div class="ds">' + Object.keys(o.items).map((k) => (shopItem(k) ? shopItem(k).emoji + shopItem(k).name : k) + ' ×' + o.items[k]).join('、') + '</div><div class="ds">第 ' + o.d + ' 天下單' + (o.got ? '' : ' · 第 ' + o.arrive + ' 天到貨') + '</div></div><div class="pr">' + fmtN(o.total) + '</div></div>').join('') : '<div class="sh-empty">還沒有訂單</div>';
       S.orders.forEach((o) => { if (o.got) o.seen = true; }); shopBadge();
     } else {
-      const bl = SAVE.brushLv || 1; h = '<div class="sh-card"><div class="em">🧹</div><div class="tx"><div class="nm">' + esc(brushName(bl)) + '</div><div class="ds">清潔刷 Lv.' + bl + (bl >= 10 ? '(最高等級)' : '') + ' · 一次刷掉 ' + bl + ' 點灰塵</div></div></div>';
+      const bl = SAVE.brushLv || 1; h = '<div class="sh-card"><div class="em">' + brushSvg(bl) + '</div><div class="tx"><div class="nm">' + esc(brushName(bl)) + '</div><div class="ds">清潔刷 Lv.' + bl + (bl >= 10 ? '(最高等級)' : '') + ' · 一次刷掉 ' + bl + ' 點灰塵</div></div></div>';
       const ids = Object.keys(S.bag).filter((k) => S.bag[k] > 0 && shopItem(k));
-      h += ids.length ? ids.map((k) => { const it = shopItem(k); return '<div class="sh-card"><div class="em">' + it.emoji + '</div><div class="tx"><div class="nm">' + esc(it.name) + ' ×' + S.bag[k] + '</div><div class="ds">' + esc(it.desc || '') + '</div></div>' + (it.use ? '<button type="button" class="btn small primary" data-sh="use" data-v="' + esc(k) + '">使用</button>' : '') + '</div>'; }).join('') : '<div class="sh-empty">還沒有道具<br>訂單送達後會放在這裡</div>';
+      h += ids.length ? ids.map((k) => { const it = shopItem(k); return '<div class="sh-card"><div class="em">' + (it.icon || it.emoji) + '</div><div class="tx"><div class="nm">' + esc(it.name) + ' ×' + S.bag[k] + '</div><div class="ds">' + esc(it.desc || '') + '</div></div>' + (it.use ? '<button type="button" class="btn small primary" data-sh="use" data-v="' + esc(k) + '">使用</button>' : '') + '</div>'; }).join('') : '<div class="sh-empty">還沒有道具<br>訂單送達後會放在這裡</div>';
     }
     $('#phShBody').innerHTML = h;
   }
