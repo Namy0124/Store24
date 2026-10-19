@@ -160,6 +160,50 @@ button, .btn, [data-co] { touch-action: manipulation; -webkit-tap-highlight-colo
 #decoBar { position: fixed; left: 0; right: 0; bottom: 0; z-index: 60; background: var(--panel, #fff); border-radius: 16px 16px 0 0; box-shadow: 0 -4px 18px rgba(0,0,0,.25); padding: 10px 14px calc(10px + env(safe-area-inset-bottom, 0px)); display: flex; flex-direction: column; gap: 8px; max-width: 640px; margin: 0 auto; }
 .db-row { display: flex; align-items: center; gap: 8px; } .db-bonus { font-size: 12px; color: #0B7A82; font-weight: 700; margin-right: auto; } .db-tabs { display: flex; gap: 6px; margin-right: auto; } .db-tabs button { border: 1px solid #C5D0D2; background: #fff; border-radius: 999px; padding: 5px 12px; font-size: 13px; font-weight: 700; color: #3b5a60; } .db-tabs button.on { background: #0B7A82; border-color: #0B7A82; color: #fff; } .db-pan { display: flex; gap: 6px; }
 .db-strip { display: flex; gap: 8px; overflow-x: auto; min-height: 76px; align-items: center; } .db-card { flex: none; width: 54px; height: 72px; border: 2px solid #C5D0D2; border-radius: 8px; position: relative; padding: 0; background: #fff; overflow: hidden; } .db-card.on { border-color: #F2B200; box-shadow: 0 0 0 2px #F2B20066; } .db-card img { width: 100%; height: 100%; object-fit: cover; display: block; } .db-card i { position: absolute; right: 2px; bottom: 2px; font-style: normal; font-size: 11px; background: rgba(0,0,0,.6); color: #fff; padding: 0 5px; border-radius: 8px; } .db-empty { font-size: 12px; color: #6a8a90; }
+/* photocards: rarity effects (glow + shine; SSR has a rainbow foil), shared by the wall list, the book, the pack opening */
+.cf { position: relative; border-radius: 9px; overflow: hidden; background: #2a2a38; }
+.cf > img { width: 100%; height: 100%; display: block; object-fit: cover; }
+.cf::after { content: ''; position: absolute; inset: 0; pointer-events: none; opacity: 0; z-index: 2; }
+.cf-R { box-shadow: 0 0 7px 1px #4aa3ffaa; --gc: #4aa3ff; animation: cfpulse 2.6s ease-in-out infinite; }
+.cf-SR { box-shadow: 0 0 10px 2px #b36bffbb; --gc: #b36bff; animation: cfpulse 2s ease-in-out infinite; }
+.cf-SSR { box-shadow: 0 0 14px 4px #ffc928dd; --gc: #ffc928; animation: cfpulse 1.4s ease-in-out infinite; }
+.cf-R::after, .cf-SR::after, .cf-SSR::after { opacity: 1; background: linear-gradient(115deg, transparent 38%, rgba(255,255,255,.7) 50%, transparent 62%); background-size: 260% 100%; animation: cfshine 3s linear infinite; mix-blend-mode: screen; }
+.cf-R::after { opacity: .55; }
+.cf-SSR::before { content: ''; position: absolute; inset: 0; z-index: 1; pointer-events: none; background: linear-gradient(135deg, rgba(255,0,128,.28), rgba(255,220,0,.28), rgba(0,200,255,.28), rgba(150,0,255,.28), rgba(255,0,128,.28)); background-size: 300% 300%; animation: cfrb 4s linear infinite; mix-blend-mode: screen; }
+@keyframes cfpulse { 50% { box-shadow: 0 0 18px 6px var(--gc); } }
+@keyframes cfshine { from { background-position: 160% 0; } to { background-position: -160% 0; } }
+@keyframes cfrb { to { background-position: 300% 300%; } }
+.rb { position: absolute; left: 2px; top: 2px; z-index: 3; font-size: 10px; font-weight: 900; line-height: 1.5; padding: 0 5px; border-radius: 6px; color: #fff; letter-spacing: .5px; }
+.rb-N { background: #7b8794; } .rb-R { background: #2f80ed; } .rb-SR { background: #8e44ff; } .rb-SSR { background: linear-gradient(90deg, #d98200, #ffcf33); color: #3a2500; }
+.rb.rb-inline { position: static; display: inline-block; }
+.dx-tabs { display: flex; gap: 6px; margin-bottom: 12px; } .dx-tabs button { flex: 1; border: 1px solid var(--line); background: var(--panel-soft, #f1f5f6); border-radius: 12px; padding: 9px 4px; font-size: 14px; font-weight: 800; color: var(--muted, #6a8a90); } .dx-tabs button.on { background: var(--accent, #0B7A82); color: var(--accent-ink, #fff); border-color: transparent; }
+.cb-row { display: flex; gap: 6px; margin-top: 6px; } .cb-c { flex: 1; max-width: 76px; aspect-ratio: 3 / 4; position: relative; border-radius: 8px; }
+.cb-c.lock { background: #e2e7ea; color: #9aa6ad; display: flex; align-items: center; justify-content: center; font-size: 20px; border: 1px dashed #b8c2c8; }
+.cb-c i { position: absolute; right: 2px; bottom: 2px; z-index: 3; font-style: normal; font-size: 10px; background: rgba(0,0,0,.65); color: #fff; padding: 0 5px; border-radius: 8px; }
+.pk-mini { width: 44px; height: 58px; border-radius: 7px; margin: auto; display: flex; align-items: center; justify-content: center; font-size: 24px; box-shadow: 0 2px 5px rgba(0,0,0,.25); }
+#packSheet { position: fixed; inset: 0; z-index: 75; background: radial-gradient(circle at 50% 38%, #34286a, #0b0a18 75%); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 18px; color: #fff; padding: 16px; touch-action: none; }
+#packSheet[hidden] { display: none; }
+.pk-title { font-size: 17px; font-weight: 900; text-align: center; text-shadow: 0 2px 8px rgba(0,0,0,.6); min-height: 24px; }
+.pk-stage { display: flex; flex-direction: column; align-items: center; gap: 16px; width: 100%; }
+.pk-hint { font-size: 13px; opacity: .85; text-align: center; }
+.pk-pack { width: 150px; height: 220px; border-radius: 14px; position: relative; overflow: hidden; box-shadow: 0 10px 34px rgba(0,0,0,.6), inset 0 0 0 2px rgba(255,255,255,.35); touch-action: none; cursor: grab; animation: pkidle 2.2s ease-in-out infinite; }
+@keyframes pkidle { 50% { transform: translateY(-6px) rotate(-1.5deg); } }
+.pk-top { position: absolute; left: 0; right: 0; top: 0; height: 40px; background: linear-gradient(180deg, rgba(255,255,255,.55), rgba(255,255,255,.18)); border-bottom: 2px dashed rgba(255,255,255,.9); }
+.pk-edge { position: absolute; top: -4px; bottom: -4px; width: 4px; margin-left: -2px; background: #fff; box-shadow: 0 0 10px 3px #fff; left: 0; opacity: .0; }
+.pk-logo { position: absolute; inset: 40px 0 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; font-size: 40px; text-shadow: 0 2px 6px rgba(0,0,0,.4); } .pk-logo b { font-size: 16px; } .pk-logo small { font-size: 12px; opacity: .9; }
+.pk-flash { position: absolute; inset: 0; background: #fff; opacity: 0; pointer-events: none; z-index: 5; } .pk-flash.go { animation: pkflash .9s ease-out; } @keyframes pkflash { 0% { opacity: .95; } 100% { opacity: 0; } }
+.pk-row { display: flex; gap: 10px; justify-content: center; perspective: 900px; width: 100%; }
+.pk-card { width: min(29vw, 112px); aspect-ratio: 3 / 4; position: relative; transform-style: preserve-3d; transition: transform .65s cubic-bezier(.2, .8, .2, 1); cursor: pointer; animation: pkdeal .5s both; } .pk-card:nth-child(2) { animation-delay: .1s; } .pk-card:nth-child(3) { animation-delay: .2s; }
+@keyframes pkdeal { from { transform: translateY(40px) scale(.6); opacity: 0; } }
+.pk-card.flip { transform: rotateY(180deg); animation: none; }
+.pk-back, .pk-face { position: absolute; inset: 0; backface-visibility: hidden; -webkit-backface-visibility: hidden; border-radius: 9px; }
+.pk-back { background: repeating-linear-gradient(45deg, #3a2f7a, #3a2f7a 8px, #4b3f95 8px, #4b3f95 16px); border: 2px solid #8f82e0; display: flex; align-items: center; justify-content: center; font-size: 30px; }
+.pk-card.hint-SR .pk-back { box-shadow: 0 0 14px 3px #b36bff; } .pk-card.hint-SSR .pk-back { box-shadow: 0 0 20px 6px #ffc928; animation: cfpulse 1s ease-in-out infinite; --gc: #ffc928; }
+.pk-face { transform: rotateY(180deg); } .pk-nm { position: absolute; left: 0; right: 0; bottom: 0; z-index: 3; font-size: 11px; font-weight: 800; text-align: center; padding: 14px 2px 3px; background: linear-gradient(transparent, rgba(0,0,0,.75)); }
+.pk-new { position: absolute; right: 2px; top: 2px; z-index: 3; font-style: normal; font-size: 10px; font-weight: 900; background: #e5334b; color: #fff; padding: 0 5px; border-radius: 6px; }
+.pk-btns { display: flex; gap: 10px; min-height: 40px; }
+.pk-sp { position: fixed; z-index: 80; width: 8px; height: 8px; border-radius: 50%; pointer-events: none; animation: pksp 1.1s ease-out forwards; } @keyframes pksp { to { transform: translate(var(--dx), var(--dy)) scale(.2); opacity: 0; } }
+#packSheet.shake { animation: pkscreen .5s; } @keyframes pkscreen { 20% { transform: translate(-6px, 3px); } 40% { transform: translate(6px, -3px); } 60% { transform: translate(-4px, 2px); } 80% { transform: translate(3px, -2px); } }
 .db-msg { font-size: 12.5px; color: #3b5a60; min-height: 18px; display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
 .sh-bal { margin-left: auto; font-size: 12px; font-weight: 800; color: #0B7A82; }
 .sh-tabs { display: flex; gap: 4px; padding: 6px 8px 0; border-bottom: 1px solid #D5DDDF; } .sh-tabs button { flex: 1; border: 0; background: transparent; padding: 6px 2px; font-size: 12px; color: #6a8a90; border-bottom: 3px solid transparent; font-weight: 700; } .sh-tabs button.on { color: #0B7A82; border-bottom-color: #0B7A82; }
@@ -640,7 +684,7 @@ img { -webkit-user-drag: none; user-drag: none; }
         <textarea id="saveCode" rows="3" hidden spellcheck="false" placeholder="存檔碼貼在這裡,再按一次「匯入存檔碼」"></textarea><div class="sub" id="saveMsg"></div></div>
       <div class="controls" id="controls"></div>
       <p class="legal">配件品牌、商品與人物都是虛構的遊戲設定。手機型號使用真實型號。</p>
-      <p class="legal" id="verLine" style="margin-top:2px;opacity:.7">版本 v231 · 2026-10-18</p>
+      <p class="legal" id="verLine" style="margin-top:2px;opacity:.7">版本 v232 · 2026-10-18</p>
     </div>
   </div>
 
@@ -702,9 +746,10 @@ img { -webkit-user-drag: none; user-drag: none; }
       <div class="sheet-body gutter" id="vipBody"></div>
     </div>
   </div>
+  <div id="packSheet" hidden role="dialog" aria-modal="true" aria-label="拆卡包"><div class="pk-flash" id="pkFlash"></div><div class="pk-title" id="pkTitle"></div><div class="pk-stage" id="pkStage"></div><div class="pk-btns" id="pkBtns"></div></div>
   <div id="dexSheet" class="sheet" hidden role="dialog" aria-modal="true" aria-labelledby="dexTitle">
     <div class="sheet-box">
-      <div class="sheet-head gutter"><h2 id="dexTitle">📖 客人圖鑑</h2><button class="btn small" id="dexClose" type="button">關閉</button></div>
+      <div class="sheet-head gutter"><h2 id="dexTitle">📖 圖鑑</h2><button class="btn small" id="dexClose" type="button">關閉</button></div>
       <div class="sheet-body gutter" id="dexBody"></div>
     </div>
   </div>
@@ -944,7 +989,7 @@ function cleanVip(o) {
   if (o.seen && typeof o.seen === 'object') Object.keys(o.seen).slice(0, 40).forEach((k) => { const x = o.seen[k] || {}; v.seen[String(k).slice(0, 20)] = { n: Math.max(0, Math.min(999, Math.floor(+x.n || 0))), e: (Array.isArray(x.e) ? x.e : []).filter((t) => ['good', 'mid', 'bad', 'paid', 'call'].indexOf(t) >= 0).filter((t, i, a) => a.indexOf(t) === i) }; });
   return v;
 }
-const blankSave = () => ({ vip: blankVip(), inv: blankInv(), v: 1, name: '', msgs: [], feed: [], soDay: 0, soArc: {}, soAns: {}, soFriend: {}, soSeen: { d: 0, k: [] }, phoneBest: 0, phoneTop: [], wallet: 0, brushLv: 1, deco: { items: [] }, shop: { cart: {}, orders: [], bag: {} }, days: 0, tutorialDone: false, tips: {}, tipsOff: false, dust: null, zone: 0, mgrId: null, history: [] });
+const blankSave = () => ({ vip: blankVip(), inv: blankInv(), v: 1, name: '', msgs: [], feed: [], soDay: 0, soArc: {}, soAns: {}, soFriend: {}, soSeen: { d: 0, k: [] }, phoneBest: 0, phoneTop: [], wallet: 0, cards: {}, gacha: { pity: 0, opened: 0 }, brushLv: 1, deco: { items: [] }, shop: { cart: {}, orders: [], bag: {} }, days: 0, tutorialDone: false, tips: {}, tipsOff: false, dust: null, zone: 0, mgrId: null, history: [] });
 const invNum = (v, mx) => Math.max(0, Math.min(mx || 9999, Math.floor(+v || 0)));
 function cleanInv(o) {
   const inv = blankInv(); if (!o || typeof o !== 'object') return inv;
@@ -984,6 +1029,8 @@ function cleanSave(o) {
   if (!s.phoneTop.length && s.phoneBest) s.phoneTop = [{ s: s.phoneBest, d: 0 }];
   s.inv = cleanInv(o.inv);
   s.brushLv = Math.max(1, Math.min(10, Math.floor(+o.brushLv || 1)));
+  s.cards = {}; if (o.cards && typeof o.cards === 'object') Object.keys(o.cards).slice(0, 80).forEach((k) => { const q = Math.max(0, Math.min(9999, Math.floor(+o.cards[k] || 0))); if (q) s.cards[String(k).slice(0, 24)] = q; });
+  s.gacha = { pity: Math.max(0, Math.min(999, Math.floor(+(o.gacha && o.gacha.pity) || 0))), opened: Math.max(0, Math.min(99999, Math.floor(+(o.gacha && o.gacha.opened) || 0))) };
   { const od = o.deco || {}, items = [];
     if (Array.isArray(od.items)) od.items.slice(0, 16).forEach((it) => { if (it && typeof it.id === 'string' && ['b', 'l', 'r'].indexOf(it.w) >= 0) items.push({ id: it.id.slice(0, 24), w: it.w, u: Math.round(Math.max(-10, Math.min(10, +it.u || 0)) * 100) / 100, y: Math.round(Math.max(0, Math.min(4, +it.y || 1)) * 100) / 100 }); });
     else if (Array.isArray(od.slots)) od.slots.forEach((id, i) => { if (typeof id === 'string' && id) items.push({ id: id.slice(0, 24), w: 'b', u: (i % 3 - 1) * 0.6, y: i < 3 ? 2.2 : 1.3 }); });
@@ -2080,13 +2127,40 @@ function startScene() {
 
   /* ---------- 店面布置 (Animal-Crossing style): photocards bought in the phone shop can be pasted anywhere on the blank parts of three walls; each one raises the chance a customer adds one more item ---------- */
   const CARD_IMG = 'data:image/jpeg;base64,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';
-  const CARDS = [{ id: 'card1', name: '韓系偶像小卡 #01', tag: '★ 01', price: 180, appeal: 0.05, img: CARD_IMG }];
+  /* photocards: two idol groups, 4 members each, 4 rarities (N / R / SR / SSR); the wall bonus per card depends on the rarity. The first card (card1, the abs guy) is the top SSR of the boys' group. Art is a generated placeholder until real pictures are supplied. */
+  const RAR = [{ k: 'N', nm: '普卡', theme: '日常', appeal: 0.01, fr: '#D9DEE3' }, { k: 'R', nm: '閃卡', theme: '舞台', appeal: 0.02, fr: '#4AA3FF' }, { k: 'SR', nm: '銀河卡', theme: '寫真', appeal: 0.04, fr: '#B36BFF' }, { k: 'SSR', nm: '傳說卡', theme: '限定', appeal: 0.08, fr: '#FFC928' }];
+  const rarIdx = (k) => RAR.findIndex((r) => r.k === k);
+  const GROUPS = [{ id: 'boy', name: '男團 NOVA7', emoji: '🎤', col: ['#3b4cca', '#7b5cff'], members: ['允哲', '道賢', '時宇', '子凡'] }, { id: 'girl', name: '女團 MOONBLOOM', emoji: '🌙', col: ['#e0457b', '#ff9ac1'], members: ['彩潾', '若熙', '以安', '夏恩'] }];
+  function cardArt(g, mi, r) {
+    const ri = rarIdx(r.k), hx = 120 + (mi % 2 ? 6 : -6), sp = [];
+    for (let i = 0; i < ri * 3 + 1; i++) { const a = (mi * 53 + i * 97) % 200 + 20, b = (mi * 31 + i * 71) % 230 + 20, z = 5 + (i % 3) * 3; sp.push('<path d="M' + a + ' ' + (b - z) + ' L' + (a + z * 0.35) + ' ' + (b - z * 0.35) + ' L' + (a + z) + ' ' + b + ' L' + (a + z * 0.35) + ' ' + (b + z * 0.35) + ' L' + a + ' ' + (b + z) + ' L' + (a - z * 0.35) + ' ' + (b + z * 0.35) + ' L' + (a - z) + ' ' + b + ' L' + (a - z * 0.35) + ' ' + (b - z * 0.35) + 'Z" fill="#fff" opacity=".85"/>'); }
+    const svg = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 320"><defs><linearGradient id="g" x1="' + (mi % 2) + '" y1="0" x2="' + (1 - mi % 2) + '" y2="1"><stop offset="0" stop-color="' + g.col[0] + '"/><stop offset="1" stop-color="' + g.col[1] + '"/></linearGradient><radialGradient id="h" cx=".5" cy=".38" r=".6"><stop offset="0" stop-color="#fff" stop-opacity="' + (0.25 + ri * 0.12) + '"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></radialGradient></defs><rect width="240" height="320" fill="url(#g)"/><rect width="240" height="320" fill="url(#h)"/><circle cx="' + hx + '" cy="128" r="44" fill="rgba(255,255,255,.6)"/><path d="M36 320 Q40 196 120 184 Q200 196 204 320Z" fill="rgba(255,255,255,.5)"/>' + sp.join('') + '<text x="120" y="262" text-anchor="middle" font-family="sans-serif" font-weight="900" font-size="26" fill="#fff" stroke="rgba(0,0,0,.35)" stroke-width="1">' + g.members[mi] + '</text><text x="120" y="284" text-anchor="middle" font-family="sans-serif" font-size="12" fill="#fff" opacity=".9">' + g.name.split(' ')[1] + ' · ' + r.theme + '</text></svg>';
+    return 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
+  }
+  const CARDS = [];
+  GROUPS.forEach((g) => g.members.forEach((m, mi) => RAR.forEach((r) => { const legacy = g.id === 'boy' && mi === 1 && r.k === 'SSR'; CARDS.push({ id: legacy ? 'card1' : g.id + mi + r.k, g: g.id, mi: mi, r: r.k, name: legacy ? '[傘]腹肌卡' : m + ' ' + r.theme + '卡', tag: r.k, appeal: r.appeal, fr: r.fr, img: legacy ? CARD_IMG : cardArt(g, mi, r) }); })));
   const cardById = (id) => CARDS.find((c) => c.id === id);
+  { SAVE.cards = SAVE.cards || {}; SAVE.gacha = SAVE.gacha || { pity: 0, opened: 0 };
+    Object.keys(SAVE.shop.bag).concat(SAVE.deco.items.map((it) => it.id)).forEach((id) => { if (cardById(id) && !SAVE.cards[id]) SAVE.cards[id] = 1; }); }
+  const PACK_N = 3, PITY_AT = 15, PACK_PRICE = 250;
+  const rollRar = (rng) => { const x = rng() * 100; return x < 2 ? 'SSR' : x < 10 ? 'SR' : x < 38 ? 'R' : 'N'; };
+  /* opens one pack of a group: 3 cards, at least one R or better, an SSR guaranteed once PITY_AT packs went by without one; returns [{ id, isNew }] with the best card last */
+  function packRoll(gid, rng) {
+    rng = rng || Math.random; const gp = SAVE.gacha, rs = [];
+    for (let i = 0; i < PACK_N; i++) rs.push(rollRar(rng));
+    if (rs.every((r) => r === 'N')) rs[PACK_N - 1] = 'R';
+    if (gp.pity >= PITY_AT - 1 && rs.indexOf('SSR') < 0) rs[Math.min(PACK_N - 1, Math.floor(rng() * PACK_N))] = 'SSR';
+    rs.sort((a, b) => rarIdx(a) - rarIdx(b));
+    const out = rs.map((r) => { const pool = CARDS.filter((c) => c.g === gid && c.r === r); return pool[Math.min(pool.length - 1, Math.floor(rng() * pool.length))]; });
+    gp.opened++; gp.pity = rs.indexOf('SSR') >= 0 ? 0 : gp.pity + 1;
+    return out.map((c) => { const isNew = !SAVE.cards[c.id]; SAVE.cards[c.id] = (SAVE.cards[c.id] || 0) + 1; SAVE.shop.bag[c.id] = Math.min(999, (SAVE.shop.bag[c.id] || 0) + 1); return { id: c.id, isNew: isNew }; });
+  }
+  const cardThumb = (c, w, h) => '<span class="cf cf-' + c.r + '" style="display:block;width:' + w + 'px;height:' + h + 'px;margin:auto"><img src="' + c.img + '" alt="" style="width:100%;height:100%;object-fit:cover"><b class="rb rb-' + c.r + '">' + c.r + '</b></span>';
   const CARD_TEX = {};
   function cardTex(id) {
     if (CARD_TEX[id]) return CARD_TEX[id];
     const c = cardById(id) || CARDS[0], cv = document.createElement('canvas'); cv.width = 240; cv.height = 320; const x = cv.getContext('2d');
-    const paint = (img) => { x.fillStyle = '#fff'; x.fillRect(0, 0, 240, 320); x.fillStyle = '#E9D9F2'; x.fillRect(8, 8, 224, 304); if (img) x.drawImage(img, 8, 8, 224, 304); x.fillStyle = 'rgba(255,255,255,.92)'; x.font = 'bold 20px sans-serif'; x.fillText(c.tag, 18, 300); };
+    const paint = (img) => { x.fillStyle = '#fff'; x.fillRect(0, 0, 240, 320); x.fillStyle = c.fr || '#E9D9F2'; x.fillRect(8, 8, 224, 304); if (img) x.drawImage(img, 8, 8, 224, 304); x.fillStyle = 'rgba(255,255,255,.92)'; x.font = 'bold 20px sans-serif'; x.fillText(c.tag, 18, 300); };
     paint(null); const tex = new T.CanvasTexture(cv);
     if (typeof Image !== 'undefined') { const im = new Image(); im.onload = () => { paint(im); tex.needsUpdate = true; }; im.src = c.img; }
     CARD_TEX[id] = tex; return tex;
@@ -2098,18 +2172,42 @@ function startScene() {
     l: { name: '左牆', u0: -5.6, u1: 2.4, y0: 0.5, y1: 2.9, at: (u, y) => ({ x: -8.82, y: y, z: u }), ry: Math.PI / 2, plane: [1, 0, 0, 8.82], cam: (p) => ({ pos: [-1.0, 1.75, p], look: [-8.8, 1.7, p] }), pan: [-3.2, 0] },
     r: { name: '右牆', u0: -5.6, u1: -1.2, y0: 0.5, y1: 2.9, at: (u, y) => ({ x: 8.82, y: y, z: u }), ry: -Math.PI / 2, plane: [-1, 0, 0, 8.82], cam: (p) => ({ pos: [1.6, 1.75, p], look: [8.8, 1.7, p] }), pan: [-3.4, -3.4] }
   };
-  const DECO = { mode: false, k: 0, wall: 'b', pan: 0, sel: null, meshes: [], ghost: null, on: false };
+  const DECO = { mode: false, k: 0, wall: 'b', pan: 0, sel: null, meshes: [], fx: [], ghost: null, on: false };
   const decoGroup = new T.Group(); scene.add(decoGroup);
   function cardMesh(id, sel) {
     const g = new T.Group(); box(CW + 0.03, CH + 0.03, 0.012, sel ? 0xF2B200 : 0xFFFFFF, 0, 0, 0, g);
-    const pl = new T.Mesh(new T.PlaneGeometry(CW, CH), new T.MeshBasicMaterial({ map: cardTex(id) })); pl.position.z = 0.008; g.add(pl); return g;
+    const pl = new T.Mesh(new T.PlaneGeometry(CW, CH), new T.MeshBasicMaterial({ map: cardTex(id) })); pl.position.z = 0.008; g.add(pl);
+    try { cardFx(g, id); } catch (e) { /* effects are optional */ }
+    return g;
+  }
+  /* rarity effects on the wall: R glows softly, SR glows and has a shine sweeping over it, SSR glows brightly in changing colours */
+  const FXT = {};
+  function fxTex(kind) {
+    if (FXT[kind]) return FXT[kind];
+    const cv = document.createElement('canvas'); cv.width = cv.height = 64; const x = cv.getContext('2d');
+    if (kind === 'glow') { const gr = x.createRadialGradient(32, 32, 2, 32, 32, 32); gr.addColorStop(0, 'rgba(255,255,255,1)'); gr.addColorStop(1, 'rgba(255,255,255,0)'); x.fillStyle = gr; }
+    else { const gr = x.createLinearGradient(0, 0, 64, 40); gr.addColorStop(0.36, 'rgba(255,255,255,0)'); gr.addColorStop(0.5, 'rgba(255,255,255,.95)'); gr.addColorStop(0.64, 'rgba(255,255,255,0)'); x.fillStyle = gr; }
+    x.fillRect(0, 0, 64, 64); FXT[kind] = new T.CanvasTexture(cv); return FXT[kind];
+  }
+  function cardFx(g, id) {
+    const c = cardById(id), ri = c ? rarIdx(c.r) : 0; if (ri < 1) return;
+    const col = [0, 0x4AA3FF, 0xB36BFF, 0xFFC928][ri], sc = [0, 1.7, 2.0, 2.4][ri];
+    const gm = new T.MeshBasicMaterial({ map: fxTex('glow'), color: col, transparent: true, opacity: 0.4, depthWrite: false, blending: T.AdditiveBlending });
+    const gl = new T.Mesh(new T.PlaneGeometry(CW * sc, CH * (sc - 0.2)), gm); gl.position.z = -0.004; g.add(gl);
+    DECO.fx.push({ k: 'glow', m: gm, lo: [0, 0.15, 0.3, 0.45][ri], hi: [0, 0.35, 0.6, 0.9][ri], sp: 2 + ri * 0.6, ph: DECO.fx.length * 1.7, rb: ri === 3 });
+    if (ri >= 2) { const sm = new T.MeshBasicMaterial({ map: fxTex('shine'), transparent: true, opacity: 0.6, depthWrite: false, blending: T.AdditiveBlending }); const sh = new T.Mesh(new T.PlaneGeometry(CW, CH), sm); sh.position.z = 0.0105; g.add(sh); }
+  }
+  function decoFx(now) {
+    const f = DECO.fx; if (!f || !f.length) return; const t = now / 1000;
+    for (let i = 0; i < f.length; i++) { const e = f[i]; e.m.opacity = e.lo + (e.hi - e.lo) * (0.5 + 0.5 * Math.sin(t * e.sp + e.ph)); if (e.rb && e.m.color && e.m.color.setHSL) e.m.color.setHSL((t * 0.12 + e.ph) % 1, 0.9, 0.58); }
+    if (FXT.shine) { const p = (t / 2.6) % 1; FXT.shine.offset.x = 1.2 - p * 2.4; }
   }
   function placeAt(g, w, u, y) { const W2 = DWALL[w], p = W2.at(u, y); g.position.set(p.x, p.y, p.z); g.rotation.y = W2.ry; }
   function refreshDeco3D() {
-    DECO.meshes.forEach((m) => decoGroup.remove(m)); DECO.meshes = [];
+    DECO.meshes.forEach((m) => decoGroup.remove(m)); DECO.meshes = []; DECO.fx = [];
     SAVE.deco.items.forEach((it, i) => { if (!cardById(it.id)) return; const g = cardMesh(it.id, DECO.sel && DECO.sel.kind === 'item' && DECO.sel.i === i); placeAt(g, it.w, it.u, it.y); decoGroup.add(g); DECO.meshes.push(g); });
   }
-  const decoBonus = () => Math.min(0.5, SAVE.deco.items.reduce((a, it) => a + (cardById(it.id) ? cardById(it.id).appeal : 0), 0));
+  const decoBonus = () => Math.min(0.6, SAVE.deco.items.reduce((a, it) => a + (cardById(it.id) ? cardById(it.id).appeal : 0), 0));
   const decoSnap = (v) => Math.round(v * 20) / 20;
   function decoClamp(w, u, y) { const Z = DWALL[w]; return { u: decoSnap(Math.max(Z.u0 + CW / 2, Math.min(Z.u1 - CW / 2, u))), y: decoSnap(Math.max(Z.y0 + CH / 2, Math.min(Z.y1 - CH / 2, y))) }; }
   function decoFree(w, u, y, skip) { return !SAVE.deco.items.some((it, i) => i !== skip && it.w === w && Math.abs(it.u - u) < CW + 0.03 && Math.abs(it.y - y) < CH + 0.03); }
@@ -3233,7 +3331,7 @@ function startScene() {
   const EB = { good: '好評', mid: '普通', bad: '差評', paid: '自掏腰包', call: '問過店長' };
   const favWord = (n) => n >= 5 ? '很高' : n >= 2 ? '不錯' : n > -2 ? '普通' : n > -4 ? '偏低' : '很差';
   const dexEl = $('#dexSheet'), dexBody = $('#dexBody'); let dexPrev = null;
-  let dexView = null;
+  let dexView = null, dexTab = 'guest';
   const DX_TIP = {
     haggle: { dear: '店裡不給折扣。有禮貌地婉拒不會扣分;如果你答應,折扣要自己掏腰包,而且會引來更多要求。', net: '網路價和店裡的保固、服務不同,可以說明。想跟價的話,價差由你自己補。', round: '抹零的零頭要你自己出,堅持原價最安全。', member: '你沒印象就不用給會員價,客氣說明店裡沒有這種優惠。', persist: '他會問了又問,結帳前還會再問一次,立場要一致。', staff: '前同事的承諾查不到也沒有根據,不用理會,有禮貌地說明即可。', price: '先確認系統價格,可以給他看。如果你補差價,會被記成自掏腰包。', again: '你上次破例過,所以他又來了。這次要不要堅持,好感度和評價都會受影響。' },
     ret: { ok: '核對發票、七日內、商品狀態。帶電商品憑發票可以換,同價直接換,不同價補差額。', late: '超過七日:態度好的客人可以幫他換同款,態度差的婉拒。', noinv: '沒有發票就不能換,請他回去找找看。', old: '舊發票要回總公司,店裡處理不了,請他聯絡總公司。', cash: '只能換貨,不能退現金。', nonelec: '殼、膜、支架、音源、雜項不能換,但如果沒拆封,你可以自己決定要不要換同款。' },
@@ -3277,10 +3375,26 @@ function startScene() {
       h += '</div>';
     return h;
   }
+  const dexTabs = () => '<div class="dx-tabs"><button type="button" data-dxtab="guest" class="' + (dexTab === 'guest' ? 'on' : '') + '">👥 客人圖鑑</button><button type="button" data-dxtab="card" class="' + (dexTab === 'card' ? 'on' : '') + '">🎴 小卡圖鑑</button></div>';
+  function cardBookHtml() {
+    const C = SAVE.cards || {}, gp = SAVE.gacha || { pity: 0, opened: 0 }, got = CARDS.filter((c) => C[c.id]).length;
+    let h = '<div class="dx-sum">已收集 ' + got + ' / ' + CARDS.length + ' 張 · 拆過 ' + gp.opened + ' 包 · ' + (PITY_AT - gp.pity <= 1 ? '下一包必出傳說卡(SSR)' : '再 ' + (PITY_AT - gp.pity) + ' 包內必出傳說卡(SSR)') + '</div>';
+    h += '<div class="dx-t"><div class="sub">貼在牆上的加成(每張):' + RAR.map((r) => '<span class="rb rb-' + r.k + ' rb-inline">' + r.k + '</span> ' + r.nm + ' +' + Math.round(r.appeal * 100) + '%').join(' · ') + '</div></div>';
+    GROUPS.forEach((g) => {
+      const mine = CARDS.filter((c) => c.g === g.id), n = mine.filter((c) => C[c.id]).length;
+      h += '<div class="dx-t"><h3><span>' + g.emoji + ' ' + g.name + '</span><span>' + n + '/' + mine.length + '</span></h3>';
+      g.members.forEach((m, mi) => {
+        h += '<div class="dx-e"><b>' + m + '</b><div class="cb-row">' + RAR.map((r) => { const c = mine.find((x) => x.mi === mi && x.r === r.k); return C[c.id] ? '<span class="cb-c cf cf-' + r.k + '"><img src="' + c.img + '" alt=""><b class="rb rb-' + r.k + '">' + r.k + '</b><i>×' + C[c.id] + '</i></span>' : '<span class="cb-c lock"><b class="rb rb-' + r.k + '">' + r.k + '</b>？</span>'; }).join('') + '</div></div>';
+      });
+      h += '</div>';
+    });
+    return h;
+  }
   function dexRender() {
-    const v = V(); let total = 0, got = 0, h = '';
+    const v = V(); let total = 0, got = 0, h = dexTabs();
     if (dexView && (dexView.k !== undefined || dexView.r !== undefined)) { dexDetail(v); return; }
     if (dexView && dexView.t && DEXT[dexView.t]) { dexBody.innerHTML = '<button class="btn small" type="button" data-dxback="1">‹ 返回</button><div style="margin-top:10px">' + dexTypeHtml(v, dexView.t) + '</div>'; return; }
+    if (dexTab === 'card') { dexBody.innerHTML = dexTabs() + cardBookHtml(); return; }
     Object.keys(SCN).forEach((t) => Object.keys(SCN[t]).forEach((k) => { total++; if (v.seen[t + k]) got++; }));
     h += '<div class="dx-sum">點一種客人,看他的好感度、遇過的劇情和處理方式。已收集劇情 ' + got + ' / ' + total + '。</div>';
     Object.keys(DEXT).forEach((t) => {
@@ -3291,12 +3405,13 @@ function startScene() {
     dexBody.innerHTML = h;
   }
   dexBody.addEventListener('click', (e) => {
+    const tb = e.target.closest('[data-dxtab]'); if (tb) { dexTab = tb.dataset.dxtab; dexView = null; dexRender(); dexBody.scrollTop = 0; return; }
     if (e.target.closest('[data-dxback]')) { dexView = dexView && (dexView.k !== undefined || dexView.r !== undefined) ? { t: dexView.t || 'reg' } : null; dexRender(); dexBody.scrollTop = 0; return; }
     const ty = e.target.closest('[data-dxt]'); if (ty) { dexView = { t: ty.dataset.dxt }; dexRender(); dexBody.scrollTop = 0; return; }
     const a = e.target.closest('[data-dx]'), b = e.target.closest('[data-dxr]');
     if (a) { const [t, k] = a.dataset.dx.split('|'); dexView = { t: t, k: k }; dexRender(); dexBody.scrollTop = 0; } else if (b) { dexView = { t: 'reg', r: +b.dataset.dxr }; dexRender(); dexBody.scrollTop = 0; }
   });
-  function dexOpen() { dexView = null; if (state.modal === 'phone') closePhone(); dexPrev = state.modal; dexEl.hidden = false; state.modal = 'dex'; dexRender(); }
+  function dexOpen() { dexView = null; dexTab = 'guest'; if (state.modal === 'phone') closePhone(); dexPrev = state.modal; dexEl.hidden = false; state.modal = 'dex'; dexRender(); }
   function dexClose() { dexEl.hidden = true; state.modal = dexPrev === 'dex' ? null : dexPrev; dexPrev = null; }
   $('#dexClose').addEventListener('click', dexClose);
   $('#phAppDex').addEventListener('click', dexOpen);
@@ -4303,6 +4418,7 @@ function startScene() {
     jump: jumpDays, untilWd: untilWd,
     shelf: { fill: (c) => SHELF_F[c], refresh: shelfRefresh, say: shelfSay, cats: () => Object.keys(SHELVES), info: (c) => ({ n: SHELVES[c].n, ms: SHELVES[c].ms.length }) },
     deco: { open: decoOpen, close: decoClose, bonus: decoBonus, items: () => SAVE.deco.items, pick: (id) => { DECO.sel = { kind: 'new', id: id }; }, pickItem: (i) => { DECO.sel = { kind: 'item', i: i }; }, place: decoPlace, take: decoTake, free: decoFree, clamp: decoClamp, wall: (w) => { DECO.wall = w; }, mode: () => DECO.mode, max: DECO_MAX },
+    gacha: { roll: (g, rng) => packRoll(g, rng), state: () => SAVE.gacha, cards: () => SAVE.cards, all: () => CARDS, rar: () => RAR, book: () => cardBookHtml(), pityAt: PITY_AT },
     shop: { bag: () => SAVE.shop.bag, brushLv: () => SAVE.brushLv, names: () => BRUSHES.map((b) => b.n), listed: () => shopListed(), brushName: brushName, act: (a, v) => phShopAct(a, v), render: shopRender, deliver: shopDeliver, items: () => SHOP_ITEMS, state: () => SAVE.shop, wallet: () => SAVE.wallet, setWallet: (n) => { SAVE.wallet = n; }, tab: () => SHP.tab },
     vip: { dex: dexOpen, dexClose: dexClose, open: spawnVip, state: () => VP, pick: vipPick, call: vipCall, callNow: vipCallNow, end: vipClose, data: () => SAVE.vip, plan: () => G.vipPlan, pen: () => G.vipPen, build: (t, k) => { const m = { haggle: HG, ret: RT, ask: AS, reg: RG }[t]; return k === 'intro' || t === 'reg' ? m[k](regOf(V())) : m[k](); }, kinds: () => ({ haggle: Object.keys(HG), ret: Object.keys(RT), ask: Object.keys(AS), reg: Object.keys(RG) }) },
     respond: respondCall,
@@ -5516,7 +5632,8 @@ function startScene() {
   const nextBrushLv = () => (SAVE.brushLv || 1) + 1 + pendingBrush();
   const SHOP_ITEMS = [];
   for (let lv = 2; lv <= 10; lv++) SHOP_ITEMS.push({ id: 'brush' + lv, brush: lv, name: '清潔刷升級:「' + BRUSHES[lv - 1].n + '」', emoji: '🧹', icon: brushSvg(lv), price: BRUSH_PRICE[lv], desc: '清潔力 ' + (lv - 1) + ' → ' + lv + ':刷貨架一次可以刷掉 ' + lv + ' 點灰塵,外觀也會換新。下單隔天送到,自動換上。', show: () => lv === nextBrushLv() });
-  CARDS.forEach((c) => SHOP_ITEMS.push({ id: c.id, card: true, name: c.name, emoji: '🎴', icon: '<img src="' + c.img + '" alt="">', price: c.price, desc: '韓系偶像小卡。到貨後按「🎨 布置」,可以貼在店裡後牆、左牆、右牆的空白處,每張讓客人多買一件的機率 +' + Math.round(c.appeal * 100) + '%。' }));
+  GROUPS.forEach((g) => SHOP_ITEMS.push({ id: 'pack_' + g.id, pack: g.id, name: g.name + ' 小卡卡包', emoji: '🎴', icon: '<div class="pk-mini" style="background:linear-gradient(145deg,' + g.col[0] + ',' + g.col[1] + ')">' + g.emoji + '</div>', price: PACK_PRICE, desc: '一包 ' + PACK_N + ' 張' + g.name.slice(0, 2) + '小卡,至少一張閃卡以上,連續 ' + PITY_AT + ' 包沒出傳說卡(SSR)就保底。送到後在「我的道具」拆封,卡片可以貼在牆上,稀有度越高加成越多。' }));
+  CARDS.forEach((c) => SHOP_ITEMS.push({ id: c.id, card: true, show: () => false, name: '[' + c.r + '] ' + c.name, emoji: '🎴', icon: cardThumb(c, 40, 54), price: 0, desc: '' }));
   const shopListed = () => SHOP_ITEMS.filter((x) => !x.show || x.show());
   const shopItem = (id) => SHOP_ITEMS.find((x) => x.id === id);
   const SHP = { tab: 'shop', confirm: false };
@@ -5548,7 +5665,7 @@ function startScene() {
       const bl = SAVE.brushLv || 1; h = '<div class="sh-card"><div class="em">' + brushSvg(bl) + '</div><div class="tx"><div class="nm">' + esc(brushName(bl)) + '</div><div class="ds">清潔刷 Lv.' + bl + (bl >= 10 ? '(最高等級)' : '') + ' · 一次刷掉 ' + bl + ' 點灰塵</div></div></div>';
       const ids = Object.keys(S.bag).filter((k) => S.bag[k] > 0 && shopItem(k));
       if (ids.some((k) => shopItem(k).card)) h += '<button type="button" class="btn primary" data-sh="deco" style="width:100%">🎨 去布置店面(貼小卡)</button>';
-      h += ids.length ? ids.map((k) => { const it = shopItem(k); return '<div class="sh-card"><div class="em">' + (it.icon || it.emoji) + '</div><div class="tx"><div class="nm">' + esc(it.name) + ' ×' + S.bag[k] + '</div><div class="ds">' + esc(it.card ? '到手機外的「🎨 布置」按鈕,選一張小卡再點牆面空位就能貼上。' : (it.desc || '')) + '</div></div>' + (it.use ? '<button type="button" class="btn small primary" data-sh="use" data-v="' + esc(k) + '">使用</button>' : '') + '</div>'; }).join('') : '<div class="sh-empty">還沒有道具<br>訂單送達後會放在這裡</div>';
+      h += ids.length ? ids.map((k) => { const it = shopItem(k); return '<div class="sh-card"><div class="em">' + (it.icon || it.emoji) + '</div><div class="tx"><div class="nm">' + esc(it.name) + ' ×' + S.bag[k] + '</div><div class="ds">' + esc(it.card ? '稀有度越高,貼在牆上的加成越多(+' + Math.round(cardById(k).appeal * 100) + '%)。' : (it.desc || '')) + '</div></div>' + (it.use ? '<button type="button" class="btn small primary" data-sh="use" data-v="' + esc(k) + '">使用</button>' : '') + (it.pack ? '<button type="button" class="btn small primary" data-sh="open" data-v="' + esc(k) + '">拆封</button>' : '') + '</div>'; }).join('') : '<div class="sh-empty">還沒有道具<br>訂單送達後會放在這裡</div>';
     }
     $('#phShBody').innerHTML = h;
   }
@@ -5567,10 +5684,65 @@ function startScene() {
       const id = S.orders.reduce((m, o) => Math.max(m, o.id), 0) + 1; S.orders.push({ id: id, items: items, total: tot, d: G.dayNo, arrive: G.dayNo + 1, got: false });
       S.orders = S.orders.slice(-30); S.cart = {}; SHP.tab = 'orders'; beep(1200, 0.08); toast('下單成功,明天會送到店裡');
     }
+    else if (a === 'open') { const it = shopItem(v); if (!it || !it.pack || !(S.bag[v] > 0)) return; S.bag[v]--; if (S.bag[v] <= 0) delete S.bag[v]; const res = packRoll(it.pack); saveGame(); try { packShow(it, res); } catch (e) { /* the cards are already in the bag */ } }
     else if (a === 'deco') { closePhone(); setTimeout(() => { if (!decoOpen()) toast('現在不能布置'); }, 560); return; }
     else if (a === 'use') { const it = shopItem(v); if (!it || !it.use || !(S.bag[v] > 0)) return; if (it.use() !== false) { S.bag[v]--; if (S.bag[v] <= 0) delete S.bag[v]; } }
     saveGame(); shopRender();
   }
+  /* ---------- 拆卡包: tear the top of the pack open with a swipe, then flip the cards one by one ---------- */
+  const PKE = { el: $('#packSheet'), stage: $('#pkStage'), title: $('#pkTitle'), btns: $('#pkBtns'), flash: $('#pkFlash') };
+  const PK = { on: false, res: [], it: null, flipped: 0, torn: false }; let pkDrag = null;
+  function pkFlashGo(col) { const f = PKE.flash; f.style.background = col; f.classList.remove('go'); void f.offsetWidth; f.classList.add('go'); }
+  function packShow(it, res) {
+    PK.on = true; PK.res = res; PK.it = it; PK.flipped = 0; PK.torn = false; pkDrag = null;
+    const g = GROUPS.find((x) => x.id === it.pack);
+    PKE.el.hidden = false; PKE.title.textContent = it.name; PKE.btns.innerHTML = '';
+    PKE.stage.innerHTML = '<div class="pk-hint">用手指沿著虛線往右滑,把卡包撕開</div><div class="pk-pack" id="pkPack" style="background:linear-gradient(145deg,' + g.col[0] + ',' + g.col[1] + ')"><div class="pk-top" id="pkTop"><i class="pk-edge" id="pkEdge"></i></div><div class="pk-logo">' + g.emoji + '<b>' + g.name + '</b><small>小卡 ×' + res.length + '</small></div></div><button class="btn small" type="button" data-pkskip="1">直接拆開</button>';
+  }
+  function pkTear(p) {
+    p = Math.max(0, Math.min(1, p)); const top = $('#pkTop'), edge = $('#pkEdge'), pk = $('#pkPack'); if (!top) return;
+    top.style.clipPath = 'inset(0 0 0 ' + Math.round(p * 100) + '%)'; edge.style.left = Math.round(p * 100) + '%'; edge.style.opacity = p > 0 && p < 1 ? 1 : 0; pk.style.animation = p > 0 ? 'none' : ''; pk.style.transform = p > 0 ? 'rotate(' + (p * 5).toFixed(1) + 'deg)' : '';
+    if (p > 0.02 && p < 1) beep(300 + p * 500, 0.03);
+    if (p >= 1 && !PK.torn) { PK.torn = true; pkDrag = null; setTimeout(pkBurst, 120); }
+  }
+  function pkBurst() {
+    pkFlashGo('#fff'); beep(520, 0.12); setTimeout(() => beep(780, 0.14), 90);
+    PKE.title.textContent = '點卡片翻開(越後面越稀有)';
+    PKE.stage.innerHTML = '<div class="pk-row">' + PK.res.map((r, i) => { const c = cardById(r.id); return '<div class="pk-card hint-' + c.r + '" data-pk="' + i + '"><div class="pk-back">🎴</div><div class="pk-face cf cf-' + c.r + '"><img src="' + c.img + '" alt=""><b class="rb rb-' + c.r + '">' + c.r + '</b>' + (r.isNew ? '<em class="pk-new">NEW</em>' : '') + '<span class="pk-nm">' + esc(c.name) + '</span></div></div>'; }).join('') + '</div>';
+    PKE.btns.innerHTML = '<button class="btn small" type="button" data-pkall="1">全部翻開</button>';
+  }
+  function pkSparks(el, n, cols) {
+    const r = el.getBoundingClientRect(), cx = r.left + r.width / 2, cy = r.top + r.height / 2;
+    for (let i = 0; i < n; i++) { const p = document.createElement('i'), a = Math.random() * 6.283, d = 50 + Math.random() * 130; p.className = 'pk-sp'; p.style.left = cx + 'px'; p.style.top = cy + 'px'; p.style.background = cols[i % cols.length]; p.style.setProperty('--dx', Math.cos(a) * d + 'px'); p.style.setProperty('--dy', Math.sin(a) * d + 'px'); document.body.appendChild(p); setTimeout(() => p.remove(), 1200); }
+  }
+  function pkFlip(i) {
+    const el = PKE.stage.querySelector('[data-pk="' + i + '"]'); if (!el || el.classList.contains('flip')) return;
+    el.classList.add('flip'); PK.flipped++;
+    const c = cardById(PK.res[i].id);
+    setTimeout(() => {
+      if (c.r === 'N') beep(520, 0.08);
+      else if (c.r === 'R') { beep(660, 0.1); pkSparks(el, 10, ['#4aa3ff', '#bfe0ff']); }
+      else if (c.r === 'SR') { pkFlashGo('rgba(179,107,255,.7)'); beep(740, 0.1); setTimeout(() => beep(990, 0.14), 100); pkSparks(el, 22, ['#b36bff', '#e6d0ff', '#fff']); }
+      else { pkFlashGo('rgba(255,214,80,.95)'); [660, 830, 990, 1320].forEach((f, k) => setTimeout(() => beep(f, 0.16), k * 110)); pkSparks(el, 46, ['#ffc928', '#fff3b0', '#ff7ab8', '#7ad7ff']); PKE.el.classList.add('shake'); setTimeout(() => PKE.el.classList.remove('shake'), 600); }
+    }, 330);
+    if (PK.flipped >= PK.res.length) setTimeout(pkDone, 1000);
+  }
+  function pkDone() {
+    const left = SAVE.shop.bag[PK.it.id] || 0;
+    PKE.btns.innerHTML = '<button class="btn primary" type="button" data-pkok="1">收下</button>' + (left ? '<button class="btn small" type="button" data-pkagain="1">再拆一包(還有 ' + left + ' 包)</button>' : '');
+    PKE.title.textContent = PK.res.some((r) => r.isNew) ? '獲得 ' + PK.res.filter((r) => r.isNew).length + ' 張新卡,已收進圖鑑!' : '都是重複的卡,多的可以貼在牆上';
+  }
+  function pkClose() { PK.on = false; PKE.el.hidden = true; PKE.stage.innerHTML = ''; PKE.btns.innerHTML = ''; shopRender(); }
+  PKE.stage.addEventListener('pointerdown', (e) => { const p = e.target.closest && e.target.closest('#pkPack'); if (!p || PK.torn) return; pkDrag = { x0: e.clientX, w: p.getBoundingClientRect().width * 0.85 }; try { PKE.stage.setPointerCapture(e.pointerId); } catch (_) { /* ignore */ } });
+  PKE.stage.addEventListener('pointermove', (e) => { if (pkDrag) pkTear((e.clientX - pkDrag.x0) / pkDrag.w); });
+  const pkUp = () => { if (!pkDrag) return; pkDrag = null; if (!PK.torn) pkTear(0); };
+  PKE.stage.addEventListener('pointerup', pkUp); PKE.stage.addEventListener('pointercancel', pkUp);
+  PKE.stage.addEventListener('click', (e) => { if (e.target.closest('[data-pkskip]')) { if (!PK.torn) { PK.torn = true; pkBurst(); } return; } const c = e.target.closest('[data-pk]'); if (c) pkFlip(+c.dataset.pk); });
+  PKE.btns.addEventListener('click', (e) => {
+    if (e.target.closest('[data-pkall]')) { PK.res.forEach((r, i) => setTimeout(() => pkFlip(i), i * 450)); PKE.btns.innerHTML = ''; return; }
+    if (e.target.closest('[data-pkok]')) { pkClose(); return; }
+    if (e.target.closest('[data-pkagain]')) { const id = PK.it.id; pkClose(); phShopAct('open', id); }
+  });
   /* a new day starts: yesterday's orders are delivered */
   function shopDeliver() {
     const S = SAVE.shop; let n = 0, up = 0;
@@ -5588,11 +5760,11 @@ function startScene() {
   const dbBar = $('#decoBar');
   const decoView = () => { const Z = DWALL[DECO.wall], c = Z.cam(DECO.pan); return c; };
   function decoRender() {
-    const D = SAVE.deco, bag = SAVE.shop.bag, own = CARDS.filter((c) => (bag[c.id] || 0) > 0);
+    const D = SAVE.deco, bag = SAVE.shop.bag, own = CARDS.filter((c) => (bag[c.id] || 0) > 0).sort((a, b) => rarIdx(b.r) - rarIdx(a.r));
     $('#dbBonus').textContent = '客人多買一件的機率 +' + Math.round(decoBonus() * 100) + '%(' + D.items.length + '/' + DECO_MAX + ' 張)';
     { const pn = $('#dbL').parentNode; if (pn && pn.style) pn.style.display = DECO.wall === 'b' ? 'none' : ''; }
     $('#dbWalls').innerHTML = Object.keys(DWALL).map((k) => '<button type="button" data-db="wall" data-v="' + k + '" class="' + (DECO.wall === k ? 'on' : '') + '">' + DWALL[k].name + '</button>').join('');
-    $('#dbStrip').innerHTML = own.length ? own.map((c) => '<button type="button" class="db-card' + (DECO.sel && DECO.sel.kind === 'new' && DECO.sel.id === c.id ? ' on' : '') + '" data-db="pick" data-v="' + esc(c.id) + '"><img src="' + c.img + '" alt=""><i>×' + bag[c.id] + '</i></button>').join('') : '<div class="db-empty">背包裡沒有小卡。到手機「購物」買小卡,隔天送到就能貼。</div>';
+    $('#dbStrip').innerHTML = own.length ? own.map((c) => '<button type="button" class="db-card cf cf-' + c.r + (DECO.sel && DECO.sel.kind === 'new' && DECO.sel.id === c.id ? ' on' : '') + '" data-db="pick" data-v="' + esc(c.id) + '"><img src="' + c.img + '" alt=""><b class="rb rb-' + c.r + '">' + c.r + '</b><i>×' + bag[c.id] + '</i></button>').join('') : '<div class="db-empty">背包裡沒有小卡。到手機「購物」買卡包,拆開就有小卡可以貼。</div>';
     const sel = DECO.sel;
     $('#dbMsg').innerHTML = sel && sel.kind === 'item' ? '已選取牆上的小卡:點牆面的空位可以搬過去 <button type="button" class="btn small danger" data-db="take">取下</button> <button type="button" class="btn small" data-db="none">取消選取</button>' : sel && sel.kind === 'new' ? '點牆面的空位貼上(綠色框 = 可以貼,紅色 = 位置被佔住)' : (own.length ? '先選一張小卡,再點牆面;或點牆上的小卡來搬動' : '點牆上的小卡可以搬動或取下');
   }
@@ -5913,7 +6085,7 @@ function startScene() {
     const sw = moving ? Math.sin(walkT) * 0.7 : 0;
     parts.legL.rotation.x = sw; parts.legR.rotation.x = -sw; parts.armL.rotation.x = -sw; parts.armR.rotation.x = sw;
     player.position.y = moving ? Math.abs(Math.sin(walkT)) * 0.05 : Math.sin(now / 600) * 0.012;
-    dlvPose(now); holdPose(now); brushPose(now);
+    dlvPose(now); holdPose(now); brushPose(now); try { decoFx(now); } catch (e) { /* ignore */ }
 
     /* nearest interactable */
     active = null; let bestD = 1.4, ringStand = null, ringD = 3.5;
