@@ -742,7 +742,7 @@ function cleanVip(o) {
   if (o.seen && typeof o.seen === 'object') Object.keys(o.seen).slice(0, 40).forEach((k) => { const x = o.seen[k] || {}; v.seen[String(k).slice(0, 20)] = { n: Math.max(0, Math.min(999, Math.floor(+x.n || 0))), e: (Array.isArray(x.e) ? x.e : []).filter((t) => ['good', 'mid', 'bad', 'paid', 'call'].indexOf(t) >= 0).filter((t, i, a) => a.indexOf(t) === i) }; });
   return v;
 }
-const blankSave = () => ({ vip: blankVip(), inv: blankInv(), v: 1, name: '', msgs: [], feed: [], soDay: 0, soArc: {}, soAns: {}, soFriend: {}, soSeen: { d: 0, k: [] }, phoneBest: 0, phoneTop: [], wallet: 1000, brushLv: 1, deco: { items: [] }, shop: { cart: {}, orders: [], bag: {} }, days: 0, tutorialDone: false, tips: {}, tipsOff: false, dust: null, zone: 0, mgrId: null, history: [] });
+const blankSave = () => ({ vip: blankVip(), inv: blankInv(), v: 1, name: '', msgs: [], feed: [], soDay: 0, soArc: {}, soAns: {}, soFriend: {}, soSeen: { d: 0, k: [] }, phoneBest: 0, phoneTop: [], wallet: 0, brushLv: 1, deco: { items: [] }, shop: { cart: {}, orders: [], bag: {} }, days: 0, tutorialDone: false, tips: {}, tipsOff: false, dust: null, zone: 0, mgrId: null, history: [] });
 const invNum = (v, mx) => Math.max(0, Math.min(mx || 9999, Math.floor(+v || 0)));
 function cleanInv(o) {
   const inv = blankInv(); if (!o || typeof o !== 'object') return inv;
@@ -786,7 +786,7 @@ function cleanSave(o) {
     if (Array.isArray(od.items)) od.items.slice(0, 16).forEach((it) => { if (it && typeof it.id === 'string' && ['b', 'l', 'r'].indexOf(it.w) >= 0) items.push({ id: it.id.slice(0, 24), w: it.w, u: Math.round(Math.max(-10, Math.min(10, +it.u || 0)) * 100) / 100, y: Math.round(Math.max(0, Math.min(4, +it.y || 1)) * 100) / 100 }); });
     else if (Array.isArray(od.slots)) od.slots.forEach((id, i) => { if (typeof id === 'string' && id) items.push({ id: id.slice(0, 24), w: 'b', u: (i % 3 - 1) * 0.6, y: i < 3 ? 2.2 : 1.3 }); });
     s.deco = { items: items }; }
-  s.wallet = o.wallet == null ? 1000 : Math.max(0, Math.min(99999999, Math.floor(+o.wallet || 0)));
+  s.wallet = o.wallet == null ? 0 : Math.max(0, Math.min(99999999, Math.floor(+o.wallet || 0)));
   { const so = o.shop && typeof o.shop === 'object' ? o.shop : {}, qmap = (m, mx) => { const r = {}; if (m && typeof m === 'object') Object.keys(m).slice(0, 80).forEach((k) => { const q = Math.max(0, Math.min(mx, Math.floor(+m[k] || 0))); if (q) r[String(k).slice(0, 24)] = q; }); return r; };
     s.shop = { cart: qmap(so.cart, 99), bag: qmap(so.bag, 999), orders: (Array.isArray(so.orders) ? so.orders : []).slice(-30).map((r) => ({ id: Math.max(1, Math.floor(+r.id || 1)), items: qmap(r.items, 99), total: Math.max(0, Math.floor(+r.total || 0)), d: Math.max(0, Math.floor(+r.d || 0)), arrive: Math.max(0, Math.floor(+r.arrive || 0)), got: !!r.got, seen: !!r.seen })).filter((r) => Object.keys(r.items).length) }; }
   s.vip = cleanVip(o.vip);
