@@ -150,6 +150,9 @@ button, .btn, [data-co] { touch-action: manipulation; -webkit-tap-highlight-colo
 @keyframes phshake { 0%, 100% { transform: translateX(0) rotate(0); } 25% { transform: translateX(-3px) rotate(-8deg); } 75% { transform: translateX(3px) rotate(8deg); } }
 .ph-msgs { position: absolute; inset: 0; background: #F2F5F6; color: #1B2A30; display: flex; flex-direction: column; padding-top: 24px; z-index: 3; }
 .pm-head { display: flex; align-items: center; gap: 10px; padding: 6px 10px; border-bottom: 1px solid #D5DDDF; }
+.dc-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin: 10px 0; } .dc-slot { aspect-ratio: 3 / 4; border: 2px dashed #B9C9CC; border-radius: 10px; background: #F2F5F6; display: flex; align-items: center; justify-content: center; color: #6a8a90; font-size: 13px; padding: 0; overflow: hidden; position: relative; } .dc-slot.on { border-style: solid; border-color: #C9A66B; } .dc-slot img { width: 100%; height: 100%; object-fit: cover; display: block; } .dc-slot i { position: absolute; right: 4px; bottom: 4px; font-style: normal; font-size: 11px; background: rgba(0,0,0,.55); color: #fff; padding: 1px 6px; border-radius: 8px; }
+.dc-own { display: flex; align-items: center; gap: 10px; padding: 8px 0; border-top: 1px solid #E3EAEC; } .dc-own img { width: 42px; height: 56px; object-fit: cover; border-radius: 4px; flex: none; } .dc-own .tx { flex: 1; min-width: 0; font-size: 14px; }
+.sh-card .em img { width: 44px; height: 58px; object-fit: cover; border-radius: 4px; display: block; }
 .sh-bal { margin-left: auto; font-size: 12px; font-weight: 800; color: #0B7A82; }
 .sh-tabs { display: flex; gap: 4px; padding: 6px 8px 0; border-bottom: 1px solid #D5DDDF; } .sh-tabs button { flex: 1; border: 0; background: transparent; padding: 6px 2px; font-size: 12px; color: #6a8a90; border-bottom: 3px solid transparent; font-weight: 700; } .sh-tabs button.on { color: #0B7A82; border-bottom-color: #0B7A82; }
 .sh-card { background: #fff; border-radius: 12px; padding: 8px 10px; display: flex; gap: 10px; align-items: center; box-shadow: 0 1px 3px rgba(0,0,0,.08); } .sh-card .em { font-size: 30px; width: 44px; text-align: center; flex: none; } .sh-card .em svg { width: 44px; height: 44px; display: block; } .sh-card .tx { flex: 1; min-width: 0; } .sh-card .nm { font-weight: 800; font-size: 13px; } .sh-card .ds { font-size: 11px; color: #6a8a90; line-height: 1.35; margin: 1px 0; } .sh-card .pr { font-weight: 800; color: #D9534F; font-size: 13px; }
@@ -735,7 +738,7 @@ function cleanVip(o) {
   if (o.seen && typeof o.seen === 'object') Object.keys(o.seen).slice(0, 40).forEach((k) => { const x = o.seen[k] || {}; v.seen[String(k).slice(0, 20)] = { n: Math.max(0, Math.min(999, Math.floor(+x.n || 0))), e: (Array.isArray(x.e) ? x.e : []).filter((t) => ['good', 'mid', 'bad', 'paid', 'call'].indexOf(t) >= 0).filter((t, i, a) => a.indexOf(t) === i) }; });
   return v;
 }
-const blankSave = () => ({ vip: blankVip(), inv: blankInv(), v: 1, name: '', msgs: [], feed: [], soDay: 0, soArc: {}, soAns: {}, soFriend: {}, soSeen: { d: 0, k: [] }, phoneBest: 0, phoneTop: [], wallet: 1000, brushLv: 1, shop: { cart: {}, orders: [], bag: {} }, days: 0, tutorialDone: false, tips: {}, tipsOff: false, dust: null, zone: 0, mgrId: null, history: [] });
+const blankSave = () => ({ vip: blankVip(), inv: blankInv(), v: 1, name: '', msgs: [], feed: [], soDay: 0, soArc: {}, soAns: {}, soFriend: {}, soSeen: { d: 0, k: [] }, phoneBest: 0, phoneTop: [], wallet: 1000, brushLv: 1, deco: { slots: [null, null, null, null, null, null] }, shop: { cart: {}, orders: [], bag: {} }, days: 0, tutorialDone: false, tips: {}, tipsOff: false, dust: null, zone: 0, mgrId: null, history: [] });
 const invNum = (v, mx) => Math.max(0, Math.min(mx || 9999, Math.floor(+v || 0)));
 function cleanInv(o) {
   const inv = blankInv(); if (!o || typeof o !== 'object') return inv;
@@ -775,6 +778,7 @@ function cleanSave(o) {
   if (!s.phoneTop.length && s.phoneBest) s.phoneTop = [{ s: s.phoneBest, d: 0 }];
   s.inv = cleanInv(o.inv);
   s.brushLv = Math.max(1, Math.min(10, Math.floor(+o.brushLv || 1)));
+  s.deco = { slots: [0, 1, 2, 3, 4, 5].map((i) => { const v = o.deco && Array.isArray(o.deco.slots) ? o.deco.slots[i] : null; return typeof v === 'string' && v ? v.slice(0, 24) : null; }) };
   s.wallet = o.wallet == null ? 1000 : Math.max(0, Math.min(99999999, Math.floor(+o.wallet || 0)));
   { const so = o.shop && typeof o.shop === 'object' ? o.shop : {}, qmap = (m, mx) => { const r = {}; if (m && typeof m === 'object') Object.keys(m).slice(0, 80).forEach((k) => { const q = Math.max(0, Math.min(mx, Math.floor(+m[k] || 0))); if (q) r[String(k).slice(0, 24)] = q; }); return r; };
     s.shop = { cart: qmap(so.cart, 99), bag: qmap(so.bag, 999), orders: (Array.isArray(so.orders) ? so.orders : []).slice(-30).map((r) => ({ id: Math.max(1, Math.floor(+r.id || 1)), items: qmap(r.items, 99), total: Math.max(0, Math.floor(+r.total || 0)), d: Math.max(0, Math.floor(+r.d || 0)), arrive: Math.max(0, Math.floor(+r.arrive || 0)), got: !!r.got, seen: !!r.seen })).filter((r) => Object.keys(r.items).length) }; }
