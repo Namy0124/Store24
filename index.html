@@ -684,7 +684,7 @@ img { -webkit-user-drag: none; user-drag: none; }
         <textarea id="saveCode" rows="3" hidden spellcheck="false" placeholder="存檔碼貼在這裡,再按一次「匯入存檔碼」"></textarea><div class="sub" id="saveMsg"></div></div>
       <div class="controls" id="controls"></div>
       <p class="legal">配件品牌、商品與人物都是虛構的遊戲設定。手機型號使用真實型號。</p>
-      <p class="legal" id="verLine" style="margin-top:2px;opacity:.7">版本 v232 · 2026-10-18</p>
+      <p class="legal" id="verLine" style="margin-top:2px;opacity:.7">版本 v233 · 2026-10-18</p>
     </div>
   </div>
 
@@ -2130,15 +2130,15 @@ function startScene() {
   /* photocards: two idol groups, 4 members each, 4 rarities (N / R / SR / SSR); the wall bonus per card depends on the rarity. The first card (card1, the abs guy) is the top SSR of the boys' group. Art is a generated placeholder until real pictures are supplied. */
   const RAR = [{ k: 'N', nm: '普卡', theme: '日常', appeal: 0.01, fr: '#D9DEE3' }, { k: 'R', nm: '閃卡', theme: '舞台', appeal: 0.02, fr: '#4AA3FF' }, { k: 'SR', nm: '銀河卡', theme: '寫真', appeal: 0.04, fr: '#B36BFF' }, { k: 'SSR', nm: '傳說卡', theme: '限定', appeal: 0.08, fr: '#FFC928' }];
   const rarIdx = (k) => RAR.findIndex((r) => r.k === k);
-  const GROUPS = [{ id: 'boy', name: '男團 NOVA7', emoji: '🎤', col: ['#3b4cca', '#7b5cff'], members: ['允哲', '道賢', '時宇', '子凡'] }, { id: 'girl', name: '女團 MOONBLOOM', emoji: '🌙', col: ['#e0457b', '#ff9ac1'], members: ['彩潾', '若熙', '以安', '夏恩'] }];
+  const GROUPS = [{ id: 'boy', name: '男團', emoji: '🎤', col: ['#3b4cca', '#7b5cff'], members: ['#1', '#2', '#3', '#4'] }, { id: 'girl', name: '女團', emoji: '🌙', col: ['#e0457b', '#ff9ac1'], members: ['#1', '#2', '#3', '#4'] }];
   function cardArt(g, mi, r) {
     const ri = rarIdx(r.k), hx = 120 + (mi % 2 ? 6 : -6), sp = [];
     for (let i = 0; i < ri * 3 + 1; i++) { const a = (mi * 53 + i * 97) % 200 + 20, b = (mi * 31 + i * 71) % 230 + 20, z = 5 + (i % 3) * 3; sp.push('<path d="M' + a + ' ' + (b - z) + ' L' + (a + z * 0.35) + ' ' + (b - z * 0.35) + ' L' + (a + z) + ' ' + b + ' L' + (a + z * 0.35) + ' ' + (b + z * 0.35) + ' L' + a + ' ' + (b + z) + ' L' + (a - z * 0.35) + ' ' + (b + z * 0.35) + ' L' + (a - z) + ' ' + b + ' L' + (a - z * 0.35) + ' ' + (b - z * 0.35) + 'Z" fill="#fff" opacity=".85"/>'); }
-    const svg = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 320"><defs><linearGradient id="g" x1="' + (mi % 2) + '" y1="0" x2="' + (1 - mi % 2) + '" y2="1"><stop offset="0" stop-color="' + g.col[0] + '"/><stop offset="1" stop-color="' + g.col[1] + '"/></linearGradient><radialGradient id="h" cx=".5" cy=".38" r=".6"><stop offset="0" stop-color="#fff" stop-opacity="' + (0.25 + ri * 0.12) + '"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></radialGradient></defs><rect width="240" height="320" fill="url(#g)"/><rect width="240" height="320" fill="url(#h)"/><circle cx="' + hx + '" cy="128" r="44" fill="rgba(255,255,255,.6)"/><path d="M36 320 Q40 196 120 184 Q200 196 204 320Z" fill="rgba(255,255,255,.5)"/>' + sp.join('') + '<text x="120" y="262" text-anchor="middle" font-family="sans-serif" font-weight="900" font-size="26" fill="#fff" stroke="rgba(0,0,0,.35)" stroke-width="1">' + g.members[mi] + '</text><text x="120" y="284" text-anchor="middle" font-family="sans-serif" font-size="12" fill="#fff" opacity=".9">' + g.name.split(' ')[1] + ' · ' + r.theme + '</text></svg>';
+    const svg = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 320"><defs><linearGradient id="g" x1="' + (mi % 2) + '" y1="0" x2="' + (1 - mi % 2) + '" y2="1"><stop offset="0" stop-color="' + g.col[0] + '"/><stop offset="1" stop-color="' + g.col[1] + '"/></linearGradient><radialGradient id="h" cx=".5" cy=".38" r=".6"><stop offset="0" stop-color="#fff" stop-opacity="' + (0.25 + ri * 0.12) + '"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></radialGradient></defs><rect width="240" height="320" fill="url(#g)"/><rect width="240" height="320" fill="url(#h)"/><circle cx="' + hx + '" cy="128" r="44" fill="rgba(255,255,255,.6)"/><path d="M36 320 Q40 196 120 184 Q200 196 204 320Z" fill="rgba(255,255,255,.5)"/>' + sp.join('') + '<text x="120" y="262" text-anchor="middle" font-family="sans-serif" font-weight="900" font-size="26" fill="#fff" stroke="rgba(0,0,0,.35)" stroke-width="1">' + g.members[mi] + '</text><text x="120" y="284" text-anchor="middle" font-family="sans-serif" font-size="12" fill="#fff" opacity=".9">' + g.name + ' · ' + r.theme + '</text></svg>';
     return 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
   }
   const CARDS = [];
-  GROUPS.forEach((g) => g.members.forEach((m, mi) => RAR.forEach((r) => { const legacy = g.id === 'boy' && mi === 1 && r.k === 'SSR'; CARDS.push({ id: legacy ? 'card1' : g.id + mi + r.k, g: g.id, mi: mi, r: r.k, name: legacy ? '[傘]腹肌卡' : m + ' ' + r.theme + '卡', tag: r.k, appeal: r.appeal, fr: r.fr, img: legacy ? CARD_IMG : cardArt(g, mi, r) }); })));
+  GROUPS.forEach((g) => g.members.forEach((m, mi) => RAR.forEach((r) => { const legacy = g.id === 'boy' && mi === 1 && r.k === 'SSR'; CARDS.push({ id: legacy ? 'card1' : g.id + mi + r.k, g: g.id, mi: mi, r: r.k, name: legacy ? '[傘]腹肌卡' : g.name + ' ' + m + ' ' + r.theme + '卡', tag: r.k, appeal: r.appeal, fr: r.fr, img: legacy ? CARD_IMG : cardArt(g, mi, r) }); })));
   const cardById = (id) => CARDS.find((c) => c.id === id);
   { SAVE.cards = SAVE.cards || {}; SAVE.gacha = SAVE.gacha || { pity: 0, opened: 0 };
     Object.keys(SAVE.shop.bag).concat(SAVE.deco.items.map((it) => it.id)).forEach((id) => { if (cardById(id) && !SAVE.cards[id]) SAVE.cards[id] = 1; }); }
