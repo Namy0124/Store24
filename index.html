@@ -154,6 +154,11 @@ button, .btn, [data-co] { touch-action: manipulation; -webkit-tap-highlight-colo
 @keyframes phshake { 0%, 100% { transform: translateX(0) rotate(0); } 25% { transform: translateX(-3px) rotate(-8deg); } 75% { transform: translateX(3px) rotate(8deg); } }
 .ph-msgs { position: absolute; inset: 0; background: #F2F5F6; color: #1B2A30; display: flex; flex-direction: column; padding-top: 24px; z-index: 3; }
 .pm-head { display: flex; align-items: center; gap: 10px; padding: 6px 10px; border-bottom: 1px solid #D5DDDF; }
+.sh-bal { margin-left: auto; font-size: 12px; font-weight: 800; color: #0B7A82; }
+.sh-tabs { display: flex; gap: 4px; padding: 6px 8px 0; border-bottom: 1px solid #D5DDDF; } .sh-tabs button { flex: 1; border: 0; background: transparent; padding: 6px 2px; font-size: 12px; color: #6a8a90; border-bottom: 3px solid transparent; font-weight: 700; } .sh-tabs button.on { color: #0B7A82; border-bottom-color: #0B7A82; }
+.sh-card { background: #fff; border-radius: 12px; padding: 8px 10px; display: flex; gap: 10px; align-items: center; box-shadow: 0 1px 3px rgba(0,0,0,.08); } .sh-card .em { font-size: 30px; width: 40px; text-align: center; flex: none; } .sh-card .tx { flex: 1; min-width: 0; } .sh-card .nm { font-weight: 800; font-size: 13px; } .sh-card .ds { font-size: 11px; color: #6a8a90; line-height: 1.35; margin: 1px 0; } .sh-card .pr { font-weight: 800; color: #D9534F; font-size: 13px; }
+.sh-card .btn { padding: 6px 8px; font-size: 12px; flex: none; } .sh-qty { display: flex; align-items: center; gap: 6px; flex: none; } .sh-qty button { width: 26px; height: 26px; border-radius: 50%; border: 1px solid #C5D0D2; background: #fff; font-size: 15px; line-height: 1; } .sh-qty b { min-width: 16px; text-align: center; font-size: 13px; }
+.sh-sum { background: #fff; border-radius: 12px; padding: 10px; font-size: 13px; display: flex; flex-direction: column; gap: 6px; } .sh-sum .row { display: flex; justify-content: space-between; } .sh-sum .btn { width: 100%; } .sh-empty { text-align: center; color: #6a8a90; font-size: 13px; padding: 28px 8px; } .sh-st { font-size: 11px; font-weight: 700; padding: 2px 6px; border-radius: 8px; background: #FFF1CC; color: #8a6200; } .sh-st.ok { background: #D8F3E6; color: #1b7a4b; }
 .pm-list { flex: 1; overflow-y: auto; padding: 8px; display: flex; flex-direction: column; gap: 8px; }
 .pm { background: #fff; border-radius: 12px; padding: 8px 10px; box-shadow: 0 1px 2px rgba(0,0,0,.12); font-size: 13px; line-height: 1.45; }
 .pm .pf { display: flex; justify-content: space-between; font-size: 11.5px; color: #6B7A80; } .pm .pf b { color: #0B7A82; }
@@ -627,7 +632,7 @@ img { -webkit-user-drag: none; user-drag: none; }
         <textarea id="saveCode" rows="3" hidden spellcheck="false" placeholder="存檔碼貼在這裡,再按一次「匯入存檔碼」"></textarea><div class="sub" id="saveMsg"></div></div>
       <div class="controls" id="controls"></div>
       <p class="legal">配件品牌、商品與人物都是虛構的遊戲設定。手機型號使用真實型號。</p>
-      <p class="legal" id="verLine" style="margin-top:2px;opacity:.7">版本 v223 · 2026-10-18</p>
+      <p class="legal" id="verLine" style="margin-top:2px;opacity:.7">版本 v224 · 2026-10-18</p>
     </div>
   </div>
 
@@ -727,10 +732,11 @@ img { -webkit-user-drag: none; user-drag: none; }
     <div class="ph-body">
       <div class="ph-screen">
         <div class="ph-status"><span id="phTime">11:00</span><span id="phWhere"></span></div>
-        <div id="phHome" class="ph-home"><div class="ph-clock" id="phClock">11:00</div><div class="ph-apps"><button type="button" class="ph-app" id="phAppStack"><span>📦</span>疊疊貨箱</button><button type="button" class="ph-app" id="phAppMsg"><span>💬<i class="bd" id="phBd" hidden></i></span>訊息</button><button type="button" class="ph-app" id="phAppSocial"><span>📸</span>社群</button><button type="button" class="ph-app" id="phAppDex"><span>📖</span>客人圖鑑</button><button type="button" class="ph-app off" disabled><span>🎵</span>音樂</button></div><div class="ph-best" id="phBestHome"></div></div>
+        <div id="phHome" class="ph-home"><div class="ph-clock" id="phClock">11:00</div><div class="ph-apps"><button type="button" class="ph-app" id="phAppStack"><span>📦</span>疊疊貨箱</button><button type="button" class="ph-app" id="phAppMsg"><span>💬<i class="bd" id="phBd" hidden></i></span>訊息</button><button type="button" class="ph-app" id="phAppSocial"><span>📸</span>社群</button><button type="button" class="ph-app" id="phAppDex"><span>📖</span>客人圖鑑</button><button type="button" class="ph-app" id="phAppShop"><span>🛒<i class="bd" id="phShopBd" hidden></i></span>購物</button><button type="button" class="ph-app off" disabled><span>🎵</span>音樂</button></div><div class="ph-best" id="phBestHome"></div></div>
         <div id="phGame" class="ph-game" hidden><canvas id="phCv" width="270" height="440"></canvas><div class="ph-score" id="phScore">0</div><div class="ph-over" id="phOver" hidden></div></div>
         <div id="phMsgs" class="ph-msgs" hidden><div class="pm-head"><button type="button" class="btn small" id="phMsgBack">‹ 返回</button><b>訊息</b></div><div class="pm-list" id="phMsgList"></div></div>
         <div id="phSocial" class="ph-msgs" hidden><div class="pm-head"><button type="button" class="btn small" id="phSoBack">‹ 返回</button><b>動態</b><button type="button" class="btn small" id="phSoNew" style="margin-left:auto">＋ 發文</button><button type="button" class="btn small" id="phSoMore">刷新</button></div><div id="phSoCompose" class="pm" hidden style="margin:8px 8px 0"></div><div class="pm-list" id="phSoList"></div></div>
+        <div id="phShop" class="ph-msgs" hidden><div class="pm-head"><button type="button" class="btn small" id="phShBack">‹ 返回</button><b>🛒 購物</b><span class="sh-bal" id="phShBal"></span></div><div class="sh-tabs" id="phShTabs"></div><div class="pm-list" id="phShBody"></div></div>
         <div id="phCall" class="ph-call" hidden><div class="pc-name" id="phCallName">副理</div><div class="pc-sub" id="phCallSub">來電中…</div><div class="pc-btns"><button type="button" class="btn primary" id="phAnswer">接聽</button><button type="button" class="btn danger" id="phDecline">拒接</button></div></div>
         <button type="button" class="ph-homebtn" id="phHomeBtn" aria-label="回主畫面"></button>
       </div>
@@ -924,7 +930,7 @@ function cleanVip(o) {
   if (o.seen && typeof o.seen === 'object') Object.keys(o.seen).slice(0, 40).forEach((k) => { const x = o.seen[k] || {}; v.seen[String(k).slice(0, 20)] = { n: Math.max(0, Math.min(999, Math.floor(+x.n || 0))), e: (Array.isArray(x.e) ? x.e : []).filter((t) => ['good', 'mid', 'bad', 'paid', 'call'].indexOf(t) >= 0).filter((t, i, a) => a.indexOf(t) === i) }; });
   return v;
 }
-const blankSave = () => ({ vip: blankVip(), inv: blankInv(), v: 1, name: '', msgs: [], feed: [], soDay: 0, soArc: {}, soAns: {}, soFriend: {}, soSeen: { d: 0, k: [] }, phoneBest: 0, phoneTop: [], days: 0, tutorialDone: false, tips: {}, tipsOff: false, dust: null, zone: 0, mgrId: null, history: [] });
+const blankSave = () => ({ vip: blankVip(), inv: blankInv(), v: 1, name: '', msgs: [], feed: [], soDay: 0, soArc: {}, soAns: {}, soFriend: {}, soSeen: { d: 0, k: [] }, phoneBest: 0, phoneTop: [], wallet: 1000, shop: { cart: {}, orders: [], bag: {} }, days: 0, tutorialDone: false, tips: {}, tipsOff: false, dust: null, zone: 0, mgrId: null, history: [] });
 const invNum = (v, mx) => Math.max(0, Math.min(mx || 9999, Math.floor(+v || 0)));
 function cleanInv(o) {
   const inv = blankInv(); if (!o || typeof o !== 'object') return inv;
@@ -963,6 +969,9 @@ function cleanSave(o) {
   s.phoneTop = (Array.isArray(o.phoneTop) ? o.phoneTop : []).slice(0, 5).map((r) => ({ s: Math.max(0, Math.min(9999, Math.floor(+r.s || 0))), d: Math.max(0, Math.floor(+r.d || 0)) })).filter((r) => r.s > 0).sort((a, b) => b.s - a.s);
   if (!s.phoneTop.length && s.phoneBest) s.phoneTop = [{ s: s.phoneBest, d: 0 }];
   s.inv = cleanInv(o.inv);
+  s.wallet = o.wallet == null ? 1000 : Math.max(0, Math.min(99999999, Math.floor(+o.wallet || 0)));
+  { const so = o.shop && typeof o.shop === 'object' ? o.shop : {}, qmap = (m, mx) => { const r = {}; if (m && typeof m === 'object') Object.keys(m).slice(0, 80).forEach((k) => { const q = Math.max(0, Math.min(mx, Math.floor(+m[k] || 0))); if (q) r[String(k).slice(0, 24)] = q; }); return r; };
+    s.shop = { cart: qmap(so.cart, 99), bag: qmap(so.bag, 999), orders: (Array.isArray(so.orders) ? so.orders : []).slice(-30).map((r) => ({ id: Math.max(1, Math.floor(+r.id || 1)), items: qmap(r.items, 99), total: Math.max(0, Math.floor(+r.total || 0)), d: Math.max(0, Math.floor(+r.d || 0)), arrive: Math.max(0, Math.floor(+r.arrive || 0)), got: !!r.got, seen: !!r.seen })).filter((r) => Object.keys(r.items).length) }; }
   s.vip = cleanVip(o.vip);
   s.mgrId = typeof o.mgrId === 'string' ? o.mgrId.slice(0, 12) : null;
   s.history = (Array.isArray(o.history) ? o.history : []).slice(-30).map((r) => ({ d: Math.floor(+r.d || 0), rev: Math.max(0, Math.floor(+r.rev || 0)), n: Math.max(0, Math.floor(+r.n || 0)), stars: Math.max(0, Math.min(5, +r.stars || 0)), acc: Math.max(0, Math.min(100, Math.floor(+r.acc || 0))), sg: !!r.sg, sig: typeof r.sig === 'string' && /^[ML0-9. \-]{0,2400}$/.test(r.sig) ? r.sig : '' }));
@@ -4156,6 +4165,7 @@ function startScene() {
     closeCheckout: closeCheckout,
     jump: jumpDays, untilWd: untilWd,
     shelf: { fill: (c) => SHELF_F[c], refresh: shelfRefresh, say: shelfSay, cats: () => Object.keys(SHELVES), info: (c) => ({ n: SHELVES[c].n, ms: SHELVES[c].ms.length }) },
+    shop: { act: (a, v) => phShopAct(a, v), render: shopRender, deliver: shopDeliver, items: () => SHOP_ITEMS, state: () => SAVE.shop, wallet: () => SAVE.wallet, tab: () => SHP.tab },
     vip: { dex: dexOpen, dexClose: dexClose, open: spawnVip, state: () => VP, pick: vipPick, call: vipCall, callNow: vipCallNow, end: vipClose, data: () => SAVE.vip, plan: () => G.vipPlan, pen: () => G.vipPen, build: (t, k) => { const m = { haggle: HG, ret: RT, ask: AS, reg: RG }[t]; return k === 'intro' || t === 'reg' ? m[k](regOf(V())) : m[k](); }, kinds: () => ({ haggle: Object.keys(HG), ret: Object.keys(RT), ask: Object.keys(AS), reg: Object.keys(RG) }) },
     respond: respondCall,
     greet: greet,
@@ -4888,6 +4898,7 @@ function startScene() {
     h += '<div class="day-card"><b>帳目準確度 ' + acc + '%</b><div class="sub">現金帳差 ' + (s.acctDiff > 0 ? '+' : '') + s.acctDiff + ' · 找錯零金額 ' + fmtN(st.moneyDiff) + ' · 統編錯誤 ' + st.invErr + ' 次 · 重點 ' + s.recounts + ' 次</div></div>';
     h += '<div class="day-card"><b>下班時間</b><div class="sub">' + fmtClock(clockMin()) + ' 打卡(規定 22:00)。' + esc(remark) + '</div></div>';
     if (st.tip) h += '<div class="day-card"><b>客人小費 ' + fmtN(st.tip) + '</b><div class="sub">心情好的時候客人給的小費,放進你自己的口袋,不用入帳。</div></div>';
+    h += '<div class="day-card"><b>個人收入 ' + fmtN(dayPay(st.revenue) + (st.tip || 0)) + '</b><div class="sub">今天的薪水(營業額 ' + fmtN(st.revenue) + ' 的 5%)' + fmtN(dayPay(st.revenue)) + (st.tip ? ' + 小費 ' + fmtN(st.tip) : '') + ',存進你的錢包,可以在手機「購物」買東西。</div></div>';
     const dirty = ZONES.filter((z) => (G.dust[z.id] || 0) >= DUST_MILD).map((z) => z.name);
     h += '<div class="day-card"><b>店務與清潔</b><div class="sub">掃地 ' + s.swept + '/3 · 今日清潔區「' + esc(ZONES[G.zone].name) + '」' + (s.zoneDone ? '已完成' : '未完成') + ' · 店務表' + (s.signed ? '已簽名' : '未簽名') + (dirty.length ? '<br>偏髒的區域:' + esc(dirty.join('、')) : '<br>各區域都很乾淨') + '</div></div>';
     const todays = s.msgs.filter((m) => m.d === G.dayNo); if (todays.length || s.missed || s.answered) { const ack = todays.filter((m) => m.ack && m.replied === null).length; h += '<div class="day-card"><b>手機與訊息</b><div class="sub">今天收到 ' + todays.filter((m) => !m.sys).length + ' 則訊息 · 接了 ' + s.answered + ' 通工作電話 · 漏接 ' + s.missed + ' 通' + (ack ? ' · 公司/副理訊息 ' + ack + ' 則沒回覆' : '') + '。</div></div>'; }
@@ -4899,6 +4910,7 @@ function startScene() {
     h += '<div class="day-card"><b>顧客評價 ' + (rs.length ? mean.toFixed(1) + ' ★ (' + rs.length + ' 則)' : '今天沒有評價') + '</b>';
     h += rs.map((r) => '<div class="rv"><span class="stars">' + '★'.repeat(r.stars) + '☆'.repeat(5 - r.stars) + '</span> ' + esc(r.text) + '</div>').join('');
     h += '</div><div class="sub">另外有 ' + st.browsers + ' 位客人只是逛逛。</div><div class="btn-row" style="margin-top:14px"><button class="btn primary" type="button" data-day="again">再玩一天</button><button class="btn" type="button" data-dex="1">📖 客人圖鑑</button></div>';
+    SAVE.wallet = Math.min(99999999, SAVE.wallet + dayPay(G.stats.revenue) + (G.stats.tip || 0));
     SAVE.days = G.dayNo; SAVE.dust = Object.assign({}, G.dust); SAVE.zone = G.zone; SAVE.mgrId = s.mgr ? s.mgr.id : null;
     SAVE.history.push({ d: G.dayNo, rev: st.revenue, n: n, stars: mean, acc: acc, sg: !!s.signed, sig: s.sigPath || '' }); SAVE.history = SAVE.history.slice(-30);
     SAVE.msgs = s.msgs.slice(0, 60).map((m) => Object.assign({}, m, { read: true }));
@@ -4915,7 +4927,7 @@ function startScene() {
     G.co = null; G.hand = []; renderCarry(); closeCheckout(); closeClose();
     if (G.dayNo === 0 && SAVE.days > 0 && SAVE.dust) { G.dayNo = SAVE.days; G.dust = Object.assign({}, SAVE.dust); G.zone = Math.min(SAVE.zone, ZONES.length - 1); G.pendingMgr = SAVE.mgrId; }
     G.tutorial = !SAVE.tutorialDone; G.tutSelf = false; G.tutGreeted = false; G.tutGreetDone = false; G.tutPause = false; G.mood = null;
-    G.gt = 0; brushCd = 0; greetCd = 0; playerSay = null; PH.cool = 0; PH.watch = 0; G.dayNo++; G.pendingMgr = null; G.zone = (G.dayNo - 1) % ZONES.length;
+    G.gt = 0; brushCd = 0; greetCd = 0; playerSay = null; PH.cool = 0; PH.watch = 0; G.dayNo++; shopDeliver(); G.pendingMgr = null; G.zone = (G.dayNo - 1) % ZONES.length;
     G.stats = { revenue: 0, count: 0, moneyDiff: 0, moneyNet: 0, invErr: 0, browsers: 0, reviews: [] };
     if (G.dayNo === 1) { G.dust = {}; ZONES.forEach((z) => { G.dust[z.id] = 0; }); G.dust[ZONES[G.zone].id] = 15; } else ZONES.forEach((z) => { G.dust[z.id] = Math.min(50, (G.dust[z.id] || 0) + (() => { const q = Math.random(); return q < 0.25 ? 1 : q < 0.65 ? 2 : 3; })()); });
     { const zid = ZONES[G.zone].id; G.dust[zid] = Math.max(G.dust[zid] || 0, 15); }
@@ -5338,13 +5350,82 @@ function startScene() {
   $('#phDecline').addEventListener('click', () => { if (PH.ring) missCall(); });
   function phShow(which) {
     PH.screen = which;
-    $('#phHome').hidden = which !== 'home'; $('#phGame').hidden = which !== 'game'; $('#phCall').hidden = which !== 'call'; $('#phMsgs').hidden = which !== 'msgs'; $('#phSocial').hidden = which !== 'social';
+    $('#phHome').hidden = which !== 'home'; $('#phGame').hidden = which !== 'game'; $('#phCall').hidden = which !== 'call'; $('#phMsgs').hidden = which !== 'msgs'; $('#phSocial').hidden = which !== 'social'; $('#phShop').hidden = which !== 'shop';
     $('#phBestHome').innerHTML = topHtml();
     if (which === 'game') stackStart(); else stackStop();
     if (which === 'msgs') renderInbox();
+    if (which === 'shop') shopRender();
     if (which === 'social') { PH.soReply = -1; soOpen(); $('#phSoCompose').hidden = true; }
     phWhere();
   }
+
+  /* ---------- 購物 app: shop for items on the phone like an online store; orders arrive the next day; the clerk's own money (薪水 + 小費) pays for it ---------- */
+  const PAY_RATE = 0.05, dayPay = (revenue) => Math.round((revenue || 0) * PAY_RATE);   // the clerk's pay for a finished shift: 5% of the day's revenue (personal money, separate from the till)
+  /* the catalogue: { id, name, emoji, price, desc, use? }  — the two (範例) items are placeholders until the real list is decided */
+  const SHOP_ITEMS = [
+    { id: 'demo1', name: '範例商品 A', emoji: '🧋', price: 60, desc: '(範例)之後會換成真正的道具' },
+    { id: 'demo2', name: '範例商品 B', emoji: '🎁', price: 250, desc: '(範例)之後會換成真正的道具' }
+  ];
+  const shopItem = (id) => SHOP_ITEMS.find((x) => x.id === id);
+  const SHP = { tab: 'shop', confirm: false };
+  const shopCartN = () => Object.keys(SAVE.shop.cart).reduce((a, k) => a + (shopItem(k) ? SAVE.shop.cart[k] : 0), 0);
+  const shopCartTotal = () => Object.keys(SAVE.shop.cart).reduce((a, k) => a + (shopItem(k) ? shopItem(k).price * SAVE.shop.cart[k] : 0), 0);
+  const shopArrived = () => SAVE.shop.orders.filter((o) => o.got && !o.seen).length;
+  function shopBadge() { const n = SAVE.shop.orders.filter((o) => o.got && !o.seen).length, b = $('#phShopBd'); b.hidden = !n; b.textContent = n; }
+  function shopRender() {
+    const S = SAVE.shop, tabs = [['shop', '商城'], ['cart', '購物車' + (shopCartN() ? '(' + shopCartN() + ')' : '')], ['orders', '訂單'], ['bag', '我的道具']];
+    $('#phShBal').textContent = '錢包 ' + fmtN(SAVE.wallet);
+    $('#phShTabs').innerHTML = tabs.map((t) => '<button type="button" data-sh="tab" data-v="' + t[0] + '" class="' + (SHP.tab === t[0] ? 'on' : '') + '">' + t[1] + '</button>').join('');
+    let h = '';
+    if (SHP.tab === 'shop') {
+      h = SHOP_ITEMS.length ? SHOP_ITEMS.map((it) => '<div class="sh-card"><div class="em">' + it.emoji + '</div><div class="tx"><div class="nm">' + esc(it.name) + '</div><div class="ds">' + esc(it.desc || '') + '</div><div class="pr">' + fmtN(it.price) + '</div></div><button type="button" class="btn small primary" data-sh="add" data-v="' + esc(it.id) + '">' + (S.cart[it.id] ? '再加一個(' + S.cart[it.id] + ')' : '加入購物車') + '</button></div>').join('') : '<div class="sh-empty">商城還沒有商品</div>';
+    } else if (SHP.tab === 'cart') {
+      const ids = Object.keys(S.cart).filter((k) => shopItem(k));
+      if (!ids.length) h = '<div class="sh-empty">購物車是空的<br>去商城逛逛吧</div>';
+      else {
+        h = ids.map((k) => { const it = shopItem(k); return '<div class="sh-card"><div class="em">' + it.emoji + '</div><div class="tx"><div class="nm">' + esc(it.name) + '</div><div class="pr">' + fmtN(it.price) + '</div></div><div class="sh-qty"><button type="button" data-sh="dec" data-v="' + esc(k) + '">−</button><b>' + S.cart[k] + '</b><button type="button" data-sh="inc" data-v="' + esc(k) + '">＋</button></div></div>'; }).join('');
+        const tot = shopCartTotal(), short = tot > SAVE.wallet;
+        h += '<div class="sh-sum"><div class="row"><span>商品合計</span><b>' + fmtN(tot) + '</b></div><div class="row"><span>錢包餘額</span><b>' + fmtN(SAVE.wallet) + '</b></div>' + (short ? '<div style="color:#D9534F;font-size:12px">餘額不夠,少了 ' + fmtN(tot - SAVE.wallet) + '</div>' : '<div style="color:#6a8a90;font-size:12px">今天下單,明天到貨(送到店裡)</div>') + '<button type="button" class="btn ' + (SHP.confirm ? 'danger' : 'primary') + '" data-sh="pay"' + (short ? ' disabled' : '') + '>' + (SHP.confirm ? '再按一次確認付款 ' + fmtN(tot) : '結帳') + '</button></div>';
+      }
+    } else if (SHP.tab === 'orders') {
+      const os = S.orders.slice().reverse();
+      h = os.length ? os.map((o) => '<div class="sh-card"><div class="tx"><div class="nm">訂單 #' + o.id + ' <span class="sh-st' + (o.got ? ' ok' : '') + '">' + (o.got ? '已送達' : '配送中') + '</span></div><div class="ds">' + Object.keys(o.items).map((k) => (shopItem(k) ? shopItem(k).emoji + shopItem(k).name : k) + ' ×' + o.items[k]).join('、') + '</div><div class="ds">第 ' + o.d + ' 天下單' + (o.got ? '' : ' · 第 ' + o.arrive + ' 天到貨') + '</div></div><div class="pr">' + fmtN(o.total) + '</div></div>').join('') : '<div class="sh-empty">還沒有訂單</div>';
+      S.orders.forEach((o) => { if (o.got) o.seen = true; }); shopBadge();
+    } else {
+      const ids = Object.keys(S.bag).filter((k) => S.bag[k] > 0 && shopItem(k));
+      h = ids.length ? ids.map((k) => { const it = shopItem(k); return '<div class="sh-card"><div class="em">' + it.emoji + '</div><div class="tx"><div class="nm">' + esc(it.name) + ' ×' + S.bag[k] + '</div><div class="ds">' + esc(it.desc || '') + '</div></div>' + (it.use ? '<button type="button" class="btn small primary" data-sh="use" data-v="' + esc(k) + '">使用</button>' : '') + '</div>'; }).join('') : '<div class="sh-empty">還沒有道具<br>訂單送達後會放在這裡</div>';
+    }
+    $('#phShBody').innerHTML = h;
+  }
+  function phShopAct(a, v) {
+    const S = SAVE.shop;
+    if (a !== 'pay') SHP.confirm = false;
+    if (a === 'tab') { SHP.tab = v; }
+    else if (a === 'add') { if (!shopItem(v)) return; S.cart[v] = Math.min(99, (S.cart[v] || 0) + 1); SFX.paper && SFX.paper(); toast('已加入購物車'); }
+    else if (a === 'inc') { S.cart[v] = Math.min(99, (S.cart[v] || 0) + 1); }
+    else if (a === 'dec') { S.cart[v] = (S.cart[v] || 0) - 1; if (S.cart[v] <= 0) delete S.cart[v]; }
+    else if (a === 'pay') {
+      const tot = shopCartTotal(); if (!tot || tot > SAVE.wallet) return;
+      if (!SHP.confirm) { SHP.confirm = true; shopRender(); return; }
+      SHP.confirm = false; SAVE.wallet -= tot;
+      const items = {}; Object.keys(S.cart).forEach((k) => { if (shopItem(k)) items[k] = S.cart[k]; });
+      const id = S.orders.reduce((m, o) => Math.max(m, o.id), 0) + 1; S.orders.push({ id: id, items: items, total: tot, d: G.dayNo, arrive: G.dayNo + 1, got: false });
+      S.orders = S.orders.slice(-30); S.cart = {}; SHP.tab = 'orders'; beep(1200, 0.08); toast('下單成功,明天會送到店裡');
+    }
+    else if (a === 'use') { const it = shopItem(v); if (!it || !it.use || !(S.bag[v] > 0)) return; if (it.use() !== false) { S.bag[v]--; if (S.bag[v] <= 0) delete S.bag[v]; } }
+    saveGame(); shopRender();
+  }
+  /* a new day starts: yesterday's orders are delivered */
+  function shopDeliver() {
+    const S = SAVE.shop; let n = 0;
+    S.orders.forEach((o) => { if (!o.got && o.arrive <= G.dayNo) { o.got = true; o.seen = false; Object.keys(o.items).forEach((k) => { S.bag[k] = Math.min(999, (S.bag[k] || 0) + o.items[k]); }); n++; } });
+    if (n) { addMsg({ from: '快遞', text: '📦 你訂的 ' + n + ' 筆商品已送到店裡,在手機「購物」→「我的道具」查看。', sys: true }); saveGame(); }
+    shopBadge();
+  }
+  $('#phAppShop').addEventListener('click', () => { SHP.confirm = false; phShow('shop'); });
+  $('#phShBack').addEventListener('click', () => phShow('home'));
+  $('#phShTabs').addEventListener('click', (e) => { const b = e.target.closest('[data-sh]'); if (b) phShopAct(b.dataset.sh, b.dataset.v); });
+  $('#phShBody').addEventListener('click', (e) => { const b = e.target.closest('[data-sh]'); if (b && !b.disabled) phShopAct(b.dataset.sh, b.dataset.v); });
   const FEED = [['小宇','今天的手搖杯 🧋 半糖少冰','🧋'],['Amy','週末去海邊!水好藍','🌊'],['阿豪','新買的耳機音質超讚','🎧'],['Joyce','加班第三天…','💻'],['大雄','貓咪又在我鍵盤上睡著','🐱'],['小美','午餐吃什麼好,求推薦','🍜'],['Kevin','演唱會搶票失敗,崩潰','🎤'],['Sandy','今天天氣好舒服','☀️'],['阿傑','健身房打卡 💪 今天練腿','🏋️'],['Mia','新出的甜點店好好吃','🍰'],['志明','颱風天不用上班真爽','🌀'],['小琪','終於看完那部影集,結局好扯','📺'],
     ['阿翔','新手機到貨!膜還沒貼','📱'],['婷婷','咖啡續命第二杯','☕'],['老王','釣魚一整天,一條都沒有','🎣'],['Eric','跟朋友打球,累癱','🏀'],['小雨','下雨天好想睡覺','🌧️'],['Lisa','週末市集買到好可愛的小物','🧸'],['阿德','騎車去環島第一天','🏍️'],['Tina','新髮型,覺得如何?','💇'],['宗翰','宵夜吃鹽酥雞,罪惡','🍗'],['怡君','追星成功!拿到簽名','⭐'],['小安','考試考完了,終於解脫','📚'],['阿凱','跟老婆去看夜景','🌃'],['Cindy','家裡的植物又開花了','🌸'],['大衛','今天發薪水!請大家吃飯','💰'],['Rita','早起跑步,空氣超好','🏃'],['阿宏','剛剛看到一隻超大蟑螂…','🪳'],['小萱','做了第一次蛋糕,賣相普通','🎂'],['泰瑞','通勤路上又塞車','🚗'],
     ['門市討論版','今天有人遇到客人砍價嗎?','💬'],['連鎖公司','【公告】本週店長會議改線上舉行','📢'],['生活日報','颱風假要不要放?各縣市最新消息','📰'],['手機評測','新旗艦機拍照實測,夜景大進步','📷'],['熱門影片','貓咪跟狗狗的日常,超療癒','🎬'],['小編','雙11快到了,你的購物車準備好了嗎?','🛒']];
