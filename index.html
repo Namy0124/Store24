@@ -640,7 +640,7 @@ img { -webkit-user-drag: none; user-drag: none; }
         <textarea id="saveCode" rows="3" hidden spellcheck="false" placeholder="存檔碼貼在這裡,再按一次「匯入存檔碼」"></textarea><div class="sub" id="saveMsg"></div></div>
       <div class="controls" id="controls"></div>
       <p class="legal">配件品牌、商品與人物都是虛構的遊戲設定。手機型號使用真實型號。</p>
-      <p class="legal" id="verLine" style="margin-top:2px;opacity:.7">版本 v230 · 2026-10-18</p>
+      <p class="legal" id="verLine" style="margin-top:2px;opacity:.7">版本 v231 · 2026-10-18</p>
     </div>
   </div>
 
@@ -5030,8 +5030,9 @@ function startScene() {
   });
   function lockDoor() {
     const s = G.shop, miss = [];
-    if (!s.posClosed) miss.push('POS 還沒日結'); if (s.light) miss.push('燈還沒關'); if (s.ac) miss.push('冷氣還沒關'); if (cartsPlaced() > 0) miss.push('花車還沒收'); if (!s.signed) miss.push('每日店務表還沒簽名'); if (G.cust || G.crowd.length || G.pend.length || G.line.length || G.exit.length) miss.push('店裡還有客人');
+    if (!s.posClosed) miss.push('POS 還沒日結'); if (s.light) miss.push('燈還沒關'); if (s.ac) miss.push('冷氣還沒關'); if (cartsPlaced() > 0) miss.push('花車還沒收'); if (G.cust || G.crowd.length || G.pend.length || G.line.length || G.exit.length) miss.push('店裡還有客人');
     if (miss.length) { toast('還不能鎖門:' + miss.join('、')); return; }
+    if (!s.signed) toast('今天的店務表沒簽,那一天就是「未簽」了');
     s.done = true; FX.doorTarget = 0; SFX.doorGlass(false); renderTodo(); endDay();
   }
   /* end of day summary */
