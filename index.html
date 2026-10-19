@@ -593,7 +593,7 @@ img { -webkit-user-drag: none; user-drag: none; }
     <div class="hud-top gutter">
       <div class="chip" id="storeChip">24HR 門市</div>
       <div class="chip stat" id="stat">營業額 NT$ 0 · 0 位</div>
-      <button class="btn" id="btnAdmin" type="button" hidden>商品管理</button>
+      <button class="btn" id="btnAdmin" type="button" hidden>總公司後台</button>
       <button class="btn" id="btnJump" type="button" hidden>⏩ 跳轉</button>
     </div>
     <div id="jumpMenu" class="jump-menu" hidden></div>
@@ -624,7 +624,7 @@ img { -webkit-user-drag: none; user-drag: none; }
       </label>
       <div class="btn-row">
         <button class="btn primary" id="btnStart" type="button">開店營業</button>
-        <button class="btn" id="btnAdminTitle" type="button" hidden>商品管理</button>
+        <button class="btn" id="btnAdminTitle" type="button" hidden>總公司後台</button>
       </div>
       <div class="savebox"><div class="sub" id="saveInfo"></div>
         <div class="btn-row"><button class="btn small" id="btnSaveExport" type="button">匯出存檔碼</button><button class="btn small" id="btnSaveImport" type="button">匯入存檔碼</button><button class="btn small danger" id="btnSaveReset" type="button">重新開始</button></div>
@@ -632,7 +632,7 @@ img { -webkit-user-drag: none; user-drag: none; }
         <textarea id="saveCode" rows="3" hidden spellcheck="false" placeholder="存檔碼貼在這裡,再按一次「匯入存檔碼」"></textarea><div class="sub" id="saveMsg"></div></div>
       <div class="controls" id="controls"></div>
       <p class="legal">配件品牌、商品與人物都是虛構的遊戲設定。手機型號使用真實型號。</p>
-      <p class="legal" id="verLine" style="margin-top:2px;opacity:.7">版本 v224 · 2026-10-18</p>
+      <p class="legal" id="verLine" style="margin-top:2px;opacity:.7">版本 v225 · 2026-10-18</p>
     </div>
   </div>
 
@@ -1499,8 +1499,10 @@ $('#controls').innerHTML = isTouch
 $('#hint').textContent = isTouch ? '點地板移動 · 點商品區查看商品' : 'WASD / 方向鍵走動 · E 互動 · Q 打招呼 · R 手機';
 $('#storeName').value = storeName;
 function currentStoreName() { return storeName || '24HR 門市'; }
-$('#btnAdminTitle').addEventListener('click', openAdmin);
-$('#btnAdmin').addEventListener('click', openAdmin);
+/* on the website the company-side tools live on their own page (admin.html); inside Claude or as a single saved file they stay in a window here */
+const goAdmin = () => { if (/^https?:/.test(location.protocol) && !(window.claude && window.claude.use)) { if (!window.open('admin.html', '_blank')) location.href = 'admin.html'; } else openAdmin(); };
+$('#btnAdminTitle').addEventListener('click', goAdmin);
+$('#btnAdmin').addEventListener('click', goAdmin);
 /* Only the page owner sees product management. Everyone else gets the game without it. */
 let isOwner = false;
 function applyOwner(v) {

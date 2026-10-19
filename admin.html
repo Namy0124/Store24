@@ -1,0 +1,1325 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0B7A82">
+<title>總公司後台</title>
+<style>
+[hidden] { display: none !important; }
+
+:root {
+  /* Layout concept: full-bleed 3D store; HUD chips hug the top edge, product windows rise as sheets from the bottom. */
+  --bg: #E1EBE9;
+  --fg: #17262B;
+  --muted: #566B70;
+  --panel: #FFFFFF;
+  --panel-soft: #EDF3F2;
+  --line: #CBD8D6;
+  --accent: #0B7A82;
+  --accent-ink: #FFFFFF;
+  --signal: #F2B200;
+  --danger: #C2362B;
+  --scrim: rgba(8, 24, 28, 0.48);
+  --shadow: 0 10px 30px rgba(10, 40, 45, 0.20);
+  --font-display: 'Huninn', 'Noto Sans TC', system-ui, sans-serif;
+  --font-body: 'Noto Sans TC', system-ui, -apple-system, 'PingFang TC', 'Microsoft JhengHei', sans-serif;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0E1719; --fg: #E4EFEE; --muted: #93A9AD; --panel: #172326; --panel-soft: #1E2E32;
+    --line: #2C4146; --accent: #3FC2CC; --accent-ink: #06282B; --signal: #F5C531; --danger: #F0766B;
+    --scrim: rgba(0, 0, 0, 0.6); --shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0E1719; --fg: #E4EFEE; --muted: #93A9AD; --panel: #172326; --panel-soft: #1E2E32;
+  --line: #2C4146; --accent: #3FC2CC; --accent-ink: #06282B; --signal: #F5C531; --danger: #F0766B;
+  --scrim: rgba(0, 0, 0, 0.6); --shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+html, body { height: 100%; }
+body { margin: 0; background: var(--bg); color: var(--fg); font-family: var(--font-body); font-size: 15px; line-height: 1.5; overflow: hidden; }
+button, input, select, textarea { font: inherit; color: inherit; }
+button { cursor: pointer; }
+:focus-visible { outline: 3px solid var(--signal); outline-offset: 2px; }
+
+#app { position: relative; width: 100%; height: 100%; overflow: hidden; }
+#scene { position: absolute; inset: 0; width: 100%; height: 100%; display: block; touch-action: none; }
+.gutter { padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+
+/* buttons */
+button, .btn, [data-co] { touch-action: manipulation; -webkit-tap-highlight-color: transparent; }   /* no double-tap-zoom delay on taps */
+.btn { border: 1.5px solid var(--line); background: var(--panel); border-radius: 999px; padding: 9px 18px; font-weight: 500; min-height: 40px; }
+.btn:hover { border-color: var(--accent); }
+.btn.signal { background: var(--signal); color: #1a1a1a; border-color: var(--signal); font-weight: 700; }
+.btn.primary { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); font-weight: 700; }
+.btn.danger { color: var(--danger); border-color: var(--danger); }
+.pub { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; padding: 10px 12px; margin-bottom: 12px; border: 1.5px solid var(--line); border-radius: 12px; background: var(--panel); }
+.pub.dirty { border-color: var(--accent); }
+.pubtxt { flex: 1 1 200px; font-size: 13px; color: var(--muted); }
+.btn:disabled { opacity: .5; cursor: default; }
+.btn.small { padding: 5px 12px; min-height: 32px; font-size: 13px; }
+.btn.danger.armed { background: var(--danger); color: #fff; }
+
+/* HUD */
+#hud { position: absolute; inset: 0; pointer-events: none; z-index: 5; }
+.hud-top { position: absolute; top: 12px; left: 0; right: 0; display: flex; justify-content: space-between; gap: 10px; align-items: center; }
+.chip { pointer-events: auto; background: var(--panel); border-radius: 999px; padding: 7px 16px; font-family: var(--font-display); font-size: 16px; box-shadow: var(--shadow); max-width: 60%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.hud-top .btn { pointer-events: auto; box-shadow: var(--shadow); }
+.greet { pointer-events: auto; display: flex; flex-direction: column; align-items: center; gap: 6px; }
+.greet-menu { display: flex; flex-direction: column; gap: 6px; }
+.greet .btn { box-shadow: var(--shadow); }
+.music { position: absolute; left: 50%; bottom: calc(14px + env(safe-area-inset-bottom, 0px)); transform: translateX(-50%); width: min(440px, calc(100% - 24px)); max-height: 78%; overflow-y: auto; z-index: 30; background: var(--panel); border-radius: 18px; box-shadow: var(--shadow); padding: 12px 14px; display: flex; flex-direction: column; gap: 8px; }
+.music.closed { transform: translate(-50%, 140%); visibility: hidden; transition: transform .2s, visibility 0s .2s; }
+.m-head { display: flex; align-items: center; gap: 10px; } .m-head b { flex: none; } .m-now { flex: 1; min-width: 0; font-size: 12.5px; color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.m-add { display: flex; gap: 8px; } .m-add input { flex: 1; min-width: 0; padding: 8px 10px; border: 1.5px solid var(--line); border-radius: 10px; background: var(--panel-soft); }
+.m-row { display: flex; align-items: center; gap: 6px; padding: 4px 0; } .m-row.on { font-weight: 700; }
+.m-tag { flex: none; font-size: 11.5px; background: var(--panel-soft); border-radius: 999px; padding: 2px 8px; } .m-url { flex: 1; min-width: 0; font-size: 12px; color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.m-res { display: flex; align-items: center; gap: 8px; padding: 4px 0; } .m-res img { width: 40px; height: 40px; border-radius: 8px; flex: none; background: var(--panel-soft); }
+.m-res .m-tt { flex: 1; min-width: 0; font-size: 13px; line-height: 1.3; } .m-res .m-tt span { display: block; color: var(--muted); font-size: 12px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.m-empty, .m-note { font-size: 12.5px; color: var(--muted); margin: 0; } .m-btns { display: flex; gap: 8px; }
+.hud-bottom { position: absolute; bottom: calc(14px + env(safe-area-inset-bottom, 0px)); left: 0; right: 0; display: flex; flex-direction: column; align-items: center; gap: 10px; }
+.interact { pointer-events: auto; background: var(--accent); color: var(--accent-ink); border: 0; border-radius: 999px; padding: 12px 26px; font-weight: 700; font-size: 16px; box-shadow: var(--shadow); }
+.greet .btn.pulse { animation: gpulse 1s ease-in-out infinite; border-color: #F2B200; background: #FFF4CC; }
+@keyframes gpulse { 50% { transform: scale(1.12); } }
+.phone { position: absolute; left: 50%; bottom: 0; width: min(290px, 74vw); z-index: 26; pointer-events: auto; transform: translate(-50%, 115%); transition: transform .5s cubic-bezier(.2, .8, .2, 1); }
+.phone.up { transform: translate(-50%, -6px); }
+.ph-body { position: relative; background: #11181B; border-radius: 34px 34px 0 0; padding: 12px 10px 0; box-shadow: 0 -6px 30px rgba(0, 0, 0, .45); transform: perspective(900px) rotateX(9deg); transform-origin: 50% 100%; }
+.ph-screen { position: relative; background: #1B2A30; border-radius: 24px 24px 0 0; overflow: hidden; height: min(520px, 68vh); display: flex; flex-direction: column; color: #fff; }
+.ph-status { display: flex; justify-content: space-between; font-size: 12px; padding: 8px 14px 0; opacity: .9; }
+.ph-home { flex: 1; display: flex; flex-direction: column; align-items: center; padding: 28px 14px; background: linear-gradient(160deg, #0B7A82, #23405A); }
+.ph-clock { font-size: 54px; font-weight: 700; margin-bottom: 18px; font-variant-numeric: tabular-nums; }
+.ph-apps { display: flex; gap: 14px; flex-wrap: wrap; justify-content: center; }
+.ph-app { background: transparent; border: 0; color: #fff; font-size: 12px; display: flex; flex-direction: column; align-items: center; gap: 4px; width: 66px; }
+.ph-app span { display: flex; align-items: center; justify-content: center; width: 56px; height: 56px; border-radius: 15px; background: rgba(255, 255, 255, .2); font-size: 28px; }
+.ph-app.off { opacity: .45; }
+.ph-best { margin-top: auto; font-size: 13px; opacity: .85; }
+.ph-game { position: relative; flex: 1; min-height: 0; background: #F3E8D2; display: flex; }
+.ph-game canvas { width: 100%; height: 100%; display: block; touch-action: none; }
+.ph-score { position: absolute; top: 8px; left: 0; right: 0; text-align: center; font-size: 34px; font-weight: 700; color: #5B4A2C; pointer-events: none; }
+.ph-over { position: absolute; inset: 0; background: rgba(20, 20, 20, .6); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; font-size: 18px; pointer-events: none; text-align: center; }
+.ph-call { position: absolute; inset: 0; background: #12202A; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; text-align: center; padding: 20px; animation: phring .5s ease-in-out infinite alternate; }
+@keyframes phring { to { background: #1B3342; } }
+.pc-name { font-size: 28px; font-weight: 700; } .pc-sub { opacity: .9; line-height: 1.5; }
+.ph-homebtn { align-self: center; width: 90px; height: 5px; border-radius: 3px; border: 0; background: rgba(255, 255, 255, .5); margin: 8px 0; flex: none; }
+.ph-hand { position: absolute; bottom: -24px; width: 62px; height: 130px; background: #E0AC84; border-radius: 34px; z-index: 30; pointer-events: none; transform-style: flat; }
+.ph-hand.l { left: -26px; transform: rotate(14deg); } .ph-hand.r { right: -26px; transform: rotate(-14deg); }
+.ph-warn { position: absolute; left: 50%; top: -34px; transform: translateX(-50%); white-space: nowrap; background: #FFF4CC; color: #3A2A00; font-size: 13px; font-weight: 700; padding: 5px 12px; border-radius: 999px; box-shadow: var(--shadow); }
+.ph-close { position: absolute; right: -46px; top: 10px; width: 38px; height: 38px; min-height: 0; padding: 0; border-radius: 50%; font-size: 16px; line-height: 1; box-shadow: var(--shadow); }
+.interact.alt { background: #FFF4CC; color: #3A2A00; border: 2px solid #F2B200; }
+.sbook { width: min(430px, 94vw); }
+#invSheet, #upSheet { z-index: 22; }
+.up-card { text-align: center; padding: 18px 10px; background: #FFF8E7; border: 2px solid #E0C58A; border-radius: 14px; font-size: 20px; font-weight: 700; margin: 6px 0 10px; } .up-card small { display: block; font-weight: 400; font-size: 13px; color: #6B5B2E; margin-top: 4px; }
+.up-bar { height: 8px; background: #E4ECEA; border-radius: 6px; overflow: hidden; margin-bottom: 8px; } .up-bar > i { display: block; height: 100%; background: #0F766E; }
+.up-baskets { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 8px; } .up-baskets .btn { min-height: 54px; border-left: 8px solid var(--c, #888); }
+.up-shake { animation: upshake .3s; } @keyframes upshake { 0%,100% { transform: translateX(0); } 25% { transform: translateX(-8px); } 75% { transform: translateX(8px); } }
+.up-cart { background: #D9E2E0; border: 3px solid #8FA0A3; border-radius: 12px; padding: 8px; margin-bottom: 10px; } .up-row { display: flex; gap: 6px; flex-wrap: wrap; min-height: 44px; padding: 6px; border-bottom: 4px solid #8FA0A3; } .up-row:last-child { border-bottom: 0; }
+.up-slot { padding: 6px 10px; background: #fff; border: 2px solid #5E8F86; border-radius: 8px; font-size: 13px; animation: uppop .25s; } @keyframes uppop { from { transform: translateY(-30px) scale(1.2); opacity: .3; } to { transform: none; opacity: 1; } }
+.up-chips { display: flex; gap: 8px; flex-wrap: wrap; } .up-chips .btn { text-align: left; }
+.inv-tabs { display: flex; gap: 6px; padding: 0 14px 8px; flex-wrap: wrap; } .inv-tabs .btn.on { background: var(--accent, #0F766E); color: #fff; }
+.inv-bar { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin-bottom: 8px; } .inv-bar input, .inv-bar select { padding: 8px 10px; border: 1px solid #9AA5A8; border-radius: 10px; font-size: 14px; }
+.inv-tbl { width: 100%; border-collapse: collapse; font-size: 13.5px; } .inv-tbl th { text-align: left; background: #E4ECEA; padding: 5px 6px; position: sticky; top: 0; } .inv-tbl td { padding: 5px 6px; border-bottom: 1px solid #DDE5E3; vertical-align: middle; }
+.inv-tbl .n { text-align: right; white-space: nowrap; } .inv-out { color: #B91C1C; font-weight: 700; } .inv-low { color: #B45309; font-weight: 700; } .inv-q { display: inline-flex; gap: 4px; align-items: center; } .inv-q button { min-width: 34px; padding: 5px 7px; }
+.inv-note { font-size: 12.5px; color: var(--muted); margin: 6px 0; } .inv-hint { padding: 8px 10px; background: #FFF4CC; border-radius: 10px; font-size: 13px; margin-bottom: 8px; }
+#sigPad { position: absolute; inset: 0; z-index: 40; display: flex; align-items: center; justify-content: center; background: rgba(0,0,0,.55); pointer-events: auto; } #sigPad[hidden] { display: none; }
+.sp-box { width: min(560px, 94vw); background: #FBFAF4; color: #1B2A30; border-radius: 14px; padding: 12px 14px 14px; box-shadow: 0 10px 40px rgba(0,0,0,.5); }
+.sp-box h3 { margin: 0 0 4px; font-size: 16px; } .sp-box .sp-sub { font-size: 12.5px; color: #5B6B70; margin-bottom: 8px; }
+#spCv { width: 100%; height: auto; aspect-ratio: 3 / 1.15; background: #fff repeating-linear-gradient(transparent 0 38px, #E6ECEC 38px 39px); border: 2px dashed #9AA5A8; border-radius: 8px; touch-action: none; cursor: crosshair; display: block; }
+.sp-row { display: flex; gap: 8px; justify-content: flex-end; margin-top: 10px; } .sp-msg { min-height: 16px; font-size: 12.5px; color: #C2410C; margin-top: 4px; }
+.signm svg { display: block; overflow: visible; }
+.sb-board { background: #8A6A3A; border-radius: 18px 18px 0 0; padding: 22px 12px 0; position: relative; transform: perspective(900px) rotateX(8deg); transform-origin: 50% 100%; box-shadow: 0 -6px 30px rgba(0, 0, 0, .4); }
+.sb-clip { position: absolute; top: 4px; left: 50%; width: 70px; height: 22px; margin-left: -35px; background: #B0B7BA; border-radius: 6px; }
+.sb-paper { position: relative; background: #FFFEF8; color: #26323A; border-radius: 6px 6px 0 0; padding: 10px 10px 12px; display: flex; flex-direction: column; gap: 6px; }
+.sb-title { font-weight: 700; font-size: 18px; text-align: center; } .sb-sub { font-size: 12px; color: #6B7A80; text-align: center; }
+.sb-scroll { max-height: min(300px, 40vh); overflow-y: auto; border: 1px solid #9AA5A8; border-radius: 4px; }
+.sb-tbl { width: 100%; border-collapse: collapse; font-size: 13px; }
+.sb-tbl th { position: sticky; top: 0; background: #E4ECEA; border: 1px solid #9AA5A8; padding: 4px; z-index: 1; }
+.sb-tbl td { border: 1px solid #C5CED0; padding: 0 6px; height: 36px; }
+.sb-tbl td.d { text-align: center; width: 48px; font-weight: 700; } .sb-tbl td.z { font-size: 12px; }
+.sb-tbl tr.today td { background: #FFF4CC; } .sb-tbl tr.future td.z, .sb-tbl tr.future td.d { color: #6B7A80; }
+.sb-tbl .miss { color: #C2410C; font-size: 12px; }
+.sigw { position: relative; min-width: 80px; height: 30px; margin: 0 auto; text-align: center; } .signm { display: inline-block; font-family: 'LXGW WenKai TC','Kaiti TC','KaiTi','DFKai-SB','BiauKai',serif; font-size: 28px; line-height: 30px; color: #1A3A8F; white-space: nowrap; clip-path: inset(-10% 0 -10% 0); } .sgc { display: inline-block; font-style: normal; letter-spacing: 1px; } .signm.anim { clip-path: inset(-10% 100% -10% 0); }
+.sigw .pen { position: absolute; left: 0; top: 0; font-size: 18px; margin: -16px 0 0 -2px; pointer-events: none; }
+.sb-msg { min-height: 18px; font-size: 13px; color: #C2410C; text-align: center; }
+.bd { font-style: normal; position: absolute; top: -4px; right: -4px; min-width: 18px; height: 18px; border-radius: 9px; background: #E5534B; color: #fff; font-size: 11px; font-weight: 700; display: flex; align-items: center; justify-content: center; padding: 0 4px; }
+.ph-app span, #btnPhone { position: relative; }
+#btnPhone.ring { animation: phshake .45s infinite; border-color: #E5534B; background: #FFE5E2; }
+@keyframes phshake { 0%, 100% { transform: translateX(0) rotate(0); } 25% { transform: translateX(-3px) rotate(-8deg); } 75% { transform: translateX(3px) rotate(8deg); } }
+.ph-msgs { position: absolute; inset: 0; background: #F2F5F6; color: #1B2A30; display: flex; flex-direction: column; padding-top: 24px; z-index: 3; }
+.pm-head { display: flex; align-items: center; gap: 10px; padding: 6px 10px; border-bottom: 1px solid #D5DDDF; }
+.sh-bal { margin-left: auto; font-size: 12px; font-weight: 800; color: #0B7A82; }
+.sh-tabs { display: flex; gap: 4px; padding: 6px 8px 0; border-bottom: 1px solid #D5DDDF; } .sh-tabs button { flex: 1; border: 0; background: transparent; padding: 6px 2px; font-size: 12px; color: #6a8a90; border-bottom: 3px solid transparent; font-weight: 700; } .sh-tabs button.on { color: #0B7A82; border-bottom-color: #0B7A82; }
+.sh-card { background: #fff; border-radius: 12px; padding: 8px 10px; display: flex; gap: 10px; align-items: center; box-shadow: 0 1px 3px rgba(0,0,0,.08); } .sh-card .em { font-size: 30px; width: 40px; text-align: center; flex: none; } .sh-card .tx { flex: 1; min-width: 0; } .sh-card .nm { font-weight: 800; font-size: 13px; } .sh-card .ds { font-size: 11px; color: #6a8a90; line-height: 1.35; margin: 1px 0; } .sh-card .pr { font-weight: 800; color: #D9534F; font-size: 13px; }
+.sh-card .btn { padding: 6px 8px; font-size: 12px; flex: none; } .sh-qty { display: flex; align-items: center; gap: 6px; flex: none; } .sh-qty button { width: 26px; height: 26px; border-radius: 50%; border: 1px solid #C5D0D2; background: #fff; font-size: 15px; line-height: 1; } .sh-qty b { min-width: 16px; text-align: center; font-size: 13px; }
+.sh-sum { background: #fff; border-radius: 12px; padding: 10px; font-size: 13px; display: flex; flex-direction: column; gap: 6px; } .sh-sum .row { display: flex; justify-content: space-between; } .sh-sum .btn { width: 100%; } .sh-empty { text-align: center; color: #6a8a90; font-size: 13px; padding: 28px 8px; } .sh-st { font-size: 11px; font-weight: 700; padding: 2px 6px; border-radius: 8px; background: #FFF1CC; color: #8a6200; } .sh-st.ok { background: #D8F3E6; color: #1b7a4b; }
+.pm-list { flex: 1; overflow-y: auto; padding: 8px; display: flex; flex-direction: column; gap: 8px; }
+.pm { background: #fff; border-radius: 12px; padding: 8px 10px; box-shadow: 0 1px 2px rgba(0,0,0,.12); font-size: 13px; line-height: 1.45; }
+.pm .pf { display: flex; justify-content: space-between; font-size: 11.5px; color: #6B7A80; } .pm .pf b { color: #0B7A82; }
+.pm.co { border-left: 4px solid #F2B200; } .pm.sys { background: #FDECEA; }
+.pm { color: #1B2A30; } .pm .btn, .pm-head .btn { background: #EDF3F2; color: #1B2A30; border-color: #9AA5A8; }
+.so-poll { display: flex; flex-direction: column; gap: 5px; margin-top: 8px; }
+.so-opt { position: relative; display: flex; justify-content: space-between; align-items: center; gap: 8px; border: 1px solid #9AA5A8; background: #EDF3F2; color: #1B2A30; border-radius: 10px; padding: 7px 10px; font-size: 13px; overflow: hidden; text-align: left; }
+.so-opt i { position: absolute; left: 0; top: 0; bottom: 0; background: #BFE3DD; z-index: 0; transition: width .4s; } .so-opt span, .so-opt em { position: relative; z-index: 1; font-style: normal; } .so-opt.on { border-color: #0B7A82; font-weight: 700; }
+.so-cm { margin-top: 6px; padding: 6px 8px; background: #F2F5F6; border-radius: 8px; font-size: 12px; color: #33444A; } .so-cm b { color: #0B7A82; }
+.pm .rp { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 6px; } .pm .you { margin-top: 4px; text-align: right; color: #0B7A82; }
+.pc-btns { display: flex; gap: 10px; }
+.savebox { display: flex; flex-direction: column; gap: 8px; background: var(--panel-soft); border-radius: 14px; padding: 10px 12px; }
+.savebox textarea { width: 100%; font-size: 12px; border: 1.5px solid var(--line); border-radius: 10px; padding: 8px; background: var(--panel); color: inherit; word-break: break-all; }
+.cmsg.tut { background: #FFF4CC; border-color: #F2B200; color: #3A2A00; }
+.hint { background: color-mix(in srgb, var(--panel) 88%, transparent); border-radius: 999px; padding: 5px 14px; font-size: 12.5px; color: var(--muted); text-align: center; max-width: 100%; }
+
+/* title */
+#title { position: absolute; inset: 0; z-index: 10; display: flex; align-items: center; justify-content: center; background: var(--bg); background: color-mix(in srgb, var(--bg) 72%, transparent); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); overflow-y: auto; padding-top: 16px; padding-bottom: 16px; }
+.title-card { width: min(460px, 100%); background: var(--panel); border-radius: 22px; padding: 28px 24px 22px; box-shadow: var(--shadow); display: flex; flex-direction: column; gap: 14px; margin: auto; }
+.eyebrow { font-size: 12px; letter-spacing: 0.14em; color: var(--accent); font-weight: 700; margin: 0; }
+.title-card h1 { margin: 0; font-family: var(--font-display); font-size: clamp(34px, 9vw, 46px); line-height: 1.1; text-wrap: balance; }
+.title-card p { margin: 0; color: var(--muted); }
+.field { display: flex; flex-direction: column; gap: 6px; font-size: 13px; color: var(--muted); font-weight: 500; min-width: 0; }
+.field input, .field select, .field textarea { border: 1.5px solid var(--line); background: var(--panel-soft); border-radius: 12px; padding: 10px 12px; font-size: 15px; color: var(--fg); min-width: 0; width: 100%; }
+.field textarea { resize: vertical; min-height: 110px; font-family: ui-monospace, Menlo, Consolas, monospace; font-size: 12px; }
+.btn-row { display: flex; gap: 10px; flex-wrap: wrap; }
+.btn-row .btn { flex: 1 1 140px; }
+.legal { font-size: 12px; color: var(--muted); }
+.controls { font-size: 13px; color: var(--muted); display: grid; gap: 4px; padding: 12px 14px; background: var(--panel-soft); border-radius: 12px; }
+
+/* sheets */
+.sheet { position: absolute; inset: 0; z-index: 20; display: flex; align-items: flex-end; justify-content: center; background: var(--scrim); }
+.sheet-box { width: min(940px, 100%); max-height: 88%; background: var(--panel); border-radius: 20px 20px 0 0; display: flex; flex-direction: column; box-shadow: var(--shadow); overflow: hidden; }
+.sheet.full .sheet-box { height: 100%; max-height: 100%; border-radius: 0; width: 100%; }
+.sheet-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding-top: 16px; padding-bottom: 12px; border-bottom: 1px solid var(--line); }
+.sheet-head h2 { margin: 0; font-family: var(--font-display); font-size: 22px; display: flex; align-items: center; gap: 10px; min-width: 0; }
+.dot { width: 14px; height: 14px; border-radius: 50%; flex: none; }
+.sub { color: var(--muted); font-size: 13px; font-weight: 400; font-family: var(--font-body); }
+.sheet-body { overflow-y: auto; padding-top: 16px; padding-bottom: calc(20px + env(safe-area-inset-bottom, 0px)); flex: 1; min-height: 0; }
+.sheet-foot { color: var(--muted); font-size: 12.5px; margin-top: 16px; }
+
+.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(165px, 1fr)); gap: 12px; }
+.card { background: var(--panel-soft); border: 1.5px solid var(--line); border-radius: 14px; padding: 12px; display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.card .nm { font-weight: 700; line-height: 1.35; overflow-wrap: anywhere; }
+.card .br { color: var(--muted); font-size: 12.5px; }
+.card .pr { font-variant-numeric: tabular-nums; font-weight: 700; font-size: 17px; margin-top: auto; }
+.phset { border: 0; padding: 0; margin: 0; min-width: 0; }
+.phset legend { padding: 0; margin-bottom: 6px; font-size: 13px; color: var(--muted); }
+.chks { display: flex; flex-wrap: wrap; gap: 8px; }
+.chk { display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; min-height: 36px; border: 1.5px solid var(--line); border-radius: 999px; background: var(--panel); cursor: pointer; }
+.chk:has(input:checked) { border-color: var(--accent); }
+.chk input { accent-color: var(--accent); }
+.phpanel { border: 1.5px solid var(--accent); border-radius: 12px; padding: 10px 12px; margin: 6px 0 12px; background: var(--panel-soft); }
+.pickrow { cursor: pointer; }
+.pick { display: flex; align-items: center; padding: 6px; }
+.pick input { width: 18px; height: 18px; accent-color: var(--accent); }
+.selbar { margin-bottom: 4px; align-items: center; }
+.selcnt { font-size: 13px; color: var(--muted); }
+.vars { display: flex; flex-wrap: wrap; gap: 6px; }
+.vars[hidden] { display: none; }
+.card.hasvar { cursor: pointer; }
+.card.open { grid-column: 1 / -1; }
+.tags { display: flex; flex-wrap: wrap; gap: 6px; }
+.olab { font-size: 12.5px; color: var(--muted); margin-top: 4px; }
+.olab.hint { color: var(--accent); }
+.shelfq { margin-bottom: 12px; }
+.shelfq input { width: 100%; }
+.sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+.card.open { border-color: var(--accent); }
+.optg { display: flex; gap: 8px; margin-bottom: 8px; flex-wrap: wrap; align-items: center; }
+.optg .optn { flex: 0 1 110px; }
+.optg .optv { flex: 1 1 200px; }
+.pill { display: inline-block; align-self: flex-start; font-size: 12px; padding: 2px 9px; border-radius: 999px; background: var(--panel); border: 1px solid var(--line); color: var(--muted); }
+.pill.on { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+.empty { padding: 28px 8px; text-align: center; color: var(--muted); }
+
+/* admin */
+.tabs { display: flex; gap: 6px; flex-wrap: wrap; }
+.tab { border: 1.5px solid var(--line); background: var(--panel); border-radius: 999px; padding: 6px 16px; font-weight: 500; }
+.tab[aria-selected="true"] { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+.bar { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin-bottom: 14px; }
+.bar .spacer { flex: 1; }
+.chips { display: flex; gap: 6px; flex-wrap: wrap; }
+.chipbtn { border: 1.5px solid var(--line); background: var(--panel); border-radius: 999px; padding: 3px 12px; font-size: 13px; }
+.chipbtn[aria-pressed="true"] { background: var(--fg); color: var(--bg); border-color: var(--fg); }
+.form { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; padding: 16px; background: var(--panel-soft); border-radius: 14px; margin-bottom: 16px; }
+.form .wide { grid-column: 1 / -1; }
+.row { display: flex; gap: 12px; align-items: center; padding: 10px 0; border-bottom: 1px solid var(--line); flex-wrap: wrap; }
+.row .main { flex: 1 1 220px; min-width: 0; }
+.row .nm { font-weight: 700; overflow-wrap: anywhere; }
+.row .meta { color: var(--muted); font-size: 13px; display: flex; gap: 10px; flex-wrap: wrap; }
+.row .price { font-variant-numeric: tabular-nums; font-weight: 700; min-width: 70px; text-align: right; }
+.row .acts { display: flex; gap: 6px; }
+.err { color: var(--danger); font-size: 13px; min-height: 18px; }
+
+#toast { position: absolute; left: 50%; bottom: calc(80px + env(safe-area-inset-bottom, 0px)); transform: translateX(-50%); background: var(--fg); color: var(--bg); padding: 9px 18px; border-radius: 999px; font-size: 14px; z-index: 40; max-width: calc(100% - 32px); text-align: center; opacity: 0; pointer-events: none; transition: opacity 0.2s; }
+.hud-col { position: absolute; top: 56px; left: 0; right: 0; display: flex; flex-direction: column; align-items: flex-start; gap: 6px; pointer-events: none; }
+.todo { pointer-events: auto; max-width: 100%; }
+.todo #todoList { background: var(--panel); border-radius: 12px; padding: 8px 12px; margin-top: 6px; box-shadow: var(--shadow); min-width: 190px; }
+.nexth { margin-top: 6px; background: #F2B200; color: #3A2A00; font-weight: 700; font-size: 14px; border-radius: 10px; padding: 6px 10px; max-width: 78vw; box-shadow: var(--shadow); }
+.tl { font-size: 14px; padding: 2px 0; color: var(--muted); } .tl.ok { color: var(--text); text-decoration: line-through; opacity: 0.7; } .tl.warn { color: #C2410C; font-weight: 700; text-decoration: none; opacity: 1; }
+.day-card { background: var(--panel-soft); border-radius: 14px; padding: 12px 14px; margin-top: 12px; }
+.day-card .sub { margin-top: 4px; }
+.rv { padding: 5px 0; border-top: 1px solid var(--line); font-size: 14px; } .rv:first-of-type { margin-top: 6px; }
+.stars { color: #F2B200; letter-spacing: 1px; }
+#stat { font-size: 14px; font-family: var(--font-body); font-weight: 700; flex: none; }
+.order { position: static; width: auto; max-width: min(420px, 100%); background: var(--panel); border: 2px solid var(--signal); border-radius: 16px; padding: 10px 14px; box-shadow: var(--shadow); pointer-events: none; }
+.o-h { font-size: 12px; color: var(--muted); font-weight: 700; letter-spacing: .08em; }
+.o-t { font-size: 17px; font-weight: 700; line-height: 1.35; margin: 2px 0; overflow-wrap: anywhere; }
+.o-s { font-size: 12.5px; color: var(--muted); }
+.carry { pointer-events: auto; display: flex; align-items: center; gap: 10px; background: var(--panel); border: 1.5px solid var(--accent); border-radius: 999px; padding: 6px 8px 6px 16px; box-shadow: var(--shadow); max-width: calc(100% - 32px); font-size: 14px; }
+.carry span { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.bubble { position: absolute; left: 0; top: 0; z-index: 6; pointer-events: none; background: #fff; color: #17262B; border-radius: 14px; padding: 7px 12px; max-width: 230px; font-size: 14px; line-height: 1.4; box-shadow: var(--shadow); margin-top: -8px; }
+.bubble::after { content: ''; position: absolute; left: 50%; bottom: -7px; margin-left: -7px; border: 7px solid transparent; border-bottom: 0; border-top-color: #fff; }
+.steps { display: flex; gap: 6px; list-style: none; padding: 0; margin: 0 0 14px; flex-wrap: wrap; }
+.steps li { font-size: 13px; padding: 4px 12px; border-radius: 999px; background: var(--panel-soft); color: var(--muted); }
+.steps li.on { background: var(--accent); color: var(--accent-ink); font-weight: 700; }
+.cmsg { background: color-mix(in srgb, var(--signal) 22%, var(--panel)); border: 1.5px solid var(--signal); border-radius: 12px; padding: 9px 12px; margin-bottom: 12px; font-weight: 500; }
+.co-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 10px; margin-bottom: 14px; }
+.co-card { background: var(--panel-soft); border: 1.5px solid var(--line); border-radius: 14px; padding: 12px; display: flex; flex-direction: column; gap: 4px; overflow-wrap: anywhere; }
+.co-card.wide { grid-column: 1 / -1; }
+.co-l { font-size: 12.5px; color: var(--muted); font-weight: 500; }
+.co-line { display: flex; justify-content: space-between; gap: 10px; }
+.co-sum { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.co-sum div { background: var(--panel-soft); border-radius: 12px; padding: 10px 12px; display: flex; flex-direction: column; }
+.co-sum span { font-size: 12.5px; color: var(--muted); }
+.co-sum b, .co-given b { font-size: 22px; font-variant-numeric: tabular-nums; }
+.den-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 8px; }
+.den { display: flex; align-items: center; gap: 8px; background: var(--panel-soft); border-radius: 12px; padding: 6px 8px; }
+.den .dv { flex: 1; font-weight: 700; font-variant-numeric: tabular-nums; }
+.den b { min-width: 2.2em; text-align: center; font-variant-numeric: tabular-nums; }
+.co-given { display: flex; justify-content: space-between; align-items: center; margin: 12px 0; padding: 10px 12px; border-radius: 12px; border: 1.5px dashed var(--accent); }
+.sheet.dock { background: transparent; pointer-events: none; }
+.sheet.dock .sheet-box { pointer-events: auto; max-height: 58%; width: min(1100px, 100%); box-shadow: 0 -8px 30px rgba(10, 40, 45, 0.35); }
+.sheet.dock .sheet-head { padding-top: 10px; padding-bottom: 8px; }
+.sheet.dock.min .sheet-body { display: none; }
+@media (max-width: 720px) {
+  .hud-col { top: 50px; }
+  .chip { font-size: 13px; padding: 6px 12px; } #storeChip { max-width: 30%; } .stat { max-width: 62%; }
+  .hud-top .btn { padding: 5px 12px; min-height: 32px; font-size: 13px; }
+  .nexth { font-size: 13px; padding: 5px 9px; max-width: 100%; }
+  .order { padding: 6px 12px; border-radius: 12px; }
+  .greet { position: absolute; right: 12px; bottom: calc(86px + env(safe-area-inset-bottom, 0px)); flex-direction: column !important; gap: 8px; }
+  .greet .btn { width: 44px; height: 44px; min-height: 44px; padding: 0; font-size: 20px; border-radius: 50%; opacity: 0.85; }
+  .greet .lb { display: none; }
+  .interact { padding: 9px 20px; font-size: 15px; opacity: 0.92; }
+  .order .o-s { display: none; }
+  .order .o-t { font-size: 15px; margin: 0; }
+  .order .o-h { font-size: 11px; }
+  .sheet.dock .sheet-box { max-height: 48%; }
+}
+.pos { display: flex; flex-direction: column; gap: 0; }
+@media (pointer: coarse) { .hint { display: none; } }
+/* touch screens: the action button sits in one fixed spot under the right thumb; it only lights up when you stand at something you can use */
+@media (pointer: coarse), (max-width: 720px) {
+  .hud-bottom .interact { position: absolute; right: max(14px, env(safe-area-inset-right, 0px)); bottom: calc(28px + env(safe-area-inset-bottom, 0px)); padding: 9px 16px; font-size: 14px; min-height: 44px; max-width: 40vw; white-space: normal; text-align: center; line-height: 1.2; opacity: .94; box-shadow: 0 4px 12px rgba(10, 40, 45, .3); }
+  .hud-bottom .interact:active { transform: scale(.95); }
+  .hud-bottom #btnLog { bottom: calc(86px + env(safe-area-inset-bottom, 0px)); }
+}
+/* phones: the round utility buttons (greet / music / phone) form a column on the right edge from 86px up, so the action button sits underneath it at the very bottom */
+@media (max-width: 720px) {
+  .hud-bottom .interact { right: max(14px, env(safe-area-inset-right, 0px)); bottom: calc(28px + env(safe-area-inset-bottom, 0px)); max-width: calc(100vw - 28px); }
+  .hud-bottom #btnLog { right: calc(68px + env(safe-area-inset-right, 0px)); bottom: calc(90px + env(safe-area-inset-bottom, 0px)); }
+}
+/* tablets: put the controls where both thumbs rest — utility buttons at the left edge, action buttons at the right edge */
+@media (pointer: coarse) and (min-width: 721px) {
+  .greet { position: absolute; left: max(26px, env(safe-area-inset-left, 0px)); bottom: calc(36px + env(safe-area-inset-bottom, 0px)); flex-direction: column !important; gap: 14px; }
+  .greet .btn { width: 64px; height: 64px; min-height: 64px; padding: 0; font-size: 28px; border-radius: 50%; opacity: 0.9; }
+  .greet .lb { display: none; }
+  .hud-bottom .interact { position: absolute; right: max(30px, env(safe-area-inset-right, 0px)); bottom: calc(34px + env(safe-area-inset-bottom, 0px)); padding: 20px 38px; font-size: 21px; min-height: 64px; }
+  .hud-bottom #btnLog { bottom: calc(118px + env(safe-area-inset-bottom, 0px)); }
+}
+#joy { position: absolute; left: 0; top: 0; width: 0; height: 0; z-index: 7; pointer-events: none; }
+#joy[hidden] { display: none; }
+.joy-base { position: absolute; width: 110px; height: 110px; margin: -55px 0 0 -55px; border-radius: 50%; background: rgba(255, 255, 255, 0.25); border: 2px solid rgba(255, 255, 255, 0.55); box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2); }
+.joy-knob { position: absolute; left: 50%; top: 50%; width: 48px; height: 48px; margin: -24px 0 0 -24px; border-radius: 50%; background: rgba(255, 255, 255, 0.85); box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3); }
+.pos-head { display: flex; justify-content: space-between; gap: 10px; flex-wrap: wrap; align-items: center; background: var(--accent); color: var(--accent-ink); border-radius: 12px; padding: 8px 14px; margin-bottom: 12px; font-size: 14px; }
+.pos-no { opacity: .9; font-variant-numeric: tabular-nums; }
+/* checkout: keep the action buttons in view while the panel scrolls, and use the space better on bigger screens */
+.sheet.dock #coBody { padding-top: 10px; }
+.pos-right > .btn-row:last-child, .pos-left > .btn-row:last-child { position: sticky; bottom: 0; z-index: 2; background: var(--panel-soft); padding: 8px 0 2px; margin-top: 0; box-shadow: 0 -8px 8px -6px rgba(0,0,0,.08); }
+@media (min-width: 721px) and (min-height: 640px) { .sheet.dock .sheet-box { max-height: 66%; } }
+/* desktop / tablet: the money steps fit without scrolling (item rows fold away, keys and spacing tighten, the window may reach a bit higher) */
+@media (min-width: 721px) and (min-height: 560px) {
+  .sheet.dock .sheet-box { max-height: 72%; }
+  .pos.st-pay .pos-head, .pos.st-change .pos-head { display: none; }
+  .pos.st-pay .pos-line, .pos.st-change .pos-line, .pos.st-invoice .pos-line, .pos.st-pay .pos-th, .pos.st-change .pos-th, .pos.st-invoice .pos-th { display: none; }
+  .pos.st-pay .steps, .pos.st-change .steps, .pos.st-invoice .steps { margin-bottom: 6px; }
+  .pos.st-pay .keypad .btn { min-height: 40px; font-size: 18px; }
+  .pos.st-pay .kp-disp { font-size: 24px; min-height: 42px; padding: 4px 12px; }
+  .pos.st-pay .pos-right, .pos.st-change .pos-right { gap: 6px; padding: 10px; }
+  .pos.st-pay .pos-right .co-l[style] { margin-top: 4px !important; }
+  .pos.st-change .dn { min-height: 44px; }
+  .pos.st-change .dn-took { min-height: 28px; margin: 6px 0 2px; }
+}
+@media (max-height: 820px) { .keypad .btn { min-height: 44px; font-size: 18px; } .kp-disp { font-size: 24px; min-height: 44px; padding: 5px 12px; } .pos-line { padding: 7px 12px; } .pos-head { margin-bottom: 8px; } .pos-right, .pos-left { gap: 8px; } }
+.pos-main { display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr); gap: 14px; align-items: start; }
+@media (max-width: 720px) { .pos-main { grid-template-columns: 1fr; } }
+.pos-left, .pos-right { display: flex; flex-direction: column; gap: 10px; min-width: 0; }
+.pos-right { background: var(--panel-soft); border: 1.5px solid var(--line); border-radius: 14px; padding: 12px; }
+.shelfwant .wg { margin-top: 4px; } .shelfwant .wl { font-size: 14px; line-height: 1.4; } .shelfwant { max-height: 34vh; overflow-y: auto; }
+.shelfwant { position: sticky; top: 0; z-index: 2; margin-bottom: 8px; }
+.want { background: color-mix(in srgb, var(--signal) 20%, var(--panel)); border: 1.5px solid var(--signal); border-radius: 12px; padding: 8px 12px; }
+.pos-list { border: 1.5px solid var(--line); border-radius: 14px; overflow: hidden; background: var(--panel); }
+.pos-th { display: flex; justify-content: space-between; padding: 8px 12px; background: var(--panel-soft); font-size: 12.5px; color: var(--muted); }
+.pos-line { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-top: 1px solid var(--line); }
+.pos-line .pn { flex: 1; min-width: 0; overflow-wrap: anywhere; }
+.pos-line .pp { font-variant-numeric: tabular-nums; font-weight: 700; min-width: 5.5em; text-align: right; }
+.pos-line.ok { background: color-mix(in srgb, var(--accent) 8%, var(--panel)); }
+.pos-total { display: flex; justify-content: space-between; align-items: baseline; padding: 12px; border-top: 2px solid var(--fg); font-weight: 700; }
+.pos-total b { font-size: 26px; font-variant-numeric: tabular-nums; }
+.cust-disp { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; background: #10252A; color: #E4EFEE; border-radius: 12px; padding: 10px 12px; }
+.cust-disp .cd-t { grid-column: 1 / -1; font-size: 11px; letter-spacing: .2em; color: #8FB1B6; }
+.cust-disp span { display: block; font-size: 11.5px; color: #8FB1B6; }
+.cust-disp b { font-size: 17px; font-variant-numeric: tabular-nums; color: #7FE3D0; }
+.cash-row { display: flex; flex-wrap: wrap; gap: 8px; }
+.cash { background: #fff; color: #17262B; border: 2px solid #17262B33; border-radius: 6px; padding: 8px 12px; font-weight: 700; font-variant-numeric: tabular-nums; }
+.cash.c1000 { background: #CFE8D5; } .cash.c500 { background: #E8D5C2; } .cash.c200 { background: #E4D9F0; } .cash.c100 { background: #F3D0D0; } .cash.c2000 { background: #D4DEF2; }
+.cash.c50, .cash.c10, .cash.c5, .cash.c1 { border-radius: 999px; background: #E9E3CE; }
+.kp-disp { background: #10252A; color: #7FE3D0; font-size: 30px; font-variant-numeric: tabular-nums; text-align: right; border-radius: 12px; padding: 8px 14px; min-height: 54px; }
+.keypad { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.keypad.calc { grid-template-columns: repeat(4, 1fr); }
+.calc-res { text-align: right; color: var(--muted); font-size: 14px; min-height: 20px; margin: 2px 4px 6px; font-variant-numeric: tabular-nums; }
+.keypad .btn:active, .dn:active { transform: scale(.94); filter: brightness(.93); }
+.keypad .btn { min-height: 52px; font-size: 20px; font-weight: 700; border-radius: 14px; }
+.co-sum .due { border: 2px solid var(--accent); }
+.recpt { background: #fff; color: #17262B; border: 1px dashed #999; border-radius: 8px; padding: 14px; margin-bottom: 12px; text-align: center; display: grid; gap: 4px; max-width: 280px; font-family: ui-monospace, Menlo, Consolas, monospace; }
+.recpt b { font-size: 18px; letter-spacing: .06em; }
+.recpt .bc { font-size: 22px; }
+.recpt.bar { border-style: solid; }
+#toast.show { opacity: 1; }
+#noGL { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; text-align: center; color: var(--muted); padding: 24px; }
+@media (prefers-reduced-motion: reduce) { #toast { transition: none; } }
+.vp-who { font-weight: 700; font-size: 16px; margin-bottom: 8px; }
+.vp-say { background: var(--panel-soft); border: 1px solid var(--line); border-radius: 14px; padding: 12px 14px; font-size: 16px; margin: 8px 0 10px; }
+.vp-h { margin-bottom: 4px; color: var(--muted); font-size: 13.5px; }
+.vp-p { color: var(--accent); }
+.vp-note { font-size: 13.5px; color: var(--muted); margin-bottom: 8px; }
+.vp-ch { display: flex; flex-direction: column; gap: 8px; margin: 10px 0; }
+.vp-ch .btn { text-align: left; white-space: normal; height: auto; padding: 10px 14px; }
+.vp-inv { border: 1px dashed var(--line); border-radius: 10px; padding: 10px 12px; margin: 6px 0 10px; background: var(--panel); font-size: 14px; }
+.vp-it { font-weight: 700; margin-bottom: 4px; } .vp-it span { color: var(--muted); font-weight: 400; margin-left: 6px; }
+.vp-ir { display: flex; justify-content: space-between; gap: 12px; padding: 1px 0; } .vp-ir.today { border-top: 1px solid var(--line); margin-top: 4px; padding-top: 4px; color: var(--muted); }
+.vp-mgr { background: var(--panel-soft); border-left: 4px solid var(--signal); border-radius: 8px; padding: 10px 12px; margin: 6px 0; }
+.vp-res { border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px; margin: 8px 0 12px; }
+.vp-res .stars { color: var(--signal); font-size: 20px; } .vp-bad { color: var(--danger); font-weight: 700; }
+.dx-sum { color: var(--muted); margin-bottom: 10px; }
+.dx-t { border: 1px solid var(--line); border-radius: 14px; padding: 12px 14px; margin-bottom: 12px; background: var(--panel); }
+.dx-t h3 { margin: 0 0 4px; font-size: 17px; display: flex; justify-content: space-between; gap: 8px; }
+.dx-bar { height: 8px; border-radius: 4px; background: var(--panel-soft); overflow: hidden; margin: 6px 0 4px; } .dx-bar i { display: block; height: 100%; background: var(--accent); }
+.dx-bar.neg i { background: var(--danger); }
+.dx-e { border-top: 1px solid var(--line); padding: 8px 0; } .dx-e.lock { color: var(--muted); } .dx-e.tap { cursor: pointer; } .dx-e.tap:active { background: var(--panel-soft); }
+.dx-e b { display: block; } .dx-e .sub { font-size: 13px; color: var(--muted); }
+.dx-b { display: inline-block; font-size: 12px; border: 1px solid var(--line); border-radius: 10px; padding: 0 7px; margin: 2px 4px 0 0; color: var(--muted); } .dx-b.on { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+.jump-menu { position: absolute; top: 56px; right: 16px; z-index: 15; background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 10px; box-shadow: var(--shadow); display: flex; flex-direction: column; gap: 6px; min-width: 190px; pointer-events: auto; }
+.jump-menu[hidden] { display: none; }
+.jump-menu .jm-t { font-size: 12px; color: var(--muted); }
+.up-hands { display: flex; justify-content: center; gap: 120px; font-size: 46px; margin-top: -6px; } .up-hands span { display: inline-block; animation: upReach .35s ease-in-out infinite alternate; } .up-hands span:last-child { animation-delay: .17s; transform: scaleX(-1); }
+@keyframes upReach { from { transform: translateY(8px); } to { transform: translateY(-10px); } }
+.up-fly { animation: upFly .32s ease-out; } @keyframes upFly { from { transform: translateY(90px) scale(1.7); opacity: .2; } to { transform: none; opacity: 1; } }
+.rs-hint { color: var(--muted); margin-bottom: 4px; font-size: 13px; } .rs-tray { display: flex; flex-wrap: wrap; gap: 6px; }
+.rs-chip { padding: 7px 11px; font-size: 14px; background: var(--panel); border: 2px solid var(--accent); border-radius: 10px; font-weight: 700; touch-action: none; cursor: grab; user-select: none; -webkit-user-select: none; }
+.rs-chip.drag { opacity: .35; }
+/* the restock tray looks like a basket: woven sides, a handle on top, the goods sitting inside */
+.rs-tray { position: relative; margin-top: 18px; padding: 12px 10px 10px; background: repeating-linear-gradient(90deg, #C99A5B 0 10px, #B8874A 10px 12px); border: 3px solid #8E6330; border-radius: 6px 6px 22px 22px; box-shadow: inset 0 6px 8px rgba(0,0,0,.18); }
+.rs-tray::before { content: ''; position: absolute; left: 14%; right: 14%; top: -18px; height: 26px; border: 4px solid #8E6330; border-bottom: none; border-radius: 40px 40px 0 0; }
+.rs-tray .rs-chip { background: #FFFDF6; color: #26323A; border-color: #0B7A85; box-shadow: 0 2px 4px rgba(0,0,0,.25); }
+.rs-ghost { position: fixed; z-index: 60; pointer-events: none; padding: 10px 14px; background: var(--accent); color: var(--accent-ink); border-radius: 10px; font-weight: 700; box-shadow: var(--shadow); transform: translate(-50%, -60%) scale(1.08); }
+.rs-ghost.land { transition: transform .28s ease-in, opacity .28s; transform: translate(-50%, -60%) scale(.2); opacity: 0; }
+.rs-ok { margin-top: 8px; }
+/* light-coloured panels always carry their own dark text, so dark mode cannot turn them into light-on-light */
+.greet .btn.pulse, .ph-game, .up-card, .up-bar, .up-cart, .up-slot, .inv-tbl th, .inv-hint, .sb-tbl th, .sb-tbl tr.today td, #btnPhone.ring, .cash, .pm.sys { color: #1B2A30; }
+.vp-res .stars, .stars { color: #B7791F; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .vp-res .stars, :root:not([data-theme="light"]) .stars { color: var(--signal); } :root:not([data-theme="light"]) .inv-out { color: #FCA5A5; } :root:not([data-theme="light"]) .inv-low { color: #FCD34D; } }
+:root[data-theme="dark"] .vp-res .stars, :root[data-theme="dark"] .stars { color: var(--signal); } :root[data-theme="dark"] .inv-out { color: #FCA5A5; } :root[data-theme="dark"] .inv-low { color: #FCD34D; }
+.dn-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(64px, 1fr)); gap: 8px; }
+.dn { position: relative; display: flex; align-items: center; justify-content: center; min-height: 58px; border: 2px solid #17262B44; border-radius: 8px; color: #17262B; font-weight: 800; font-size: 18px; font-variant-numeric: tabular-nums; background: #fff; padding: 4px; }
+.dn.c1000 { background: #CFE8D5; } .dn.c500 { background: #E8D5C2; } .dn.c100 { background: #F3D0D0; }
+.dn.c50, .dn.c10, .dn.c5, .dn.c1 { border-radius: 999px; background: #E9E3CE; aspect-ratio: 1 / 1; min-height: 0; }
+.dn:active { transform: scale(.94); }
+.dn-n { position: absolute; top: -7px; right: -5px; background: var(--accent); color: var(--accent-ink); font-style: normal; font-size: 12px; font-weight: 800; border-radius: 999px; padding: 1px 7px; }
+.dn-took { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin: 10px 0 4px; min-height: 36px; }
+.dn-took .cash { padding: 6px 10px; font-size: 14px; cursor: pointer; }
+@media (max-width: 720px) {
+  .pos.st-pay .pos-line, .pos.st-change .pos-line, .pos.st-invoice .pos-line, .pos.st-pay .pos-th, .pos.st-change .pos-th, .pos.st-invoice .pos-th { display: none; }
+  .pos.st-pay .steps, .pos.st-change .steps, .pos.st-invoice .steps { margin-bottom: 4px; }
+}
+/* a long press must never select text or open the callout menu while playing */
+html, body { -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; -webkit-tap-highlight-color: transparent; }
+input, textarea, [contenteditable="true"], .selectable { -webkit-user-select: text; user-select: text; -webkit-touch-callout: default; }
+button, .btn, canvas, .rs-chip, .dn { touch-action: manipulation; }
+img { -webkit-user-drag: none; user-drag: none; }
+/* landscape phones/tablets: the checkout (and restock) panel becomes the right half of the screen, the shop stays visible in the left half, nothing needs scrolling */
+@media (orientation: landscape) and (max-height: 640px) {
+  .sheet.dock { justify-content: flex-end; align-items: stretch; }
+  .sheet.dock .sheet-box { width: 50%; max-height: 100%; height: 100%; border-radius: 20px 0 0 20px; box-shadow: -8px 0 28px rgba(10, 40, 45, .35); }
+  .sheet.dock.min .sheet-box { height: auto; }
+  .sheet.dock .sheet-head { padding-top: 6px; padding-bottom: 4px; }
+  .sheet.dock .sheet-head h2 { font-size: 16px; }
+  .sheet.dock #coBody, .sheet.dock .sheet-body { padding-top: 6px; padding-bottom: 8px; }
+  .pos-main { grid-template-columns: minmax(0, 1fr) minmax(0, 1.15fr); gap: 8px; }
+  .pos-head { margin-bottom: 4px; font-size: 13px; }
+  .steps { margin-bottom: 6px; gap: 4px; } .steps li { padding: 2px 8px; font-size: 12px; }
+  .pos-left, .pos-right { gap: 6px; } .pos-right { padding: 8px; }
+  .pos-line { padding: 5px 8px; font-size: 13px; } .pos-th { padding: 4px 8px; }
+  .pos.st-pay .pos-line, .pos.st-change .pos-line, .pos.st-invoice .pos-line { display: flex; }
+  .keypad { gap: 5px; } .keypad .btn { min-height: 36px; font-size: 16px; padding: 0; border-radius: 10px; }
+  .kp-disp { font-size: 20px; min-height: 34px; padding: 3px 10px; }
+  .co-sum { gap: 6px; } .co-sum b { font-size: 16px; }
+  .dn-grid { grid-template-columns: repeat(4, 1fr); gap: 6px; } .dn { min-height: 40px; font-size: 15px; } .dn.c50, .dn.c10, .dn.c5, .dn.c1 { min-height: 0; }
+  .dn-took { margin: 4px 0; min-height: 28px; } .dn-took .cash { padding: 3px 8px; font-size: 12.5px; }
+  .btn-row .btn { flex: 1 1 90px; min-height: 36px; padding: 6px 10px; font-size: 14px; }
+  .cmsg { padding: 4px 8px; font-size: 12.5px; margin-bottom: 4px; }
+  .rs-chip { padding: 7px 10px; font-size: 14px; }
+}
+/* landscape phones (short screens): everything is smaller and pushed to the edges so the shop in the middle stays visible.
+   left thumb = joystick area (kept clear), right thumb = round utility column on top + action button at the bottom */
+@media (orientation: landscape) and (max-height: 520px) {
+  .hud-top { top: max(6px, env(safe-area-inset-top, 0px)); padding-left: max(12px, env(safe-area-inset-left, 0px)); padding-right: max(12px, env(safe-area-inset-right, 0px)); gap: 6px; flex-wrap: nowrap; align-items: flex-start; justify-content: flex-start; }
+  .chip { font-size: 12px; padding: 4px 10px; line-height: 1.25; min-width: 0; }
+  #storeChip { flex: 0 1 auto; max-width: 22%; }
+  #stat { flex: 1 1 0; max-width: none; white-space: normal; text-align: center; border-radius: 14px; }
+  .hud-top .btn { flex: none; white-space: nowrap; padding: 3px 10px; min-height: 28px; font-size: 12px; }
+  .hud-col { top: 52px; padding-left: max(12px, env(safe-area-inset-left, 0px)); }
+  .nexth { font-size: 12px; padding: 4px 8px; max-width: 46vw; margin-top: 4px; }
+  .todo #todoList { padding: 6px 10px; min-width: 170px; max-height: 52vh; overflow-y: auto; font-size: 12.5px; }
+  .order { padding: 4px 10px; border-radius: 10px; } .order .o-s { display: none; } .order .o-t { font-size: 13px; margin: 0; } .order .o-h { font-size: 10.5px; }
+  .greet { position: fixed; left: auto; right: max(12px, env(safe-area-inset-right, 0px)); top: calc(50vh - 96px); bottom: auto; z-index: 6; flex-direction: column !important; gap: 8px; }
+  .greet .btn { width: 40px; height: 40px; min-height: 40px; padding: 0; font-size: 18px; border-radius: 50%; opacity: .88; }
+  .greet .lb { display: none; }
+  .hud-bottom { bottom: calc(8px + env(safe-area-inset-bottom, 0px)); }
+  .hud-bottom .interact { position: absolute; right: max(14px, env(safe-area-inset-right, 0px)); bottom: calc(14px + env(safe-area-inset-bottom, 0px)); padding: 7px 16px; font-size: 13.5px; min-height: 40px; max-width: 30vw; }
+  .hud-bottom #btnLog { right: calc(max(14px, env(safe-area-inset-right, 0px)) + 4px); bottom: calc(64px + env(safe-area-inset-bottom, 0px)); }
+  .carry { font-size: 12px; }
+  .music { width: min(420px, 52vw); left: auto; right: calc(max(12px, env(safe-area-inset-right, 0px)) + 52px); transform: none; bottom: 8px; max-height: 86%; }
+  .music.closed { transform: translateX(140%); }
+}
+/* landscape phones, checkout panel: squeeze every step into the half-screen panel so nothing scrolls */
+@media (orientation: landscape) and (max-height: 640px) {
+  .pos-head { display: none; }
+  .steps { margin: 0 0 4px; } .steps li { padding: 2px 6px; font-size: 11.5px; }
+  .cmsg { padding: 3px 8px; font-size: 11.5px; line-height: 1.3; margin-bottom: 4px; border-radius: 8px; }
+  .pos-main { grid-template-columns: minmax(0, .72fr) minmax(0, 1.4fr); gap: 6px; }
+  .pos-left, .pos-right { gap: 4px; } .pos-right { padding: 6px 8px; }
+  .pos-th { padding: 2px 6px; font-size: 11px; } .pos-line { padding: 3px 6px; font-size: 12px; } .pos-line .pn { font-size: 12px; } .pos-total { padding: 4px 6px; font-size: 13px; } .pos-total b { font-size: 15px; }
+  .want { padding: 4px 8px; font-size: 12px; }
+  .pos-right .co-l { display: none; }
+  .pos-right .sub, .pos-right > p { display: none; }
+  .cash-row { margin: 0; min-height: 0; gap: 4px; } .cash-row .cash { padding: 3px 8px; font-size: 12px; }
+  .kp-disp { font-size: 18px; min-height: 30px; padding: 2px 8px; }
+  .keypad { grid-template-columns: repeat(6, 1fr); gap: 5px; } .keypad .btn { min-height: 38px; font-size: 16px; padding: 0; }
+  .co-sum { gap: 4px; } .co-sum div { padding: 4px 8px; flex-direction: row; align-items: baseline; justify-content: space-between; gap: 4px; } .co-sum b, .co-given b { font-size: 16px; } .co-sum span { font-size: 11px; }
+  .co-given { margin: 0; padding: 4px 8px; } .co-given span { font-size: 12px; }
+  .dn-grid { grid-template-columns: repeat(4, 1fr); gap: 4px; } .dn, .dn.c50, .dn.c10, .dn.c5, .dn.c1 { min-height: 0; height: 32px; aspect-ratio: auto; font-size: 13px; padding: 2px; border-radius: 8px; }
+  .dn-took { margin: 0; min-height: 24px; gap: 4px; } .dn-took .co-l { display: inline; font-size: 11px; }
+  .co-card { margin-bottom: 4px !important; padding: 4px 8px; font-size: 12.5px; } .co-card .co-l { display: block; }
+  .recpt { padding: 4px 8px; font-size: 12px; } .recpt .bc { font-size: 15px; }
+  .btn-row { gap: 4px; margin-top: 0 !important; } .btn-row .btn { flex: 1 1 64px; min-height: 32px; padding: 4px 6px; font-size: 12.5px; }
+  .pos-right > .btn-row:last-child, .pos-left > .btn-row:last-child { padding: 2px 0 0; box-shadow: none; position: static; }
+}
+@media (orientation: landscape) and (max-height: 400px) {
+  .steps { display: none; }
+  .dn, .dn.c50, .dn.c10, .dn.c5, .dn.c1 { height: 28px; }
+  .co-sum div { padding: 2px 8px; } .co-given { padding: 2px 8px; } .keypad .btn { min-height: 30px; } .kp-disp { min-height: 26px; font-size: 16px; }
+  .btn-row .btn { min-height: 28px; padding: 3px 6px; }
+}
+@media (orientation: landscape) and (max-height: 640px) { .pos-left .pos-list { max-height: calc(100vh - 140px); overflow-y: auto; } }
+/* portrait phones: the status chip may wrap (it is long), the owner buttons sit on the first row, nothing gets pushed off-screen */
+@media (max-width: 720px) and (orientation: portrait) {
+  .hud-top { gap: 6px; padding-left: max(10px, env(safe-area-inset-left, 0px)); padding-right: max(10px, env(safe-area-inset-right, 0px)); flex-wrap: wrap; align-items: stretch; }
+  .hud-top .btn { white-space: nowrap; flex: none; padding: 4px 10px; min-height: 30px; font-size: 12px; align-self: center; }
+  .chip { font-size: 12.5px; padding: 5px 11px; min-width: 0; line-height: 1.3; }
+  #storeChip { flex: 1 1 auto; max-width: none; align-self: center; }
+  #stat { flex: 1 1 100%; max-width: 100%; order: 5; white-space: normal; border-radius: 16px; text-align: center; font-size: 12.5px; }
+  .hud-col { top: 100px; }
+  .carry { align-self: flex-start; margin-left: max(12px, env(safe-area-inset-left, 0px)); max-width: calc(100vw - 38vw - 34px); font-size: 12.5px; padding: 5px 6px 5px 12px; gap: 6px; }
+  .carry span { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .hud-bottom .interact { max-width: 38vw; }
+}
+#sbClose { right: 6px; top: 6px; width: 32px; height: 32px; z-index: 5; font-size: 15px; }
+/* landscape phones: the tutorial / small pop-up windows become a compact card on the left so the shop stays visible */
+@media (orientation: landscape) and (max-height: 520px) {
+  #tutSheet { background: transparent; align-items: flex-end; justify-content: flex-start; padding: 0 0 8px max(10px, env(safe-area-inset-left, 0px)); }
+  #tutSheet .sheet-box { width: min(46vw, 380px); max-height: 62%; border-radius: 16px; box-shadow: 0 6px 24px rgba(10, 40, 45, .4); }
+  #tutSheet .sheet-head { padding-top: 8px; padding-bottom: 4px; } #tutSheet .sheet-head h2 { font-size: 15px; }
+  #tutSheet .sheet-body { padding-top: 4px; padding-bottom: 10px; font-size: 12.5px; line-height: 1.4; overflow-y: auto; }
+  #tutSheet .sheet-body p { margin: 0 0 6px; } #tutSheet .btn { min-height: 34px; padding: 5px 14px; font-size: 13px; }
+}
+#tipLayer { position: fixed; inset: 0; z-index: 70; pointer-events: auto; background: rgba(10, 30, 35, .12); }
+#awayCover { position: fixed; inset: 0; z-index: 120; display: flex; align-items: center; justify-content: center; background: rgba(10, 30, 35, .78); } #awayCover[hidden] { display: none; }
+.away-box { background: #fff; color: #17323A; border-radius: 18px; padding: 20px 22px; text-align: center; max-width: min(340px, 86vw); box-shadow: 0 10px 40px rgba(0,0,0,.5); } .away-t { font-size: 20px; font-weight: 800; } .away-s { font-size: 14px; margin: 6px 0 14px; color: #44585E; }
+#awayCover .btn.primary { background: #0B7A85; color: #fff; border-color: #0B7A85; min-height: 48px; padding: 10px 22px; font-size: 16px; }
+#tipLayer.through { pointer-events: none; background: none; } #tipLayer.through #tipCard { pointer-events: auto; }
+#tipRing { position: fixed; border: 3px solid #ffb703; border-radius: 12px; box-shadow: 0 0 0 4px rgba(255, 183, 3, .35); pointer-events: none; animation: tipPulse 1s ease-in-out infinite; display: none; }
+#tipArrow { position: fixed; font-size: 30px; line-height: 1; color: #ffb703; text-shadow: 0 2px 4px rgba(0, 0, 0, .5); pointer-events: none; display: none; animation: tipBob .7s ease-in-out infinite alternate; }
+@keyframes tipPulse { 50% { box-shadow: 0 0 0 9px rgba(255, 183, 3, .12); } }
+@keyframes tipBob { to { transform: translateY(6px); } }
+#tipCard { position: fixed; left: 50%; bottom: max(14px, env(safe-area-inset-bottom, 0px)); transform: translateX(-50%); width: min(420px, calc(100vw - 28px)); background: #fff; color: #17323a; border-radius: 16px; padding: 12px 16px 12px; box-shadow: 0 8px 30px rgba(10, 40, 45, .45); }
+#tipCard .btn { background: #EEF3F3; color: #17323A; border: 1px solid #C5D3D4; box-shadow: none; } #tipCard .btn.primary { background: #0B7A85; color: #fff; border-color: #0B7A85; }
+#tipCard.top { bottom: auto; top: max(108px, env(safe-area-inset-top, 0px)); }
+.tip-n { font-size: 11px; color: #6a8a90; } .tip-t { font-weight: 800; font-size: 16px; margin: 2px 0 4px; } .tip-b { font-size: 14px; line-height: 1.5; }
+.tip-btns { display: flex; justify-content: space-between; gap: 8px; margin-top: 10px; }
+@media (orientation: landscape) and (max-height: 520px) {
+  #tipCard { left: max(10px, env(safe-area-inset-left, 0px)); transform: none; width: min(44vw, 360px); padding: 8px 12px; border-radius: 14px; }
+  #tipCard.top { top: 8px; } .tip-t { font-size: 14px; margin: 0 0 2px; } .tip-b { font-size: 12.5px; line-height: 1.4; } .tip-btns { margin-top: 6px; }
+}
+#jumpMenu { max-height: 78vh; overflow-y: auto; }
+/* music is switched off for now (the code stays so it can come back) */
+#btnMusic, #music { display: none !important; }
+/* restock: the tray is a basket floating at the bottom of the screen, the shop stays visible behind it */
+#rsDock .sheet-box { background: transparent; box-shadow: none; }
+#rsDock .sheet-head { background: var(--panel); border-radius: 999px; margin: 0 12px 6px; box-shadow: var(--shadow); }
+#rsDock .sheet-body { padding-top: 0; padding-bottom: 10px; }
+#rsDock .rs-hint { background: var(--panel); border-radius: 12px; padding: 6px 10px; margin-bottom: 6px; display: inline-block; box-shadow: var(--shadow); }
+@media (orientation: landscape) and (max-height: 640px) {
+  #rsDock .sheet-box { background: var(--panel); box-shadow: -8px 0 28px rgba(10, 40, 45, .35); }
+  #rsDock .sheet-head { background: transparent; border-radius: 0; margin: 0; box-shadow: none; }
+  #rsDock .rs-hint { background: none; padding: 0; display: block; box-shadow: none; }
+}
+/* portrait phones: the checkout window reaches up to the front edge of the counter (the camera is shifted to match) */
+@media (max-width: 720px) and (orientation: portrait) {
+  #checkout .sheet-box { height: 66.7%; max-height: none; }
+  #checkout.min .sheet-box { height: auto; }
+}
+</style>
+</head>
+<body>
+  <div id="admin" class="sheet full" hidden role="dialog" aria-modal="true" aria-labelledby="adminTitle">
+    <div class="sheet-box">
+      <div class="sheet-head gutter">
+        <h2 id="adminTitle">總公司後台</h2>
+        <button class="btn small" id="adminClose" type="button">關閉</button>
+      </div>
+      <div class="gutter" style="padding-top:12px">
+        <div class="tabs" role="tablist" id="adminTabs"></div>
+      </div>
+      <div class="sheet-body gutter" id="adminBody"></div>
+    </div>
+  </div>
+  <div id="toast" role="status"></div>
+<script>
+/* ---------- helpers ---------- */
+const DUMMY = new Proxy(function () {}, { get: (t, k) => (k === 'style' || k === 'classList' || k === 'dataset' ? DUMMY : k === Symbol.toPrimitive ? () => '' : DUMMY), apply: () => DUMMY, set: () => true });
+const $ = (s) => document.querySelector(s) || DUMMY;
+document.addEventListener('contextmenu', (e) => { const t = e.target && e.target.tagName; if (t !== 'INPUT' && t !== 'TEXTAREA') e.preventDefault(); });
+const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const LS = {
+  get(k, d) { try { const v = window.localStorage.getItem(k); return v === null ? d : JSON.parse(v); } catch (e) { return d; } },
+  set(k, v) { try { window.localStorage.setItem(k, JSON.stringify(v)); } catch (e) { /* storage unavailable */ } }
+};
+const isTouch = window.matchMedia && window.matchMedia('(pointer: coarse)').matches;
+const state = { started: false, modal: null };
+
+/* ---------- content data (kept apart from game logic) ---------- */
+const CATS = [
+  { id: 'case',  name: '殼類', color: 0x4C9BE8 },
+  { id: 'film',  name: '膜類', color: 0x7B6CF0 },
+  { id: 'cable', name: '線材', color: 0xF2994A },
+  { id: 'power', name: '電源', color: 0xE5534B },
+  { id: 'audio', name: '音源', color: 0x3DB88A },
+  { id: 'stand', name: '支架', color: 0xD9A441 },
+  { id: 'fan',   name: '風扇', color: 0x36B6C9 },
+  { id: 'misc',  name: '雜項', color: 0x9AA5A8 }
+];
+const catById = {};
+CATS.forEach((c) => { c.css = '#' + c.color.toString(16).padStart(6, '0'); c.kind = (c.id === 'case' || c.id === 'film') ? 'wall' : 'cart'; catById[c.id] = c; });
+
+const DEFAULT_PHONES = [
+  { id: 'ip17', name: 'iPhone 17' },
+  { id: 'ip16', name: 'iPhone 16' },
+  { id: 'ip15', name: 'iPhone 15' },
+  { id: 's25',  name: 'Galaxy S25' },
+  { id: 'px9',  name: 'Pixel 9' }
+];
+// [category, name, brand, price, phone ('all' = fits any phone)]
+const DEFAULT_ROWS = [
+  ['case', '透明防摔殼', 'Zenor', 399, 'ip17'], ['case', '霧面矽膠殼', 'Mirel', 349, 'ip16'],
+  ['case', '磁吸保護殼', 'Kovia', 590, 'ip17'], ['case', '軍規防摔殼', 'Tavio', 450, 's25'],
+  ['case', '透明空壓殼', 'Zenor', 380, 'px9'], ['case', '皮革翻蓋殼', 'Norin', 520, 'ip15'],
+  ['film', '滿版玻璃貼', 'Plexa', 480, 'ip17'], ['film', '滿版玻璃貼', 'Plexa', 450, 'ip16'],
+  ['film', '霧面抗藍光貼', 'Plexa', 520, 's25'], ['film', '鏡頭保護貼', 'Kovia', 280, 'ip17'],
+  ['film', '螢幕保護貼', 'Plexa', 420, 'px9'], ['film', '防窺玻璃貼', 'Mirel', 560, 'ip15'],
+  ['cable', 'USB-C 對 USB-C 快充線 1m', 'Zenor', 250, 'all'], ['cable', 'USB-C 對 Lightning 線 1m', 'Kovia', 290, 'all'],
+  ['cable', '編織快充線 2m', 'Tavio', 350, 'all'], ['cable', '磁吸充電線', 'Norin', 420, 'all'],
+  ['cable', '三合一充電線', 'Brava', 380, 'all'], ['cable', '螺旋彈簧充電線', 'Mirel', 300, 'all'],
+  ['power', '20W 快充頭', 'Zenor', 350, 'all'], ['power', '65W 氮化鎵充電器', 'Kovia', 890, 'all'],
+  ['power', '10000mAh 行動電源', 'Brava', 750, 'all'], ['power', '20000mAh 行動電源', 'Tavio', 1090, 'all'],
+  ['power', '磁吸無線行動電源', 'Norin', 1290, 'all'], ['power', '多孔萬用充電座', 'Plexa', 690, 'all'],
+  ['audio', 'Type-C 有線耳機', 'Mirel', 390, 'all'], ['audio', '真無線藍牙耳機', 'Kovia', 1290, 'all'],
+  ['audio', '降噪藍牙耳機', 'Tavio', 2490, 'all'], ['audio', '頸掛式藍牙耳機', 'Norin', 790, 'all'],
+  ['audio', '小型藍牙喇叭', 'Brava', 990, 'all'], ['audio', '運動耳掛耳機', 'Zenor', 1190, 'all'],
+  ['stand', '桌上型手機支架', 'Plexa', 290, 'all'], ['stand', '車用出風口支架', 'Tavio', 350, 'all'],
+  ['stand', '車用磁吸支架', 'Kovia', 490, 'all'], ['stand', '可彎曲蛇形支架', 'Brava', 320, 'all'],
+  ['stand', '手機環扣支架', 'Mirel', 150, 'all'], ['stand', '自拍直播腳架', 'Norin', 690, 'all'],
+  ['fan', '手持小風扇', 'Zenor', 390, 'all'], ['fan', '頸掛式風扇', 'Kovia', 890, 'all'],
+  ['fan', '桌上型夾扇', 'Brava', 590, 'all'], ['fan', '手機散熱背夾', 'Tavio', 790, 'all'],
+  ['fan', '摺疊攜帶風扇', 'Norin', 450, 'all'], ['fan', 'USB 迷你風扇', 'Mirel', 190, 'all'],
+  ['misc', '手機吊繩', 'Mirel', 180, 'all'], ['misc', '防塵塞', 'Plexa', 90, 'all'],
+  ['misc', '清潔組', 'Zenor', 120, 'all'], ['misc', '手機收納包', 'Norin', 260, 'all'],
+  ['misc', '讀卡機', 'Kovia', 350, 'all'], ['misc', '防水袋', 'Brava', 220, 'all']
+];
+function defaultDB() {
+  return {
+    phones: DEFAULT_PHONES.map((p) => ({ id: p.id, name: p.name })),
+    products: DEFAULT_ROWS.map((r, i) => ({ id: 'd' + (i + 1), cat: r[0], name: r[1], brand: r[2], price: r[3], phone: r[4], note: '' }))
+  };
+}
+const DRAFT_KEY = 'store24.draft.v1';
+let db = defaultDB();
+const payloadOf = (d) => (d.wh && Object.keys(d.wh).length ? { v: 1, phones: d.phones, products: d.products, wh: d.wh } : { v: 1, phones: d.phones, products: d.products });
+let sharedStr = JSON.stringify(payloadOf(db));
+function saveDB() { if (isOwner) LS.set(DRAFT_KEY, db); }
+const phoneName = (id) => { const p = db.phones.find((x) => x.id === id); return p ? p.name : '通用'; };
+const vSplit = (v) => {
+  const m = /^(.*?)\s*([=＝+＋])\s*(\d{1,5})$/.exec(String(v));
+  if (m && m[1].trim()) return { l: m[1].trim(), mode: (m[2] === '=' || m[2] === '＝') ? 'abs' : 'add', n: +m[3] };
+  return { l: String(v).replace(/\s*[=＝+＋]\s*$/, '').trim(), mode: null, n: 0 };
+};
+const parseVals = (t) => {
+  const out = [], seen = new Set();
+  String(t || '').split(/[、,，\/\n]+/).forEach((x) => {
+    const o = vSplit(x.trim()); const l = o.l.slice(0, 14);
+    if (!l || seen.has(l)) return; seen.add(l);
+    out.push(o.mode === 'abs' ? l + '=' + o.n : o.mode === 'add' ? l + '+' + o.n : l);
+  });
+  return out.slice(0, 12);
+};
+const normOptions = (arr) => (Array.isArray(arr) ? arr : []).map((o) => ({ n: String((o && o.n) || '').trim().slice(0, 8) || '選項', v: parseVals(Array.isArray(o && o.v) ? o.v.join('、') : (o && o.v)) })).filter((o) => o.v.length).slice(0, 4);
+const optsFromLegacy = (p) => { const a = []; if (Array.isArray(p.variants) && p.variants.length) a.push({ n: '款式', v: p.variants }); if (Array.isArray(p.colors) && p.colors.length) a.push({ n: '顏色', v: p.colors }); return a; };
+const cloneOpts = (a) => (a || []).map((o) => ({ n: o.n, v: o.v.slice() }));
+const optLabel = (v) => { const o = vSplit(v); return o.l + (o.mode === 'abs' ? '  NT$' + o.n : o.mode === 'add' ? '  +' + o.n : ''); };
+const parseRules = (t) => {
+  const out = [];
+  String(t || '').split(/\n+/).forEach((line) => {
+    const m = /^(.*?)\s*[=＝]\s*(\d{1,5})\s*$/.exec(line.trim()); if (!m) return;
+    const toks = m[1].split(/[\/／]+/).map((x) => x.trim()).filter(Boolean);
+    if (toks.length) out.push(toks.join('/') + '=' + m[2]);
+  });
+  return out.slice(0, 200);
+};
+const ruleObj = (r) => { const i = r.lastIndexOf('='); return { t: r.slice(0, i).split('/'), n: +r.slice(i + 1) }; };
+function priceSpan(p, picks) {
+  const groups = (p.options || []).map((o, i) => (picks && picks[i] ? [picks[i]] : o.v));
+  const rules = (p.rules || []).map(ruleObj);
+  let lo = Infinity, hi = -Infinity;
+  const walk = (i, base, add, labels) => {
+    if (i === groups.length) {
+      let price = base + add, best = -1;
+      rules.forEach((r) => { if (r.t.length > best && r.t.every((t) => labels.indexOf(t) >= 0)) { best = r.t.length; price = r.n; } });
+      if (price < lo) lo = price; if (price > hi) hi = price;
+      return;
+    }
+    groups[i].forEach((v) => { const x = vSplit(v); walk(i + 1, x.mode === 'abs' ? x.n : base, add + (x.mode === 'add' ? x.n : 0), labels.concat(x.l)); });
+  };
+  walk(0, Number(p.price), 0, []);
+  return [lo, hi];
+}
+const dispName = (p, admin) => {
+  let n = p.name;
+  if (p.phone !== 'all') { const m = phoneName(p.phone); if (n.indexOf(m) < 0) n = n + ' ' + m; }
+  if (p.house) n = (admin ? '〔店名〕' : currentStoreName()) + ' ' + n;
+  return n;
+};
+let storeName = LS.get('store24.name', '') || '';
+
+/* ---------- save: finished days are kept in the browser, plus a code to carry to another device ---------- */
+const SAVE_KEY = 'store24.save';
+const blankInv = () => ({ stock: {}, draft: {}, sold: {}, today: {}, hist: [], wh: {}, cap: {}, sent: null, slip: null, up: null });
+const blankVip = () => ({ fav: { haggle: 0, ret: 0, ask: 0, reg: 0 }, pre: 0, paid: 0, regs: [], again: [], sold: [], recent: [], seen: {} });
+function cleanVip(o) {
+  const v = blankVip(); if (!o || typeof o !== 'object') return v;
+  ['haggle', 'ret', 'ask', 'reg'].forEach((k) => { v.fav[k] = Math.max(-5, Math.min(8, Math.floor(+(o.fav || {})[k] || 0))); });
+  v.pre = Math.max(0, Math.min(99, Math.floor(+o.pre || 0))); v.paid = Math.max(0, Math.min(999999, Math.floor(+o.paid || 0)));
+  v.regs = (Array.isArray(o.regs) ? o.regs : []).slice(0, 5).map((r) => ({ n: String(r.n || '').slice(0, 8), f: Math.max(-5, Math.min(12, Math.floor(+r.f || 0))), v: Math.max(0, Math.floor(+r.v || 0)), d: Math.max(0, Math.floor(+r.d || 0)), b: String(r.b || '').slice(0, 40), chat: !!r.chat, gift: Math.max(0, Math.floor(+r.gift || 0)) })).filter((r) => r.n);
+  v.again = (Array.isArray(o.again) ? o.again : []).slice(0, 4).map((a) => ({ due: Math.max(0, Math.floor(+a.due || 0)), n: String(a.n || '').slice(0, 40), off: Math.max(0, Math.floor(+a.off || 0)) })).filter((a) => a.off > 0);
+  v.sold = (Array.isArray(o.sold) ? o.sold : []).slice(-24).map((e) => ({ n: String(e.n || '').slice(0, 40), p: Math.max(0, Math.floor(+e.p || 0)), d: Math.floor(+e.d || 0), e: !!e.e, t: !!e.t })).filter((e) => e.n && e.p > 0);
+  v.recent = (Array.isArray(o.recent) ? o.recent : []).slice(0, 6).map((r) => ({ t: String(r.t || '').slice(0, 8), s: String(r.s || '').slice(0, 20) }));
+  if (o.seen && typeof o.seen === 'object') Object.keys(o.seen).slice(0, 40).forEach((k) => { const x = o.seen[k] || {}; v.seen[String(k).slice(0, 20)] = { n: Math.max(0, Math.min(999, Math.floor(+x.n || 0))), e: (Array.isArray(x.e) ? x.e : []).filter((t) => ['good', 'mid', 'bad', 'paid', 'call'].indexOf(t) >= 0).filter((t, i, a) => a.indexOf(t) === i) }; });
+  return v;
+}
+const blankSave = () => ({ vip: blankVip(), inv: blankInv(), v: 1, name: '', msgs: [], feed: [], soDay: 0, soArc: {}, soAns: {}, soFriend: {}, soSeen: { d: 0, k: [] }, phoneBest: 0, phoneTop: [], wallet: 1000, shop: { cart: {}, orders: [], bag: {} }, days: 0, tutorialDone: false, tips: {}, tipsOff: false, dust: null, zone: 0, mgrId: null, history: [] });
+const invNum = (v, mx) => Math.max(0, Math.min(mx || 9999, Math.floor(+v || 0)));
+function cleanInv(o) {
+  const inv = blankInv(); if (!o || typeof o !== 'object') return inv;
+  const map = (m, mx) => { const out = {}; if (m && typeof m === 'object') Object.keys(m).slice(0, 4000).forEach((k) => { if (k.length <= 80) out[k] = invNum(m[k], mx); }); return out; };
+  inv.cap = map(o.cap, 99999); inv.wh = map(o.wh, 9999); inv.sold = map(o.sold, 9999); inv.today = map(o.today, 9999);
+  inv.hist = (Array.isArray(o.hist) ? o.hist : []).slice(-90).map((h) => ({ d: invNum(h && h.d, 99999), s: map(h && h.s, 999) })).filter((h) => h.d > 0);
+  inv.stock = map(o.stock, 9999); inv.draft = map(o.draft, 999);
+  const lines = (a) => (Array.isArray(a) ? a : []).slice(0, 600).map((l) => ({ k: String(l.k || '').slice(0, 80), lab: String(l.lab || '').slice(0, 70), ord: invNum(l.ord, 999), got: invNum(l.got, 999), why: String(l.why || '').slice(0, 20) })).filter((l) => l.k);
+  if (o.up && typeof o.up === 'object') inv.up = { lines: (Array.isArray(o.up.lines) ? o.up.lines : []).slice(0, 200).map((l) => ({ lab: String(l.lab || '').slice(0, 60), qty: invNum(l.qty, 9999), cat: String(l.cat || '').slice(0, 12), s: !!l.s, d: !!l.d })).filter((l) => l.lab && l.qty > 0) };
+  if (inv.up && !inv.up.lines.length) inv.up = null;
+  if (o.sent && typeof o.sent === 'object') inv.sent = { sd: invNum(o.sent.sd, 99999), arrive: invNum(o.sent.arrive, 99999), lines: lines(o.sent.lines), here: !!o.sent.here };
+  if (o.slip && typeof o.slip === 'object') inv.slip = { sd: invNum(o.slip.sd, 99999), lines: lines(o.slip.lines) };
+  return inv;
+}
+function cleanSave(o) {
+  if (!o || typeof o !== 'object' || o.v !== 1) return null;
+  const s = blankSave();
+  s.days = Math.max(0, Math.min(9999, Math.floor(+o.days || 0)));
+  s.tutorialDone = !!o.tutorialDone; s.tipsOff = !!o.tipsOff; s.tips = {}; if (o.tips && typeof o.tips === 'object') Object.keys(o.tips).slice(0, 20).forEach((k) => { if (o.tips[k]) s.tips[String(k).slice(0, 12)] = 1; });
+  s.feed = (Array.isArray(o.feed) ? o.feed : []).slice(0, 40).map((f) => {
+    const x = { k: ['post', 'story', 'poll', 'news', 'ad', 'live', 'store'].indexOf(f.k) >= 0 ? f.k : 'post', c: String(f.c || '').slice(0, 40), n: String(f.n || '').slice(0, 12), t: String(f.t || '').slice(0, 90), e: String(f.e || '').slice(0, 4), ago: Math.max(0, Math.min(999, Math.floor(+f.ago || 0))), d: Math.max(0, Math.floor(+f.d || 0)), g: Math.max(0, Math.floor(+f.g || 0)), likes: Math.max(0, Math.min(9999, Math.floor(+f.likes || 0))), liked: !!f.liked, mine: !!f.mine, rx: !!f.rx, arc: String(f.arc || '').slice(0, 10), tone: String(f.tone || '').slice(0, 6) };
+    x.cm = (Array.isArray(f.cm) ? f.cm : []).slice(0, 8).map((m) => ({ n: String(m.n || '').slice(0, 12), t: String(m.t || '').slice(0, 60) })).filter((m) => m.n && m.t);
+    if (f.po && Array.isArray(f.po.o)) { const o2 = f.po.o.slice(0, 4).map((q) => String(q).slice(0, 14)); x.po = { o: o2, v: o2.map((q, qi) => Math.max(0, Math.min(9999, Math.floor(+(f.po.v || [])[qi] || 0)))), m: Math.max(-1, Math.min(3, Math.floor(f.po.m === undefined ? -1 : +f.po.m))) }; }
+    return x;
+  }).filter((f) => f.n && f.t);
+  s.soDay = Math.max(0, Math.floor(+o.soDay || 0));
+  s.soArc = {}; if (o.soArc && typeof o.soArc === 'object') Object.keys(o.soArc).slice(0, 12).forEach((k) => { s.soArc[String(k).slice(0, 10)] = Math.max(0, Math.min(9, Math.floor(+o.soArc[k] || 0))); });
+  s.soAns = {}; if (o.soAns && typeof o.soAns === 'object') Object.keys(o.soAns).slice(0, 12).forEach((k) => { s.soAns[String(k).slice(0, 10)] = Math.max(0, Math.min(3, Math.floor(+o.soAns[k] || 0))); });
+  s.soFriend = {}; if (o.soFriend && typeof o.soFriend === 'object') Object.keys(o.soFriend).slice(0, 30).forEach((k) => { s.soFriend[String(k).slice(0, 12)] = Math.max(0, Math.min(30, Math.floor(+o.soFriend[k] || 0))); });
+  s.soSeen = { d: Math.max(0, Math.floor(+(o.soSeen || {}).d || 0)), k: (Array.isArray((o.soSeen || {}).k) ? o.soSeen.k : []).slice(0, 8).map((x) => String(x).slice(0, 10)) };
+  s.msgs = (Array.isArray(o.msgs) ? o.msgs : []).slice(0, 60).map((m) => ({ id: Math.floor(+m.id || 0), from: String(m.from || '').slice(0, 20), text: String(m.text || '').slice(0, 120), t: String(m.t || '').slice(0, 8), d: Math.floor(+m.d || 0), read: true, co: !!m.co, ack: !!m.ack, sys: !!m.sys, replies: Array.isArray(m.replies) ? m.replies.slice(0, 3).map((r) => String(r).slice(0, 12)) : null, replied: m.replied === null || m.replied === undefined ? null : Math.floor(+m.replied) })).filter((m) => m.from && m.text);
+  s.name = typeof o.name === 'string' ? o.name.trim().slice(0, 8) : '';
+  if (o.dust && typeof o.dust === 'object') { s.dust = {}; Object.keys(o.dust).slice(0, 20).forEach((k) => { s.dust[String(k).slice(0, 12)] = Math.max(0, Math.min(50, Math.floor(+o.dust[k] || 0))); }); }
+  s.zone = Math.max(0, Math.min(20, Math.floor(+o.zone || 0)));
+  s.phoneBest = Math.max(0, Math.min(9999, Math.floor(+o.phoneBest || 0)));
+  s.phoneTop = (Array.isArray(o.phoneTop) ? o.phoneTop : []).slice(0, 5).map((r) => ({ s: Math.max(0, Math.min(9999, Math.floor(+r.s || 0))), d: Math.max(0, Math.floor(+r.d || 0)) })).filter((r) => r.s > 0).sort((a, b) => b.s - a.s);
+  if (!s.phoneTop.length && s.phoneBest) s.phoneTop = [{ s: s.phoneBest, d: 0 }];
+  s.inv = cleanInv(o.inv);
+  s.wallet = o.wallet == null ? 1000 : Math.max(0, Math.min(99999999, Math.floor(+o.wallet || 0)));
+  { const so = o.shop && typeof o.shop === 'object' ? o.shop : {}, qmap = (m, mx) => { const r = {}; if (m && typeof m === 'object') Object.keys(m).slice(0, 80).forEach((k) => { const q = Math.max(0, Math.min(mx, Math.floor(+m[k] || 0))); if (q) r[String(k).slice(0, 24)] = q; }); return r; };
+    s.shop = { cart: qmap(so.cart, 99), bag: qmap(so.bag, 999), orders: (Array.isArray(so.orders) ? so.orders : []).slice(-30).map((r) => ({ id: Math.max(1, Math.floor(+r.id || 1)), items: qmap(r.items, 99), total: Math.max(0, Math.floor(+r.total || 0)), d: Math.max(0, Math.floor(+r.d || 0)), arrive: Math.max(0, Math.floor(+r.arrive || 0)), got: !!r.got, seen: !!r.seen })).filter((r) => Object.keys(r.items).length) }; }
+  s.vip = cleanVip(o.vip);
+  s.mgrId = typeof o.mgrId === 'string' ? o.mgrId.slice(0, 12) : null;
+  s.history = (Array.isArray(o.history) ? o.history : []).slice(-30).map((r) => ({ d: Math.floor(+r.d || 0), rev: Math.max(0, Math.floor(+r.rev || 0)), n: Math.max(0, Math.floor(+r.n || 0)), stars: Math.max(0, Math.min(5, +r.stars || 0)), acc: Math.max(0, Math.min(100, Math.floor(+r.acc || 0))), sg: !!r.sg, sig: typeof r.sig === 'string' && /^[ML0-9. \-]{0,2400}$/.test(r.sig) ? r.sig : '' }));
+  return s;
+}
+let SAVE = cleanSave(LS.get(SAVE_KEY, null)) || blankSave();
+const saveGame = () => LS.set(SAVE_KEY, SAVE);
+const encodeSave = () => 'S24-' + btoa(unescape(encodeURIComponent(JSON.stringify(SAVE))));
+function decodeSave(code) {
+  try { return cleanSave(JSON.parse(decodeURIComponent(escape(atob(String(code).trim().replace(/^S24-/, '')))))); } catch (e) { return null; }
+}
+function saveInfoText() {
+  if (!SAVE.days) return '新遊戲:第一天是教學日,客人少,會有提示。';
+  const hs = SAVE.history.filter((r) => r.stars > 0), avg = hs.length ? hs.reduce((a, r) => a + r.stars, 0) / hs.length : 0;
+  return '已營業 ' + SAVE.days + ' 天' + (avg ? ' · 平均評價 ' + avg.toFixed(1) + ' ★' : '') + ' · 下一天是第 ' + (SAVE.days + 1) + ' 天';
+}
+
+/* ---------- inventory: stock is counted per product variant, as one total (shelf + under the carts) ---------- */
+const WD = ['週一', '週二', '週三', '週四', '週五', '週六', '週日'];
+const wdOf = (d) => ((d - 1) % 7 + 7) % 7;
+const invKey = (p, picks) => p.id + '|' + (picks || []).join('/');
+function variantsOf(p) {
+  let combos = [[]];
+  (p.options || []).forEach((o) => { const next = []; combos.forEach((c) => (o.v || []).forEach((v) => { if (next.length < 40) next.push(c.concat([v])); })); if (next.length) combos = next; });
+  return combos;
+}
+/* expected sales per week of one variant: ~220 items a week split by category weight, then over that category's variants */
+const INV_CATW = { case: 18, film: 17, cable: 18, power: 12, audio: 10, fan: 6, stand: 8, misc: 9 };
+let invDemandCache = null;
+function invDemand(p) {
+  if (!invDemandCache || invDemandCache.n !== db.products.length) {
+    const cnt = {}, tot = {}; db.products.forEach((q) => { cnt[q.cat] = (cnt[q.cat] || 0) + variantsOf(q).length; }); const sumw = Object.keys(cnt).reduce((a, k) => a + (INV_CATW[k] || 8), 0) || 1;
+    invDemandCache = { n: db.products.length, cnt: cnt, sumw: sumw };
+  }
+  const c = invDemandCache, share = (INV_CATW[p.cat] || 8) / c.sumw;
+  return Math.max(0.3, 220 * share / Math.max(1, c.cnt[p.cat] || 1));
+}
+const invInit = (p) => { const cap = p.price >= 1000 ? 4 : p.price >= 500 ? 8 : 14; return Math.max(2, Math.min(cap, Math.round(invDemand(p) * (0.9 + Math.random() * 0.7)))); };   // new items: the company allocates about a week of stock
+function invStockK(key, p) { const I = SAVE.inv; if (!(key in I.stock)) I.stock[key] = p ? invInit(p) : 0; return I.stock[key]; }
+const invStock = (p, picks) => invStockK(invKey(p, picks), p);
+function invAdd(p, picks, n) { const k = invKey(p, picks), cur = invStockK(k, p); SAVE.inv.stock[k] = Math.max(0, cur + n); }
+const hrand = (str) => { let h = 2166136261; for (let i = 0; i < str.length; i++) { h ^= str.charCodeAt(i); h = Math.imul(h, 16777619); } h ^= h >>> 13; h = Math.imul(h, 0x5bd1e995); h ^= h >>> 15; return (h >>> 0) / 4294967296; };
+/* the company warehouse is simulated: what is left this week after all the other branches ordered */
+const whAdded = (key) => (db.wh && db.wh[key]) || 0;   // stock the owner added to the company warehouse by hand (part of the published shop data, so every player gets it)
+function whQty(p, key, week) {
+  const avail = p.avail != null && p.avail !== '' ? Math.max(0, Math.min(100, +p.avail)) / 100 : 0.93;
+  let base = 0;
+  if (hrand(p.id + '#b' + week) < avail) {   // otherwise the company simply has none of this item this week
+    const cap = p.supply != null && p.supply !== '' ? Math.max(0, +p.supply) : Math.max(4, Math.round(invDemand(p) * 2.5));
+    base = cap <= 0 ? 0 : Math.max(1, Math.round(cap * (0.3 + 0.7 * hrand(key + '#a' + week))));
+  }
+  return base + whAdded(key);
+}
+function salesIn(key, days, curDay) {   // units sold in the last `days` days, today included
+  const I = SAVE.inv; let n = I.today[key] || 0;
+  I.hist.forEach((h) => { if (h.d > curDay - days && h.d < curDay) n += h.s[key] || 0; });
+  return n;
+}
+const prodOfKey = (key) => db.products.find((p) => p.id === key.split('|')[0]);
+const invLabel = (p, picks) => dispName(p) + (picks && picks.length ? '・' + picks.filter(Boolean).map((v) => vSplit(v).l).join('・') : '');
+const picksOfKey = (p, key) => { const rest = key.slice(p.id.length + 1); const vs = variantsOf(p); const hit = vs.find((c) => c.join('/') === rest); return hit || []; };
+
+/* ---------- toast ---------- */
+let toastTimer = 0;
+function toast(msg) {
+  const t = $('#toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove('show'), 2400);
+}
+
+/* ---------- shelf window ---------- */
+let gameApi = null;
+const shelf = { cat: '', q: '', groups: [] };
+function buildGroups(catId) {
+  const map = new Map();
+  db.products.filter((p) => p.cat === catId).forEach((p) => {
+    const k = p.name + '|' + (p.house ? '#house' : p.brand);
+    if (!map.has(k)) map.set(k, { key: k, name: p.name, brand: p.brand, house: !!p.house, items: [], open: false, pid: '', sel: [] });
+    map.get(k).items.push(p);
+  });
+  const gs = Array.from(map.values());
+  gs.forEach((g) => { if (g.items.length === 1) g.pid = g.items[0].id; });
+  return gs;
+}
+const grpTitle = (g) => (g.house ? currentStoreName() + ' ' : '') + g.name;
+function grpHay(g) {
+  let t = grpTitle(g) + ' ' + (g.house ? '店家自有品牌' : g.brand);
+  g.items.forEach((p) => { t += ' ' + (p.phone === 'all' ? '通用' : phoneName(p.phone)) + ' ' + (p.options || []).map((o) => o.n + ' ' + o.v.map((v) => vSplit(v).l).join(' ')).join(' '); });
+  return t.toLowerCase();
+}
+function grpPrice(g) {
+  const sel = g.items.find((p) => p.id === g.pid);
+  const fmt = (n) => Number(n).toLocaleString('en-US');
+  let lo, hi;
+  if (sel) { const r = priceSpan(sel, g.sel); lo = r[0]; hi = r[1]; }
+  else { const rs = g.items.map((p) => priceSpan(p, [])); lo = Math.min.apply(null, rs.map((r) => r[0])); hi = Math.max.apply(null, rs.map((r) => r[1])); }
+  return lo === hi ? 'NT$ ' + fmt(lo) : 'NT$ ' + fmt(lo) + ' – ' + fmt(hi);
+}
+function renderShelfGrid() {
+  const toks = shelf.q.toLowerCase().split(/\s+/).filter(Boolean);
+  const list = shelf.groups.filter((g) => { const h = grpHay(g); return toks.every((t) => h.indexOf(t) >= 0); });
+  const el = $('#shelfGrid');
+  if (!list.length) { el.innerHTML = '<div class="empty">' + (shelf.groups.length ? '找不到符合「' + esc(shelf.q) + '」的商品。' : '這個區域目前沒有商品。到「商品管理」新增。') + '</div>'; return; }
+  el.innerHTML = '<div class="grid">' + list.map((g) => {
+    const gi = shelf.groups.indexOf(g);
+    const sel = g.items.find((p) => p.id === g.pid);
+    const needModel = g.items.length > 1 || g.items[0].phone !== 'all';
+    let tags = g.items.length > 1 ? '<span class="pill on">' + g.items.length + ' 種型號 ▾</span>' : (g.items[0].phone === 'all' ? '<span class="pill">通用</span>' : '<span class="pill on">' + esc(phoneName(g.items[0].phone)) + '</span>');
+    ((sel || g.items[0]).options || []).forEach((o) => { tags += ' <span class="pill on">' + o.v.length + ' 種' + esc(o.n) + ' ▾</span>'; });
+    let opts = '';
+    if (g.open) {
+      if (needModel && g.items.length > 1) {
+        opts += '<div class="olab">1. 選型號</div><div class="vars">' + g.items.map((p) => '<button class="chipbtn" type="button" data-gi="' + gi + '" data-pick="p" data-v="' + esc(p.id) + '" aria-pressed="' + (g.pid === p.id) + '">' + esc(p.phone === 'all' ? '通用' : phoneName(p.phone)) + '</button>').join('') + '</div>';
+      }
+      if (sel) {
+        let step = g.items.length > 1 ? 1 : 0;
+        (sel.options || []).forEach((o, oi) => {
+          step++;
+          opts += '<div class="olab">' + (step > 1 || (sel.options || []).length > 1 ? step + '. ' : '') + '選' + esc(o.n) + '</div><div class="vars">' + o.v.map((v) => '<button class="chipbtn" type="button" data-gi="' + gi + '" data-pick="o" data-oi="' + oi + '" data-v="' + esc(v) + '" aria-pressed="' + (g.sel[oi] === v) + '">' + esc(optLabel(v)) + '</button>').join('') + '</div>';
+        });
+      }
+      if (!sel && g.items.length > 1) opts += '<div class="olab hint">請先選型號</div>';
+      if (sel) opts += '<div class="olab hint">已選:' + esc(dispName(sel) + g.sel.filter(Boolean).map((v) => ' ' + vSplit(v).l).join('')) + '</div>';
+    }
+    const expandable = g.items.length > 1 || (g.items[0].options || []).length;
+    if ((g.open || !expandable) && sel && (sel.options || []).every((o, oi) => g.sel[oi])) opts += '<div class="btn-row" style="margin-top:6px"><button class="btn primary small takebtn" type="button" data-gi="' + gi + '" data-pick="take">拿這個商品</button></div>';
+    return '<div class="card' + (expandable ? ' hasvar' : '') + (g.open ? ' open' : '') + '" data-gi="' + gi + '"><div class="nm">' + esc(grpTitle(g)) + '</div><div class="br">' + esc(g.house ? '店家自有品牌' : g.brand) + '</div><div class="tags">' + tags + '</div>' + opts + '<div class="pr">' + grpPrice(g) + '</div></div>';
+  }).join('') + '</div>';
+}
+document.addEventListener('click', (e) => {
+  if (!e.target.closest('#shelfBody')) return;
+  const chip = e.target.closest('.chipbtn[data-gi], .takebtn[data-gi]');
+  if (chip) {
+    const g = shelf.groups[+chip.dataset.gi]; if (!g) return;
+    if (chip.dataset.pick === 'take') { if (gameApi) gameApi.take(g); else toast('開店後才能拿取商品'); return; }
+    if (chip.dataset.pick === 'p') { g.pid = chip.dataset.v; g.sel = []; } else { const oi = +chip.dataset.oi; g.sel[oi] = g.sel[oi] === chip.dataset.v ? '' : chip.dataset.v; }
+    renderShelfGrid(); return;
+  }
+  const card = e.target.closest('.card.hasvar');
+  if (card) { const g = shelf.groups[+card.dataset.gi]; if (g) { g.open = !g.open; renderShelfGrid(); } }
+});
+document.addEventListener('input', (e) => {
+  if (e.target && e.target.id === 'shelfSearch') { shelf.q = e.target.value; renderShelfGrid(); }
+});
+let shelfWantFn = null;   // set by the game: what the customer at the counter is asking for
+function openShelf(catId) {
+  const cat = catById[catId];
+  shelf.cat = catId; shelf.q = ''; shelf.groups = buildGroups(catId);
+  $('#shelfTitle').innerHTML = '<span class="dot" style="background:' + cat.css + '"></span>' + esc(cat.name) + (cat.kind === 'wall' ? '陳列牆' : '花車') + ' <span class="sub">共 ' + shelf.groups.length + ' 款</span>';
+  let want = ''; try { want = shelfWantFn ? shelfWantFn() : ''; } catch (e) { want = ''; }
+  $('#shelfBody').innerHTML = (want ? '<div class="want shelfwant"><span class="co-l">客人要找</span><div>' + want + '</div></div>' : '') + '<label class="field shelfq" for="shelfSearch"><span class="sr">查詢商品</span><input id="shelfSearch" type="search" placeholder="查詢:品名、品牌、型號、顏色" autocomplete="off"></label><div id="shelfGrid"></div><p class="sheet-foot">客人來了之後,在這裡選出客人要的商品。先選型號,再選款式或顏色。</p>';
+  renderShelfGrid();
+  $('#shelf').hidden = false;
+  state.modal = 'shelf';
+  $('#shelfClose').focus();
+}
+function closeShelf() { $('#shelf').hidden = true; if (state.modal === 'shelf') state.modal = null; }
+$('#shelfClose').addEventListener('click', closeShelf);
+$('#shelf').addEventListener('pointerdown', (e) => { if (e.target === $('#shelf')) closeShelf(); });
+
+/* ---------- admin ---------- */
+const adm = { tab: 'products', filter: 'all', editing: null, confirm: '', msg: '', backupText: '', sel: new Set(), phAdd: '', phSel: new Set(), pubMsg: '', publishing: false };
+function openAdmin() {
+  if (!isOwner) return;
+  $('#admin').hidden = false;
+  state.modal = 'admin';
+  renderAdmin();
+  $('#adminClose').focus();
+}
+function closeAdmin() { $('#admin').hidden = true; if (state.modal === 'admin') state.modal = null; adm.editing = null; adm.confirm = ''; adm.msg = ''; }
+$('#adminClose').textContent = '回遊戲'; $('#adminClose').addEventListener('click', () => { location.href = 'index.html'; });
+
+/* ---------- 總公司管理: things that belong to the company side (supply per product, the warehouse); more can be added here later ---------- */
+const hq = { q: '', cat: 'all', rows: [], prods: [] };
+const hqDay = () => (gameApi && gameApi.dayNo && gameApi.dayNo()) || (SAVE.days + 1);
+function hqTablesHTML() {
+  const toks = hq.q.toLowerCase().split(/\s+/).filter(Boolean), wk = Math.floor((hqDay() - 1) / 7);
+  const prods = db.products.filter((p) => (hq.cat === 'all' || p.cat === hq.cat) && toks.every((t) => (dispName(p) + ' ' + (p.brand || '')).toLowerCase().indexOf(t) >= 0));
+  hq.prods = prods.slice(0, 50);
+  let h = '<h3 style="margin:10px 0 4px">每週供貨設定</h3><p class="inv-note">公司每週最多能出多少、這週有沒有貨。留空就自動(依預估銷量、約 93% 的週數有貨)。有貨機率填 0 代表公司不出這項商品。這些設定屬於商品資料,要按上方「發布給所有玩家」才會讓大家生效。</p><table class="inv-tbl"><thead><tr><th>商品</th><th class="n">每週供貨上限</th><th class="n">有貨機率 %</th></tr></thead><tbody>' +
+    hq.prods.map((p, i) => '<tr><td>' + esc(dispName(p, true)) + '</td><td class="n"><input type="number" min="0" max="999" step="1" style="width:84px" data-hqf="supply" data-i="' + i + '" placeholder="自動" value="' + esc(p.supply == null ? '' : p.supply) + '"></td><td class="n"><input type="number" min="0" max="100" step="1" style="width:84px" data-hqf="avail" data-i="' + i + '" placeholder="自動" value="' + esc(p.avail == null ? '' : p.avail) + '"></td></tr>').join('') + '</tbody></table>' + (prods.length > 50 ? '<div class="inv-note">只顯示前 50 項,共 ' + prods.length + ' 項。</div>' : '');
+  const rows = [];
+  prods.slice(0, 30).forEach((p) => variantsOf(p).forEach((picks) => { if (rows.length < 80) rows.push({ p: p, picks: picks, key: invKey(p, picks) }); }));
+  hq.rows = rows;
+  h += '<h3 style="margin:16px 0 4px">公司倉庫進貨(手動)</h3><p class="inv-note">幫公司倉庫補貨,讓玩家這週可以叫到更多。補的量加在這個規格每週的公司供貨上,不會用完就消失,要取消就減回 0。表中「這週倉庫」是目前遊戲週(第 ' + (wk + 1) + ' 週)的量。跟供貨設定一樣,要按上方「發布給所有玩家」才會讓大家生效。</p><table class="inv-tbl"><thead><tr><th>商品規格</th><th class="n">這週倉庫</th><th class="n">其中手動進貨(每週)</th><th class="n">進貨</th></tr></thead><tbody>' +
+    rows.map((r, i) => { const add = whAdded(r.key); return '<tr><td>' + esc(invLabel(r.p, r.picks)) + '</td><td class="n">' + whQty(r.p, r.key, wk) + '</td><td class="n">' + add + '</td><td class="n"><span class="inv-q"><button class="btn small" type="button" data-hq="wm5" data-i="' + i + '">−5</button><button class="btn small" type="button" data-hq="wp5" data-i="' + i + '">+5</button><button class="btn small" type="button" data-hq="wp20" data-i="' + i + '">+20</button></span></td></tr>'; }).join('') + '</tbody></table>' + (rows.length >= 80 ? '<div class="inv-note">只顯示前 80 筆,請用搜尋縮小範圍。</div>' : '');
+  return h;
+}
+function hqHTML() {
+  return '<div class="inv-bar" style="margin-top:8px"><input id="hqQ" type="search" placeholder="搜尋商品、品牌" value="' + esc(hq.q) + '"><select id="hqCat"><option value="all">全部分類</option>' + CATS.map((c) => '<option value="' + c.id + '"' + (hq.cat === c.id ? ' selected' : '') + '>' + esc(c.name) + '</option>').join('') + '</select></div><div id="hqTables">' + hqTablesHTML() + '</div>';
+}
+document.addEventListener('input', (e) => { if (e.target && e.target.id === 'hqQ') { hq.q = e.target.value; const el = $('#hqTables'); if (el) el.innerHTML = hqTablesHTML(); } });
+document.addEventListener('change', (e) => {
+  const t = e.target; if (!t) return;
+  if (t.id === 'hqCat') { hq.cat = t.value; const el = $('#hqTables'); if (el) el.innerHTML = hqTablesHTML(); return; }
+  if (t.dataset && t.dataset.hqf) {
+    const p = hq.prods[+t.dataset.i]; if (!p) return;
+    const v = String(t.value).trim(), mx = t.dataset.hqf === 'avail' ? 100 : 999;
+    if (v === '') delete p[t.dataset.hqf]; else if (isFinite(+v)) p[t.dataset.hqf] = Math.max(0, Math.min(mx, Math.floor(+v))); else return;
+    afterChange(); renderAdmin();
+  }
+});
+document.addEventListener('click', (e) => {
+  const b = e.target && e.target.closest && e.target.closest('[data-hq]'); if (!b) return;
+  const r = hq.rows[+b.dataset.i]; if (!r) return;
+  const d = b.dataset.hq === 'wm5' ? -5 : b.dataset.hq === 'wp20' ? 20 : 5;
+  if (!db.wh) db.wh = {}; db.wh[r.key] = Math.max(0, whAdded(r.key) + d); if (!db.wh[r.key]) delete db.wh[r.key];
+  afterChange(); renderAdmin(); const el = $('#hqTables'); if (el) el.innerHTML = hqTablesHTML();
+});
+function renderTabs() {
+  const tabs = [['products', '商品'], ['phones', '手機型號'], ['hq', '總公司管理'], ['backup', '備份與還原']];
+  $('#adminTabs').innerHTML = tabs.map((t) => '<button class="tab" role="tab" type="button" data-act="tab" data-v="' + t[0] + '" aria-selected="' + (adm.tab === t[0]) + '">' + t[1] + '</button>').join('');
+}
+function isDirty() { return JSON.stringify(payloadOf(db)) !== sharedStr; }
+function pubHTML() {
+  const d = isDirty();
+  return '<div class="pub' + (d ? ' dirty' : '') + '"><div class="pubtxt">' + (adm.pubMsg ? esc(adm.pubMsg) : (d ? '你有尚未發布的修改,只有你自己看得到。' : '目前內容與所有玩家看到的一致。')) + '</div>' +
+    '<button class="btn primary small" type="button" data-act="publish"' + ((!d || adm.publishing) ? ' disabled' : '') + '>' + (adm.publishing ? '發布中…' : '發布給所有玩家') + '</button></div>';
+}
+function renderAdmin() {
+  renderTabs();
+  const body = $('#adminBody');
+  let h;
+  if (adm.tab === 'products') h = productsHTML();
+  else if (adm.tab === 'phones') h = phonesHTML();
+  else if (adm.tab === 'hq') h = hqHTML();
+  else h = backupHTML();
+  body.innerHTML = pubHTML() + h;
+}
+async function publishShared() {
+  if (!isOwner || adm.publishing || !isDirty()) return;
+  const str = JSON.stringify(payloadOf(db));
+  adm.publishing = true; adm.pubMsg = ''; renderAdmin();
+  try {
+    const art = await window.claude.use('artifact');
+    await art.publish({ 'products.json': { content: str, contentType: 'application/json' } });
+    sharedStr = str; adm.pubMsg = '已發布,所有玩家重新整理後會看到新商品。'; toast('已發布給所有玩家');
+  } catch (e) {
+    const c = e && e.code;
+    adm.pubMsg = c === 'conflict' ? '發布失敗:內容已被別處更新,請重新整理頁面後再改。'
+      : c === 'rate_limited' ? '發布太頻繁,請稍等一下再試。'
+      : '無法直接發布。請到「備份與還原」複製文字貼給 Claude,由 Claude 更新。';
+  }
+  adm.publishing = false; renderAdmin();
+}
+function curList() { return db.products.filter((p) => adm.filter === 'all' || p.cat === adm.filter); }
+function selBarHTML(list) {
+  const n = adm.sel.size, all = list.length && list.every((p) => adm.sel.has(p.id));
+  const armed = adm.confirm === 'bulk';
+  return '<button class="btn small" type="button" data-act="selall">' + (all ? '取消全選' : '全選(' + list.length + ')') + '</button>' +
+    '<span class="spacer"></span><span class="selcnt">' + (n ? '已選 ' + n + ' 項' : '') + '</span>' +
+    '<button class="btn small danger' + (armed ? ' armed' : '') + '" type="button" data-act="delsel"' + (n ? '' : ' disabled') + '>' + (armed ? '確定刪除 ' + n + ' 項?' : '刪除選取') + '</button>';
+}
+function refreshSelBar() { const el = $('#selbar'); if (el) el.innerHTML = selBarHTML(curList()); }
+function productsHTML() {
+  const list = db.products.filter((p) => adm.filter === 'all' || p.cat === adm.filter);
+  let h = '<div class="bar"><div class="chips">';
+  h += '<button class="chipbtn" type="button" data-act="filter" data-v="all" aria-pressed="' + (adm.filter === 'all') + '">全部 ' + db.products.length + '</button>';
+  CATS.forEach((c) => {
+    const n = db.products.filter((p) => p.cat === c.id).length;
+    h += '<button class="chipbtn" type="button" data-act="filter" data-v="' + c.id + '" aria-pressed="' + (adm.filter === c.id) + '">' + esc(c.name) + ' ' + n + '</button>';
+  });
+  h += '</div><span class="spacer"></span><button class="btn primary small" type="button" data-act="new">新增商品</button></div>';
+  if (adm.editing) h += formHTML(adm.editing);
+  if (list.length) h += '<div class="bar selbar" id="selbar">' + selBarHTML(list) + '</div>';
+  if (!list.length) h += '<div class="empty">這個類別還沒有商品。</div>';
+  list.forEach((p) => {
+    const c = catById[p.cat];
+    const armed = adm.confirm === p.id;
+    h += '<div class="row"><label class="pick"><input type="checkbox" data-act="pick" data-id="' + esc(p.id) + '"' + (adm.sel.has(p.id) ? ' checked' : '') + ' aria-label="選取 ' + esc(dispName(p, true)) + '"></label><div class="main"><div class="nm">' + esc(dispName(p, true)) + '</div><div class="meta"><span><span class="dot" style="display:inline-block;width:9px;height:9px;background:' + c.css + ';margin-right:5px"></span>' + esc(c.name) + '</span><span>' + (p.house ? '貼牌' : esc(p.brand)) + '</span>' + ((p.options || []).map((o) => '<span>' + esc(o.n + ':' + o.v.join('、')) + '</span>').join('') + ((p.rules || []).length ? '<span>' + p.rules.length + ' 條組合價格</span>' : '')) + '<span>' + (p.phone === 'all' ? '通用' : esc(phoneName(p.phone))) + '</span></div></div>';
+    h += '<div class="price">NT$ ' + Number(p.price).toLocaleString('en-US') + '</div><div class="acts"><button class="btn small" type="button" data-act="edit" data-id="' + esc(p.id) + '">編輯</button>';
+    h += '<button class="btn small danger' + (armed ? ' armed' : '') + '" type="button" data-act="del" data-id="' + esc(p.id) + '">' + (armed ? '確定刪除?' : '刪除') + '</button></div></div>';
+  });
+  return h;
+}
+const sibsOf = (p) => db.products.filter((x) => x.cat === p.cat && x.name === p.name && x.brand === p.brand && !!x.house === !!p.house);
+function phChecks(f) {
+  const sel = f.phones || [];
+  const opt = (v, label) => '<label class="chk"><input type="checkbox" name="f_ph" value="' + esc(v) + '"' + (sel.indexOf(v) >= 0 ? ' checked' : '') + '><span>' + esc(label) + '</span></label>';
+  return '<fieldset class="field wide phset"><legend>適用手機(可複選,每個勾選的型號會各新增一項)</legend><div class="bar" style="margin-bottom:8px"><button class="btn small" type="button" data-act="phall">全選手機型號</button><button class="btn small" type="button" data-act="phnone">全部取消</button></div><div class="chks">' + opt('all', '通用') + db.phones.map((p) => opt(p.id, p.name)).join('') + '</div></fieldset>';
+}
+function optsEditor(f) {
+  const ops = f.opts || [];
+  let h = '<fieldset class="field wide phset"><legend>選項(選填):長度、規格、顏色等,每組選項客人要各選一個。內容用頓號或逗號分隔;後面加「=價格」代表改成這個價格,加「+金額」代表加價</legend>';
+  ops.forEach((o, i) => {
+    h += '<div class="optg"><input class="optn" type="text" maxlength="8" placeholder="名稱,例如:長度" aria-label="選項名稱" value="' + esc(o.n) + '"><input class="optv" type="text" maxlength="160" placeholder="例如:1m=250、2m=350" aria-label="選項內容" value="' + esc(o.vt) + '"><button class="btn small danger" type="button" data-act="optdel" data-i="' + i + '">移除</button></div>';
+  });
+  if (ops.length < 4) h += '<div class="bar"><span class="selcnt">新增選項組:</span>' + ['長度', '規格', '顏色', '其他'].map((n) => '<button class="btn small" type="button" data-act="optadd" data-n="' + (n === '其他' ? '' : n) + '">' + n + '</button>').join('') + '</div>';
+  if (ops.length > 1 || (f.rulesText || '')) h += '<label class="field" for="f_rules" style="margin-top:8px">組合價格(選填):不同選項搭配有不同價格時,每行一條,選項之間用 / 分開<textarea id="f_rules" rows="4" placeholder="例如:&#10;Lightning-USB/120cm=290&#10;Lightning-USB/200cm=390&#10;Lightning-TypeC/120cm=325">' + esc(f.rulesText || '') + '</textarea></label>';
+  return h + '</fieldset>';
+}
+const supplyOf = (p) => { const o = {}; if (p && p.supply != null && p.supply !== '' && isFinite(+p.supply)) o.supply = Math.max(0, Math.min(999, Math.floor(+p.supply))); if (p && p.avail != null && p.avail !== '' && isFinite(+p.avail)) o.avail = Math.max(0, Math.min(100, Math.floor(+p.avail))); return o; };
+function readOpts() { return Array.from(document.querySelectorAll('#prodForm .optg')).map((g) => ({ n: g.querySelector('.optn').value, vt: g.querySelector('.optv').value })); }
+function captureForm() {
+  const f = adm.editing; if (!f || !$('#f_name')) return;
+  Object.assign(f, { name: $('#f_name').value.trim(), brand: $('#f_brand').value.trim(), price: $('#f_price').value.trim(), cat: $('#f_cat').value, house: $('#f_house').checked, opts: readOpts(), rulesText: $('#f_rules') ? $('#f_rules').value : (f.rulesText || ''), applyAll: !!($('#f_all') && $('#f_all').checked), addPh: Array.from(document.querySelectorAll('input[name="f_addph"]:checked')).map((x) => x.value) });
+  if (f.id) f.phone = $('#f_phone').value; else f.phones = Array.from(document.querySelectorAll('input[name="f_ph"]:checked')).map((x) => x.value);
+}
+function formHTML(f) {
+  const catOpts = CATS.map((c) => '<option value="' + c.id + '"' + (f.cat === c.id ? ' selected' : '') + '>' + esc(c.name) + '</option>').join('');
+  const phOpts = '<option value="all"' + (f.phone === 'all' ? ' selected' : '') + '>通用(任何手機)</option>' + db.phones.map((p) => '<option value="' + esc(p.id) + '"' + (f.phone === p.id ? ' selected' : '') + '>' + esc(p.name) + '</option>').join('');
+  return '<form class="form" id="prodForm" novalidate>' +
+    '<label class="field wide" for="f_name">商品名稱<input id="f_name" type="text" maxlength="40" value="' + esc(f.name) + '"></label>' +
+    '<label class="field" for="f_brand">品牌(虛構)<input id="f_brand" type="text" maxlength="20" value="' + esc(f.brand) + '"' + (f.house ? ' disabled' : '') + '></label>' +
+    '<label class="field" for="f_price">價格(NT$)<input id="f_price" type="number" min="0" max="99999" step="1" inputmode="numeric" value="' + esc(f.price) + '"></label>' +
+    '<label class="chk wide" for="f_house"><input id="f_house" type="checkbox" data-act="house"' + (f.house ? ' checked' : '') + '><span>貼牌商品:品名前自動加上玩家設定的店名</span></label>' +
+    '<label class="field" for="f_cat">商品類別<select id="f_cat">' + catOpts + '</select></label>' +
+    optsEditor(f) +
+    (function () {
+      if (!f.id) return '';
+      const o = db.products.find((x) => x.id === f.id); const n = o ? sibsOf(o).length : 1;
+      return n > 1 ? '<label class="chk wide" for="f_all"><input id="f_all" type="checkbox"' + (f.applyAll ? ' checked' : '') + '><span>套用到同款的全部 ' + n + ' 項(所有型號):品名、品牌、類別、價格、選項、貼牌</span></label>' : '';
+    })() +
+    (f.id ? '<label class="field" for="f_phone">適用手機<select id="f_phone">' + phOpts + '</select></label>' : phChecks(f)) +
+    (function () {
+      if (!f.id) return '';
+      const o = db.products.find((x) => x.id === f.id); if (!o) return '';
+      const have = new Set(sibsOf(o).map((x) => x.phone));
+      const miss = [{ id: 'all', name: '通用' }].concat(db.phones).filter((p) => !have.has(p.id));
+      if (!miss.length) return '';
+      const sel = f.addPh || [];
+      return '<fieldset class="field wide phset"><legend>替這個品項新增其他型號(勾選的型號會各新增一項,內容沿用上面的設定)</legend><div class="bar" style="margin-bottom:8px"><button class="btn small" type="button" data-act="addphall">全選未有的型號</button><button class="btn small" type="button" data-act="addphnone">全部取消</button></div><div class="chks">' +
+        miss.map((p) => '<label class="chk"><input type="checkbox" name="f_addph" value="' + esc(p.id) + '"' + (sel.indexOf(p.id) >= 0 ? ' checked' : '') + '><span>' + esc(p.name) + '</span></label>').join('') + '</div></fieldset>';
+    })() +
+    '<div class="wide err" id="f_err">' + esc(adm.msg) + '</div>' +
+    '<div class="wide btn-row"><button class="btn primary" type="submit" data-act="save">' + (f.id ? '儲存修改' : '新增') + '</button><button class="btn" type="button" data-act="cancel">取消</button></div></form>';
+}
+function groupsLacking(phoneId) {
+  const map = new Map();
+  db.products.forEach((x) => { const k = x.cat + '|' + x.name + '|' + (x.house ? '#h' : x.brand); if (!map.has(k)) map.set(k, []); map.get(k).push(x); });
+  const out = [];
+  map.forEach((items, k) => { if (items.some((x) => x.phone !== 'all') && !items.some((x) => x.phone === phoneId)) out.push({ key: k, items: items }); });
+  return out;
+}
+function phAddPanel(p) {
+  const gs = groupsLacking(p.id);
+  let h = '<div class="phpanel"><div class="bar"><strong>' + esc(p.name) + '</strong><span class="spacer"></span><button class="btn small" type="button" data-act="phnew" data-id="' + esc(p.id) + '">建立全新商品</button></div>';
+  if (!gs.length) return h + '<div class="empty">現有的商品都已經有這個型號了。要新增全新的商品,按上方「建立全新商品」。</div></div>';
+  h += '<p class="sub">勾選要加上「' + esc(p.name) + '」的現有商品,內容沿用該商品的設定:</p><div class="bar"><button class="btn small" type="button" data-act="phgall" data-id="' + esc(p.id) + '">' + (gs.every((g) => adm.phSel.has(g.key)) ? '取消全選' : '全選(' + gs.length + ')') + '</button><span class="spacer"></span><button class="btn small primary" type="button" data-act="phgdo" data-id="' + esc(p.id) + '"' + (adm.phSel.size ? '' : ' disabled') + '>新增 ' + adm.phSel.size + ' 項</button></div>';
+  gs.forEach((g) => {
+    const f = g.items[0], c = catById[f.cat];
+    h += '<label class="row pickrow"><span class="pick"><input type="checkbox" data-act="phgpick" data-k="' + esc(g.key) + '"' + (adm.phSel.has(g.key) ? ' checked' : '') + '></span><div class="main"><div class="nm">' + esc((f.house ? '〔店名〕 ' : '') + f.name) + '</div><div class="meta"><span>' + esc(c.name) + '</span><span>已有 ' + g.items.length + ' 個型號</span></div></div><div class="price">NT$ ' + Number(f.price).toLocaleString('en-US') + '</div></label>';
+  });
+  return h + '</div>';
+}
+function phonesHTML() {
+  let h = '<div class="bar"><label class="field" for="ph_name" style="flex:1 1 220px">新增手機型號<input id="ph_name" type="text" maxlength="24" placeholder="例如:iPhone 17 Pro"></label><button class="btn primary small" type="button" data-act="addphone" style="align-self:flex-end">新增</button></div>';
+  h += '<div class="err">' + esc(adm.msg) + '</div>';
+  db.phones.forEach((p) => {
+    const used = db.products.filter((x) => x.phone === p.id).length;
+    h += '<div class="row"><div class="main"><div class="nm">' + esc(p.name) + '</div><div class="meta"><span>' + used + ' 項商品使用中</span></div></div><div class="acts"><button class="btn small primary" type="button" data-act="phadd" data-id="' + esc(p.id) + '">' + (adm.phAdd === p.id ? '收起' : '新增商品') + '</button><button class="btn small danger" type="button" data-act="delphone" data-id="' + esc(p.id) + '"' + (used ? ' disabled' : '') + '>刪除</button></div></div>';
+    if (adm.phAdd === p.id) h += phAddPanel(p);
+  });
+  return h;
+}
+function backupHTML() {
+  if (!adm.backupText) adm.backupText = JSON.stringify(payloadOf(db));
+  return '<p class="sub">匯出的文字可以存起來備份,也可以貼給 Claude 更新所有玩家看到的商品。</p>' +
+    '<label class="field" for="bk_out">目前資料<textarea id="bk_out" readonly>' + esc(adm.backupText) + '</textarea></label>' +
+    '<div class="bar" style="margin-top:10px"><button class="btn small" type="button" data-act="copy">複製</button></div>' +
+    '<label class="field" for="bk_in" style="margin-top:14px">貼上要匯入的資料<textarea id="bk_in" placeholder="把匯出的文字貼在這裡"></textarea></label>' +
+    '<div class="err" id="bk_err">' + esc(adm.msg) + '</div>' +
+    '<div class="bar"><button class="btn primary small" type="button" data-act="import">匯入</button><span class="spacer"></span><button class="btn small danger' + (adm.confirm === 'reset' ? ' armed' : '') + '" type="button" data-act="reset">' + (adm.confirm === 'reset' ? '確定還原預設?' : '還原預設商品') + '</button></div>';
+}
+function cleanImport(obj, allowEmpty) {
+  if (!obj || !Array.isArray(obj.phones) || !Array.isArray(obj.products)) throw new Error('格式不對,需要包含手機型號與商品。');
+  const phones = [];
+  obj.phones.forEach((p) => { if (p && typeof p.name === 'string' && p.name.trim()) phones.push({ id: String(p.id || ('m' + Math.random().toString(36).slice(2, 8))), name: p.name.trim().slice(0, 24) }); });
+  const ids = new Set(phones.map((p) => p.id));
+  const products = [];
+  obj.products.forEach((p, i) => {
+    if (!p || typeof p.name !== 'string' || !p.name.trim() || !catById[p.cat]) return;
+    const price = Math.round(Number(p.price));
+    if (!isFinite(price) || price < 0) return;
+    products.push(Object.assign({ id: String(p.id || ('i' + Date.now().toString(36) + i)), cat: p.cat, name: p.name.trim().slice(0, 40), brand: String(p.brand || '').slice(0, 20), price: Math.min(price, 99999), phone: (p.phone === 'all' || ids.has(p.phone)) ? p.phone : 'all', house: p.house === true, options: normOptions(Array.isArray(p.options) ? p.options : optsFromLegacy(p)), rules: Array.isArray(p.rules) ? parseRules(p.rules.join('\n')) : [], note: '' }, supplyOf(p)));
+  });
+  if (!products.length && !allowEmpty) throw new Error('沒有找到可用的商品。');
+  const wh = {}; if (obj.wh && typeof obj.wh === 'object') Object.keys(obj.wh).slice(0, 3000).forEach((k) => { const n = Math.max(0, Math.min(999, Math.floor(+obj.wh[k] || 0))); if (n && k.length <= 80) wh[k] = n; });
+  return { phones: phones, products: products, wh: wh };
+}
+function afterChange() { invDemandCache = null; adm.sel.clear(); saveDB(); adm.backupText = ''; adm.confirm = ''; adm.msg = ''; }
+
+$('#adminTabs').addEventListener('click', (e) => {
+  const b = e.target.closest('[data-act="tab"]');
+  if (!b) return;
+  adm.tab = b.dataset.v; adm.sel.clear(); adm.phAdd = ''; adm.phSel.clear(); adm.editing = null; adm.confirm = ''; adm.msg = ''; adm.backupText = '';
+  renderAdmin();
+});
+$('#adminBody').addEventListener('click', (e) => {
+  const b = e.target.closest('[data-act]');
+  if (!b) return;
+  const act = b.dataset.act;
+  if (act === 'filter') { adm.filter = b.dataset.v; adm.confirm = ''; adm.sel.clear(); renderAdmin(); }
+  else if (act === 'new') { adm.editing = { id: '', cat: adm.filter === 'all' ? 'case' : adm.filter, name: '', brand: '', price: '', phone: 'all', phones: ['all'], house: false, opts: [] }; adm.msg = ''; renderAdmin(); const n = $('#f_name'); if (n) n.focus(); }
+  else if (act === 'edit') { const p = db.products.find((x) => x.id === b.dataset.id); if (p) { adm.editing = Object.assign({}, p, { opts: (p.options || []).map((o) => ({ n: o.n, vt: o.v.join('、') })), rulesText: (p.rules || []).join('\n'), applyAll: true }); adm.msg = ''; renderAdmin(); const n = $('#f_name'); if (n) n.focus(); } }
+  else if (act === 'cancel') { adm.editing = null; adm.msg = ''; renderAdmin(); }
+  else if (act === 'optadd') { captureForm(); adm.editing.opts = (adm.editing.opts || []).concat([{ n: b.dataset.n || '', vt: '' }]); renderAdmin(); const ns = document.querySelectorAll('#prodForm .optg .optn'); const last = ns[ns.length - 1]; if (last) last.focus(); }
+  else if (act === 'optdel') { captureForm(); adm.editing.opts.splice(+b.dataset.i, 1); renderAdmin(); }
+  else if (act === 'house') { const bi = $('#f_brand'); if (bi) bi.disabled = b.checked; }
+  else if (act === 'pick') {
+    if (b.checked) adm.sel.add(b.dataset.id); else adm.sel.delete(b.dataset.id);
+    adm.confirm = ''; refreshSelBar();
+  }
+  else if (act === 'selall') {
+    const list = curList();
+    if (list.every((p) => adm.sel.has(p.id))) adm.sel.clear(); else list.forEach((p) => adm.sel.add(p.id));
+    adm.confirm = ''; renderAdmin();
+  }
+  else if (act === 'delsel') {
+    if (!adm.sel.size) return;
+    if (adm.confirm === 'bulk') { const n = adm.sel.size; db.products = db.products.filter((x) => !adm.sel.has(x.id)); afterChange(); toast('已刪除 ' + n + ' 項商品'); }
+    else adm.confirm = 'bulk';
+    renderAdmin();
+  }
+  else if (act === 'del') {
+    if (adm.confirm === b.dataset.id) { db.products = db.products.filter((x) => x.id !== b.dataset.id); afterChange(); toast('已刪除'); }
+    else adm.confirm = b.dataset.id;
+    renderAdmin();
+  }
+  else if (act === 'addphone') {
+    const v = ($('#ph_name').value || '').trim();
+    if (!v) { adm.msg = '請輸入型號名稱。'; renderAdmin(); return; }
+    if (db.phones.some((p) => p.name.toLowerCase() === v.toLowerCase())) { adm.msg = '這個型號已經存在。'; renderAdmin(); return; }
+    db.phones.push({ id: 'm' + Date.now().toString(36), name: v }); afterChange(); toast('已新增手機型號'); renderAdmin();
+  }
+  else if (act === 'delphone') {
+    db.phones = db.phones.filter((p) => p.id !== b.dataset.id); afterChange(); toast('已刪除'); renderAdmin();
+  }
+  else if (act === 'phadd') { adm.phAdd = adm.phAdd === b.dataset.id ? '' : b.dataset.id; adm.phSel.clear(); adm.msg = ''; renderAdmin(); }
+  else if (act === 'phgpick') { if (b.checked) adm.phSel.add(b.dataset.k); else adm.phSel.delete(b.dataset.k); renderAdmin(); }
+  else if (act === 'phgall') {
+    const gs = groupsLacking(b.dataset.id);
+    if (gs.every((g) => adm.phSel.has(g.key))) adm.phSel.clear(); else gs.forEach((g) => adm.phSel.add(g.key));
+    renderAdmin();
+  }
+  else if (act === 'phgdo') {
+    const pid = b.dataset.id, gs = groupsLacking(pid).filter((g) => adm.phSel.has(g.key));
+    gs.forEach((g, i) => { const f = g.items[0]; db.products.push({ id: 'u' + Date.now().toString(36) + i + Math.random().toString(36).slice(2, 5), cat: f.cat, name: f.name, brand: f.brand, price: f.price, phone: pid, house: !!f.house, options: cloneOpts(f.options), rules: (f.rules || []).slice(), note: '' }); });
+    afterChange(); adm.phSel.clear(); toast('已為 ' + phoneName(pid) + ' 新增 ' + gs.length + ' 項商品'); renderAdmin();
+  }
+  else if (act === 'phnew') {
+    adm.tab = 'products'; adm.filter = 'all'; adm.msg = '';
+    adm.editing = { id: '', cat: 'case', name: '', brand: '', price: '', phone: 'all', phones: [b.dataset.id], house: false, opts: [] };
+    renderAdmin(); const n = $('#f_name'); if (n) n.focus();
+  }
+  else if (act === 'addphall' || act === 'addphnone') {
+    document.querySelectorAll('input[name="f_addph"]').forEach((x) => { x.checked = act === 'addphall' && x.value !== 'all'; });
+  }
+  else if (act === 'phall' || act === 'phnone') {
+    document.querySelectorAll('input[name="f_ph"]').forEach((x) => { x.checked = act === 'phall' && x.value !== 'all'; });
+  }
+  else if (act === 'publish') publishShared();
+  else if (act === 'copy') {
+    const ta = $('#bk_out');
+    const fallback = () => { ta.focus(); ta.select(); toast('已選取,請手動複製'); };
+    try { navigator.clipboard.writeText(ta.value).then(() => toast('已複製'), fallback); } catch (err) { fallback(); }
+  }
+  else if (act === 'import') {
+    const raw = ($('#bk_in').value || '').trim();
+    if (!raw) { adm.msg = '請先貼上資料。'; renderAdmin(); return; }
+    try { db = cleanImport(JSON.parse(raw)); afterChange(); toast('匯入完成'); }
+    catch (err) { adm.msg = '匯入失敗:' + (err && err.message ? err.message : '資料格式不對。'); }
+    renderAdmin();
+  }
+  else if (act === 'reset') {
+    if (adm.confirm === 'reset') { db = defaultDB(); afterChange(); toast('已還原預設商品'); }
+    else adm.confirm = 'reset';
+    renderAdmin();
+  }
+});
+$('#adminBody').addEventListener('submit', (e) => {
+  e.preventDefault();
+  const f = adm.editing;
+  if (!f) return;
+  const name = $('#f_name').value.trim();
+  const brand = $('#f_brand').value.trim();
+  const priceRaw = $('#f_price').value.trim();
+  const price = Number(priceRaw);
+  const checkedPhones = () => Array.from(document.querySelectorAll('input[name="f_ph"]:checked')).map((x) => x.value);
+  const err = (m) => { captureForm(); adm.msg = m; renderAdmin(); };
+  const fOpts = normOptions(readOpts().map((o) => ({ n: o.n, v: o.vt })));
+  const fRules = $('#f_rules') ? parseRules($('#f_rules').value) : parseRules(f.rulesText);
+  if (!name) return err('請輸入商品名稱。');
+  if (priceRaw === '' || !isFinite(price) || price < 0 || price > 99999 || Math.floor(price) !== price) return err('價格要是 0 到 99999 的整數。');
+  const sup = supplyOf(f.id ? db.products.find((x) => x.id === f.id) : null);   // HQ supply settings are edited in the 總公司管理 tab; keep them as they are
+  const mkId = () => 'u' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+  if (f.id) {
+    const rec = { id: f.id, cat: $('#f_cat').value, name: name, brand: brand || '無品牌', price: price, phone: $('#f_phone').value, house: $('#f_house').checked, options: cloneOpts(fOpts), rules: fRules.slice(), note: '' };
+    Object.assign(rec, sup);
+    const i = db.products.findIndex((x) => x.id === rec.id);
+    let n = 1;
+    if (i >= 0 && $('#f_all') && $('#f_all').checked) {
+      const sibs = sibsOf(db.products[i]);
+      sibs.forEach((x) => { if (x.id !== rec.id) { x.cat = rec.cat; x.name = rec.name; x.brand = rec.brand; x.price = rec.price; x.house = rec.house; x.options = cloneOpts(rec.options); x.rules = rec.rules.slice(); } });
+      n = sibs.length;
+    }
+    if (i >= 0) db.products[i] = rec; else db.products.push(rec);
+    const addPh = Array.from(document.querySelectorAll('input[name="f_addph"]:checked')).map((x) => x.value);
+    addPh.forEach((ph) => db.products.push(Object.assign({ id: mkId(), cat: rec.cat, name: rec.name, brand: rec.brand, price: rec.price, phone: ph, house: rec.house, options: cloneOpts(rec.options), rules: rec.rules.slice(), note: '' }, sup)));
+    if (addPh.length) { afterChange(); adm.editing = null; toast('已儲存,並新增 ' + addPh.length + ' 個型號'); renderAdmin(); return; }
+    afterChange(); adm.editing = null; toast(n > 1 ? '已更新同款全部 ' + n + ' 項' : '已儲存修改'); renderAdmin();
+    return;
+  }
+  const phs = checkedPhones();
+  if (!phs.length) return err('請至少勾選一個適用手機(或「通用」)。');
+  phs.forEach((ph) => db.products.push(Object.assign({ id: mkId(), cat: $('#f_cat').value, name: name, brand: brand || '無品牌', price: price, phone: ph, house: $('#f_house').checked, options: cloneOpts(fOpts), rules: fRules.slice(), note: '' }, sup)));
+  afterChange(); adm.editing = null; toast(phs.length > 1 ? '已新增 ' + phs.length + ' 項商品' : '已新增商品'); renderAdmin();
+});
+
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') {
+    if (state.modal === 'shelf') closeShelf();
+    else if (state.modal === 'admin') closeAdmin();
+    else if (state.modal === 'checkout') { if (gameApi) gameApi.closeCheckout(); else { $('#checkout').hidden = true; state.modal = null; } }
+    else if (state.modal === 'restock' && gameApi && gameApi.closeRestock) gameApi.closeRestock();
+  }
+});
+
+
+/* ---------- 總公司後台 page: only the company-side tools (products, phones, warehouse, supply); the game itself and its test buttons stay in index.html ---------- */
+function currentStoreName() { return storeName || '24HR 門市'; }
+let isOwner = false;
+async function detectOwner() {
+  try {
+    if (window.claude && window.claude.use) { const u = await window.claude.use('user'); return !!(u && (await u.isOwner())); }
+  } catch (e) { return false; }
+  return true;   // your own copy / GitHub Pages: the page only edits a local draft and exports text, nothing here can change the live shop by itself
+}
+async function loadShared() {
+  try { const r = await fetch('products.json', { cache: 'no-store' }); if (!r.ok) return null; return cleanImport(await r.json(), true); } catch (e) { return null; }
+}
+Promise.all([loadShared(), detectOwner()]).then((res) => {
+  const shared = res[0], own = res[1];
+  if (shared) db = shared;
+  sharedStr = JSON.stringify(payloadOf(db));
+  isOwner = own;
+  if (!own) { document.body.insertAdjacentHTML('beforeend', '<p style="padding:24px;font:16px sans-serif">只有擁有者可以使用總公司後台。</p>'); return; }
+  const d = LS.get(DRAFT_KEY, null);
+  if (d && Array.isArray(d.phones) && Array.isArray(d.products)) { try { db = cleanImport(d, true); } catch (e) {} }
+  openAdmin();
+});
+</script>
+</body>
+</html>
