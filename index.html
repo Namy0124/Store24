@@ -417,7 +417,7 @@ button, .btn, [data-co] { touch-action: manipulation; -webkit-tap-highlight-colo
 .pos-right { background: var(--panel-soft); border: 1.5px solid var(--line); border-radius: 14px; padding: 12px; }
 .shelfwant .wg { margin-top: 4px; } .shelfwant .wl { font-size: 14px; line-height: 1.4; } .shelfwant { max-height: 24vh; overflow-y: auto; } @media (orientation: landscape) and (max-height: 640px) { .shelfwant { max-height: 30vh; } }
 .shelfwant { position: sticky; top: 0; z-index: 2; margin-bottom: 8px; }
-.stk { display: flex; align-items: center; justify-content: space-between; gap: 10px; background: var(--panel-soft, #eef3f4); border: 1px solid var(--line, #d5dddf); border-radius: 12px; padding: 8px 12px; margin-bottom: 10px; font-size: 14px; line-height: 1.5; } .stk .btn { flex: none; min-width: 88px; } .inv-tbl .d { padding-left: 3px; padding-right: 3px; font-size: 12px; min-width: 20px; text-align: center; } .stk-l { max-height: 22vh; overflow-y: auto; border: 1px solid var(--line, #d5dddf); border-radius: 10px; margin: -4px 0 10px; font-size: 12.5px; } .stk-r { display: flex; justify-content: space-between; gap: 8px; padding: 4px 10px; border-top: 1px solid var(--line, #eee); } .stk-r:first-child { border-top: 0; } .stk-r.warn { background: #FFF1CC; font-weight: 700; } .stk-r span:last-child { flex: none; color: var(--muted, #6a8a90); }
+.stk { display: flex; align-items: center; justify-content: space-between; gap: 10px; background: var(--panel-soft, #eef3f4); border: 1px solid var(--line, #d5dddf); border-radius: 12px; padding: 8px 12px; margin-bottom: 10px; font-size: 14px; line-height: 1.5; } .stk .btn { flex: none; min-width: 88px; } .inv-tbl .d { padding-left: 3px; padding-right: 3px; font-size: 12px; min-width: 20px; text-align: center; } .inv-alert { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin: 0 16px 8px; padding: 8px 12px; border-radius: 12px; background: #FFE9A8; color: #3b2d00; font-weight: 700; font-size: 14px; } .inv-alert[hidden] { display: none; } .stk-l { max-height: 22vh; overflow-y: auto; border: 1px solid var(--line, #d5dddf); border-radius: 10px; margin: -4px 0 10px; font-size: 12.5px; } .stk-r { display: flex; justify-content: space-between; gap: 8px; padding: 4px 10px; border-top: 1px solid var(--line, #eee); } .stk-r:first-child { border-top: 0; } .stk-r.warn { background: #FFF1CC; font-weight: 700; } .stk-r span:last-child { flex: none; color: var(--muted, #6a8a90); }
 .want { background: color-mix(in srgb, var(--signal) 20%, var(--panel)); border: 1.5px solid var(--signal); border-radius: 12px; padding: 8px 12px; }
 .pos-list { border: 1.5px solid var(--line); border-radius: 14px; overflow: hidden; background: var(--panel); }
 .pos-th { display: flex; justify-content: space-between; padding: 8px 12px; background: var(--panel-soft); font-size: 12.5px; color: var(--muted); }
@@ -691,7 +691,7 @@ img { -webkit-user-drag: none; user-drag: none; }
         <textarea id="saveCode" rows="3" hidden spellcheck="false" placeholder="存檔碼貼在這裡,再按一次「匯入存檔碼」"></textarea><div class="sub" id="saveMsg"></div></div>
       <div class="controls" id="controls"></div>
       <p class="legal">配件品牌、商品與人物都是虛構的遊戲設定。手機型號使用真實型號。</p>
-      <p class="legal" id="verLine" style="margin-top:2px;opacity:.7">版本 v256 · 2026-10-18</p>
+      <p class="legal" id="verLine" style="margin-top:2px;opacity:.7">版本 v258 · 2026-10-18</p>
     </div>
   </div>
 
@@ -738,6 +738,7 @@ img { -webkit-user-drag: none; user-drag: none; }
     <div class="sheet-box">
       <div class="sheet-head gutter"><h2 id="invTitle">ERP・庫存、叫貨、公司公告</h2><button class="btn small" id="invClose" type="button">關閉</button></div>
       <div class="inv-tabs" id="invTabs"></div>
+      <div class="inv-alert" id="invAlert" hidden><span id="invAlertTx"></span><button class="btn small primary" id="invAlertGo" type="button">回櫃檯</button></div>
       <div class="sheet-body gutter" id="invBody"></div>
     </div>
   </div>
@@ -2735,7 +2736,7 @@ function startScene() {
     const i = G.line.indexOf(c); if (i >= 0) G.line.splice(i, 1);
     G.cust = c; G.co = null; c.st = 'walkIn'; c.say = ''; layoutLine();
     goTo(c, QX, QZ, (cc) => {
-      face(cc, 9, QZ); SFX.ding();
+      face(cc, 9, QZ); SFX.ding(); invPing(cc.flow === 'self' ? '🛒 有客人在櫃檯等你結帳' : '🔔 有客人在櫃檯等你服務');
       if (cc.flow === 'vip') { cc.st = 'vip'; cc.readyAt = G.gt; cc.say = ''; vipOpen(cc); return; }
       cc.st = cc.flow === 'ask' ? 'asking' : 'ready';
       cc.say = cc.flow === 'ask' ? (cc.askIdx ? pickOne(SAY.ask).replace('{item}', itemText(cc.items[cc.askIdx])) : (cc.lineTxt || askLine(cc))) : pickOne(SAY.self);
@@ -2748,7 +2749,7 @@ function startScene() {
     if (G.tutorial && primaryCount() > 0) { G.nextAt = G.gt + 5; return; }   // never replace someone who is still being served
     G.nextAt = Math.max(G.nextAt, G.gt - 30) + Math.max(6, Math.min(expo(gapAvg() / rateMul(clockMin())), 2.5 * gapAvg() / rateMul(clockMin())));
     { const nth = G.nSp = (G.nSp || 0) + 1; if (G.vipPlan && G.vipPlan.length && nth >= G.vipPlan[0]) { G.vipPlan.shift(); spawnVip0(); return; } }   // a special customer walks in like anyone else and queues if the counter is busy
-    const pr = buildPerson(); pr.g.position.set(0, 0, 5.9); pr.g.rotation.y = Math.PI; scene.add(pr.g); SFX.chime();
+    const pr = buildPerson(); pr.g.position.set(0, 0, 5.9); pr.g.rotation.y = Math.PI; scene.add(pr.g); SFX.chime(); invPing('🚪 有客人走進來了');
     const r = G.tutorial && !G.tutSelf ? 0.5 : Math.random() * (G.tutorial ? 0.65 : 1); if (G.tutorial) G.tutSelf = true;
     const kind = r < 0.35 ? 'ask' : r < 0.65 ? 'self' : 'look';
     const c = { g: pr.g, parts: pr.parts, flow: kind === 'self' ? 'self' : 'ask', look: kind === 'look', callout: kind === 'look' && Math.random() < 0.5, st: 'walkIn', path: [], then: null, walkT: 0, say: '', items: [], stops: [], t: 0, readyAt: 0, yaw: Math.PI, nag: false, askIdx: 0, got: [], upfront: false, ignored: false };
@@ -2884,7 +2885,7 @@ function startScene() {
     }
     if (G.cust && G.cust !== c && G.cust.st !== 'leaving') { if (G.line.length < LINE_MAX || G.line.indexOf(c) >= 0) { joinLine(c); return; } }
     if (G.cust !== c) { dropQ(c); G.cust = c; G.co = null; }
-    face(c, 9, QZ); SFX.ding();
+    face(c, 9, QZ); SFX.ding(); invPing(c.flow === 'self' ? '🛒 有客人在櫃檯等你結帳' : '🔔 有客人在櫃檯等你服務');
     if (c.flow === 'vip') { c.st = 'vip'; c.readyAt = G.gt; c.say = ''; vipOpen(c); return; }
     c.st = c.flow === 'ask' ? 'asking' : 'ready';
     c.readyAt = G.gt;
@@ -4648,14 +4649,14 @@ function startScene() {
     interactables.filter((x) => x.kind === 'dirt').forEach((x) => unregister(x.id));
     G.dirtSeq = -1;
     DIRT_SPOTS.slice().sort(() => Math.random() - 0.5).slice(0, 3).forEach(makeDirt);
-    G.nextDirt = 70 + Math.random() * 40;
+    G.nextDirt = 180 + Math.random() * 90;
   }
-  /* the floor keeps getting dirtier while the shop is open: a new spot every minute or so (a little faster in the evening), up to all the spots on the map */
+  /* the floor keeps getting dirtier while the shop is open: a new spot every few minutes (a little faster in the evening), up to all the spots on the map */
   function stepDirt() {
     const s = G.shop; if (!s || !s.door || isClosing() || G.tutorial || G.gt < (G.nextDirt || 1e9)) return;
     const free = DIRT_SPOTS.filter((p) => !interactables.some((x) => x.kind === 'dirt' && Math.abs(x.cx - p[0]) < 0.3 && Math.abs(x.cz - p[1]) < 0.3));
     if (free.length) makeDirt(pickOne(free));
-    G.nextDirt = G.gt + (G.gt > BIZ_SEC * 0.5 ? 55 : 80) + Math.random() * 30;
+    G.nextDirt = G.gt + (G.gt > BIZ_SEC * 0.5 ? 150 : 200) + Math.random() * 80;
   }
   function spawnZone() {
     unregister('zone'); const z = ZONES[G.zone];
@@ -4752,7 +4753,9 @@ function startScene() {
     const s = G.shop; if (!s || !s.pos) { toast('先開收銀機與 POS'); return; }
     INV.prev = state.modal === 'close' ? 'close' : state.modal === 'checkout' ? 'checkout' : null; invEl.hidden = false; state.modal = 'inv'; renderInv();
   }
-  function closeInv() { invEl.hidden = true; if (state.modal === 'inv') state.modal = INV.prev; INV.prev = null; renderTodo(); }
+  function invPing(msg) { if (state.modal !== 'inv') return; const a = $('#invAlert'); if (!a) return; $('#invAlertTx').textContent = msg; a.hidden = false; toast(msg); try { if (navigator.vibrate) navigator.vibrate(60); } catch (e) { /* ignore */ } }
+  $('#invAlertGo').addEventListener('click', () => { closeInv(); });
+  function closeInv() { const al = $('#invAlert'); if (al) al.hidden = true; invEl.hidden = true; if (state.modal === 'inv') state.modal = INV.prev; INV.prev = null; renderTodo(); }
   $('#invClose').addEventListener('click', closeInv);
   $('#clInv').addEventListener('click', () => { INV.prev = 'close'; invEl.hidden = false; state.modal = 'inv'; renderInv(); });
   $('#coErp').addEventListener('click', () => { INV.prev = 'checkout'; invEl.hidden = false; state.modal = 'inv'; renderInv(); });
