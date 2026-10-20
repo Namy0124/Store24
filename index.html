@@ -320,9 +320,9 @@ button, .btn, [data-co] { touch-action: manipulation; -webkit-tap-highlight-colo
 .rv { padding: 5px 0; border-top: 1px solid var(--line); font-size: 14px; } .rv:first-of-type { margin-top: 6px; }
 .stars { color: #F2B200; letter-spacing: 1px; }
 #stat { font-size: 14px; font-family: var(--font-body); font-weight: 700; flex: none; }
-.order { position: static; width: auto; max-width: min(420px, 100%); background: var(--panel); border: 2px solid var(--signal); border-radius: 16px; padding: 10px 14px; box-shadow: var(--shadow); pointer-events: none; }
+.order { position: static; width: auto; max-width: min(420px, 100%); max-height: min(30vh, 210px); overflow: hidden; background: var(--panel); border: 2px solid var(--signal); border-radius: 16px; padding: 10px 14px; box-shadow: var(--shadow); pointer-events: none; }
 .o-h { font-size: 12px; color: var(--muted); font-weight: 700; letter-spacing: .08em; }
-.o-chips { display: flex; flex-wrap: wrap; gap: 4px 5px; max-height: 5.6em; overflow-y: auto; margin-top: 2px; } .o-chip { font-size: 13px; font-weight: 700; line-height: 1.25; padding: 2px 7px; border-radius: 9px; background: var(--panel-soft, #eef3f4); border: 1px solid var(--line, #d5dddf); } .o-chip.done { opacity: .5; text-decoration: line-through; }
+.o-chips { display: flex; flex-wrap: wrap; gap: 4px 5px; max-height: 5.6em; overflow: hidden; margin-top: 2px; } .o-chip { font-size: 13px; font-weight: 700; line-height: 1.25; padding: 2px 7px; border-radius: 9px; background: var(--panel-soft, #eef3f4); border: 1px solid var(--line, #d5dddf); } .o-chip.done { opacity: .5; text-decoration: line-through; }
 .o-t { font-size: 17px; font-weight: 700; line-height: 1.35; margin: 2px 0; overflow-wrap: anywhere; }
 .o-s { font-size: 12.5px; color: var(--muted); }
 .carry { pointer-events: auto; display: flex; align-items: center; gap: 10px; background: var(--panel); border: 1.5px solid var(--accent); border-radius: 999px; padding: 6px 8px 6px 16px; box-shadow: var(--shadow); max-width: calc(100% - 32px); font-size: 14px; }
@@ -415,7 +415,7 @@ button, .btn, [data-co] { touch-action: manipulation; -webkit-tap-highlight-colo
 @media (max-width: 720px) { .pos-main { grid-template-columns: 1fr; } }
 .pos-left, .pos-right { display: flex; flex-direction: column; gap: 10px; min-width: 0; }
 .pos-right { background: var(--panel-soft); border: 1.5px solid var(--line); border-radius: 14px; padding: 12px; }
-.shelfwant .wg { margin-top: 4px; } .shelfwant .wl { font-size: 14px; line-height: 1.4; } .shelfwant { max-height: 34vh; overflow-y: auto; }
+.shelfwant .wg { margin-top: 4px; } .shelfwant .wl { font-size: 14px; line-height: 1.4; } .shelfwant { max-height: 24vh; overflow-y: auto; } @media (orientation: landscape) and (max-height: 640px) { .shelfwant { max-height: 30vh; } }
 .shelfwant { position: sticky; top: 0; z-index: 2; margin-bottom: 8px; }
 .stk { display: flex; align-items: center; justify-content: space-between; gap: 10px; background: var(--panel-soft, #eef3f4); border: 1px solid var(--line, #d5dddf); border-radius: 12px; padding: 8px 12px; margin-bottom: 10px; font-size: 14px; line-height: 1.5; } .stk .btn { flex: none; min-width: 88px; }
 .want { background: color-mix(in srgb, var(--signal) 20%, var(--panel)); border: 1.5px solid var(--signal); border-radius: 12px; padding: 8px 12px; }
@@ -690,7 +690,7 @@ img { -webkit-user-drag: none; user-drag: none; }
         <textarea id="saveCode" rows="3" hidden spellcheck="false" placeholder="存檔碼貼在這裡,再按一次「匯入存檔碼」"></textarea><div class="sub" id="saveMsg"></div></div>
       <div class="controls" id="controls"></div>
       <p class="legal">配件品牌、商品與人物都是虛構的遊戲設定。手機型號使用真實型號。</p>
-      <p class="legal" id="verLine" style="margin-top:2px;opacity:.7">版本 v245 · 2026-10-18</p>
+      <p class="legal" id="verLine" style="margin-top:2px;opacity:.7">版本 v246 · 2026-10-18</p>
     </div>
   </div>
 
@@ -2603,7 +2603,7 @@ function startScene() {
   }
   shelfWantFn = () => { const c = G.cust; if (!c || c.flow !== 'ask' || !(c.st === 'asking' || c.st === 'ready')) return ''; const w = wantedIdx(c); if (!w.length) return '';
     const by = {}; w.forEach((i) => { const k = c.items[i].p.cat; (by[k] = by[k] || []).push(i); });   // same category together, one line per item
-    return CATS.filter((ct) => by[ct.id]).map((ct) => '<div class="wg"><b>' + esc(ct.name) + '</b>' + by[ct.id].map((i) => '<div class="wl">・' + esc(itemText(c.items[i])) + '</div>').join('') + '</div>').join(''); };
+    return CATS.filter((ct) => by[ct.id]).map((ct) => '<div class="wg"><b>' + esc(ct.name) + '</b>' + '<div class="o-chips" style="max-height:none">' + by[ct.id].map((i) => '<span class="o-chip">' + esc(itemText(c.items[i])) + '</span>').join('') + '</div></div>').join(''); };
   const wantedIdx = (c) => { const r = [], n = c.upfront ? c.items.length : (c.askIdx || 0) + 1; for (let i = 0; i < n; i++) if (c.got.indexOf(i) < 0) r.push(i); return r; };
   const sameItem = (a, b) => a.p.id === b.p.id && a.picks.length === b.picks.length && a.picks.every((v, i) => v === b.picks[i]);
 
@@ -3517,7 +3517,8 @@ function startScene() {
   }
   $('#order').addEventListener('click', (e) => { if (e.target && e.target.id === 'btnOos') tellOos(); });
   /* a long shopping list is shown as small chips (found ones struck through) so the card stays short on a phone */
-  const orderChips = (items, got) => '<div class="o-chips">' + items.map((it, i) => '<span class="o-chip' + (got.indexOf(i) >= 0 ? ' done' : '') + '">' + (got.indexOf(i) >= 0 ? '✓ ' : '') + esc(itemText(it)) + '</span>').join('') + '</div>';
+  const orderChips = (items, got) => { const rest = items.map((it, i) => ({ it: it, i: i })).filter((x) => got.indexOf(x.i) < 0), shown = rest.slice(0, 5), hid = rest.length - shown.length;   // only what is still to find, at most 5 chips
+    return '<div class="o-chips">' + (got.length ? '<span class="o-chip done">✓ 已找到 ' + got.length + ' 項</span>' : '') + shown.map((x) => '<span class="o-chip">' + esc(itemText(x.it)) + '</span>').join('') + (hid > 0 ? '<span class="o-chip">…還有 ' + hid + ' 項</span>' : '') + '</div>'; };
   const emptyTopNote = (c) => { const idx = wantedIdx(c).find((i) => c.items[i] && invStock(c.items[i].p, c.items[i].picks) > 0 && invTopQty(c.items[i].p.cat) <= 0); return idx === undefined ? '' : '「' + esc(catName(c.items[idx].p.cat)) + '」上層沒貨了,下層還有:到那區按「補貨」再拿給客人。'; };
   function renderOrder() {
     const el = $('#order'), c = G.cust;
