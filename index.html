@@ -691,7 +691,7 @@ img { -webkit-user-drag: none; user-drag: none; }
         <textarea id="saveCode" rows="3" hidden spellcheck="false" placeholder="存檔碼貼在這裡,再按一次「匯入存檔碼」"></textarea><div class="sub" id="saveMsg"></div></div>
       <div class="controls" id="controls"></div>
       <p class="legal">配件品牌、商品與人物都是虛構的遊戲設定。手機型號使用真實型號。</p>
-      <p class="legal" id="verLine" style="margin-top:2px;opacity:.7">版本 v254 · 2026-10-18</p>
+      <p class="legal" id="verLine" style="margin-top:2px;opacity:.7">版本 v255 · 2026-10-18</p>
     </div>
   </div>
 
@@ -4777,7 +4777,7 @@ function startScene() {
     let h = '<table class="inv-tbl"><thead><tr><th>商品</th><th class="n">庫存</th><th class="n">近' + INV.range + '天銷量</th>' + (INV.tab === 'order' ? '<th class="n">本週銷售</th><th class="n">公司倉庫</th><th class="n">叫貨數量</th>' : '') + '</tr></thead><tbody>';
     INV.rows.forEach((r, i) => {
       const st = invStockK(r.key, r.p);
-      h += '<tr><td>' + esc(r.lab) + '</td><td class="n ' + qCls(st) + '">' + (st <= 0 ? '缺貨' : st + '<br><small>上 ' + invTopK(r.key, r.p) + ' / 下 ' + (st - invTopK(r.key, r.p)) + '</small>') + '</td><td class="n">' + salesIn(r.key, INV.range, G.dayNo) + '</td>';
+      h += '<tr><td>' + esc(r.lab) + '</td><td class="n ' + qCls(st) + '">' + (st <= 0 ? '缺貨' : st) + '</td><td class="n">' + salesIn(r.key, INV.range, G.dayNo) + '</td>';
       if (INV.tab === 'order') {
         const wh = whQty(r.p, r.key, wk), q = ordQty(r.key), sold = I.sold[r.key] || 0;
         h += '<td class="n">' + sold + '</td><td class="n">' + (wh <= 0 ? '<span class="inv-out">無貨</span>' : wh) + '</td><td class="n"><span class="inv-q"><button class="btn small" type="button" data-ia="dec" data-i="' + i + '">−</button><b>' + q + '</b><button class="btn small" type="button" data-ia="inc" data-i="' + i + '">+1</button><button class="btn small" type="button" data-ia="inc5" data-i="' + i + '">+5</button><button class="btn small" type="button" data-ia="zero" data-i="' + i + '">刪除</button></span></td>';
