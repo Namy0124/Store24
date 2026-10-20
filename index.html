@@ -705,7 +705,7 @@ img { -webkit-user-drag: none; user-drag: none; }
         <textarea id="saveCode" rows="3" hidden spellcheck="false" placeholder="存檔碼貼在這裡,再按一次「匯入存檔碼」"></textarea><div class="sub" id="saveMsg"></div></div>
       <div class="controls" id="controls"></div>
       <p class="legal">配件品牌、商品與人物都是虛構的遊戲設定。手機型號使用真實型號。</p>
-      <p class="legal" id="verLine" style="margin-top:2px;opacity:.7">版本 v271 · 2026-10-18</p>
+      <p class="legal" id="verLine" style="margin-top:2px;opacity:.7">版本 v272 · 2026-10-18</p>
     </div>
   </div>
 
@@ -1118,13 +1118,13 @@ function invUnder(cat) { return catVariants(cat).reduce((a, x) => a + Math.max(0
 /* stocking a display: the room on top is shared out evenly over the items that have stock (always topping up the emptiest item first). An item with nothing left is skipped, so the others get its share; once it is back in stock it is part of the average again. dry = only count. */
 function invFillTop(cat, dry) {
   const I = SAVE.inv; I.topq = I.topq || {};
-  const vs = catVariants(cat).map((x) => { const st = invStockK(x.k, x.p), t0 = Math.max(0, Math.min(I.topq[x.k] || 0, st)); return { x: x, st: st, t0: t0, t: t0 }; });
-  let total = vs.reduce((a, v) => a + v.t, 0); const capC = invCap(cat), cand = vs.filter((v) => v.st > v.t);
+  const vs = catVariants(cat).map((x) => { const st = invStockK(x.k, x.p), t0 = Math.max(0, Math.min(I.topq[x.k] || 0, st)); return { x: x, st: st, t0: t0, t: 0 }; });
+  const capC = invCap(cat), cand = vs.filter((v) => v.st > 0); let total = 0;   // the whole display is laid out again from scratch, so an item that is back in stock gets its share too
   while (total < capC && cand.length) {
     let bi = -1; for (let i = 0; i < cand.length; i++) { if (cand[i].st > cand[i].t && (bi < 0 || cand[i].t < cand[bi].t)) bi = i; }
     if (bi < 0) break; cand[bi].t++; total++;
   }
-  const plan = vs.filter((v) => v.t > v.t0).map((v) => ({ k: v.x.k, p: v.x.p, n: v.t - v.t0 }));
+  const plan = vs.filter((v) => v.t > v.t0).map((v) => ({ k: v.x.k, p: v.x.p, n: v.t - v.t0 }));   // plan = what gets added; some items may give a few back to the cart below
   if (!dry) vs.forEach((v) => { I.topq[v.x.k] = v.t; });
   return plan;
 }
