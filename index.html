@@ -417,7 +417,7 @@ button, .btn, [data-co] { touch-action: manipulation; -webkit-tap-highlight-colo
 .pos-right { background: var(--panel-soft); border: 1.5px solid var(--line); border-radius: 14px; padding: 12px; }
 .shelfwant .wg { margin-top: 4px; } .shelfwant .wl { font-size: 14px; line-height: 1.4; } .shelfwant { max-height: 24vh; overflow-y: auto; } @media (orientation: landscape) and (max-height: 640px) { .shelfwant { max-height: 30vh; } }
 .shelfwant { position: sticky; top: 0; z-index: 2; margin-bottom: 8px; }
-.stk { display: flex; align-items: center; justify-content: space-between; gap: 10px; background: var(--panel-soft, #eef3f4); border: 1px solid var(--line, #d5dddf); border-radius: 12px; padding: 8px 12px; margin-bottom: 10px; font-size: 14px; line-height: 1.5; } .stk .btn { flex: none; min-width: 88px; } .inv-tbl .d { padding-left: 3px; padding-right: 3px; font-size: 12px; min-width: 20px; text-align: center; } .inv-alert { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin: 0 16px 8px; padding: 8px 12px; border-radius: 12px; background: #FFE9A8; color: #3b2d00; font-weight: 700; font-size: 14px; } .inv-alert[hidden] { display: none; } .stk-l { max-height: 22vh; overflow-y: auto; border: 1px solid var(--line, #d5dddf); border-radius: 10px; margin: -4px 0 10px; font-size: 12.5px; } .stk-r { display: flex; justify-content: space-between; gap: 8px; padding: 4px 10px; border-top: 1px solid var(--line, #eee); } .stk-r:first-child { border-top: 0; } .stk-r.warn { background: #FFF1CC; font-weight: 700; } .stk-r span:last-child { flex: none; color: var(--muted, #6a8a90); }
+.stk { display: flex; align-items: center; justify-content: space-between; gap: 10px; background: var(--panel-soft, #eef3f4); border: 1px solid var(--line, #d5dddf); border-radius: 12px; padding: 8px 12px; margin-bottom: 10px; font-size: 14px; line-height: 1.5; } .stk .btn { flex: none; min-width: 88px; } .inv-tbl .d { padding-left: 3px; padding-right: 3px; font-size: 12px; min-width: 20px; text-align: center; } .inv-alert { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin: 0 16px 8px; padding: 8px 12px; border-radius: 12px; background: #FFE9A8; color: #3b2d00; font-weight: 700; font-size: 14px; } .inv-alert[hidden] { display: none; } .st-sum { font-size: 12px; font-weight: 700; color: #0B7A82; padding: 4px 2px 6px; } .st-slot { font-size: 12px; font-weight: 800; color: #5b6f73; margin: 8px 2px 4px; } .st-it { display: flex; align-items: center; gap: 8px; padding: 6px 8px; border: 1px solid #D5DDDF; border-radius: 10px; margin-bottom: 5px; background: #fff; color: #1f2a2d; } .st-it.on { border-color: #0B7A82; background: #E7F5F4; } .st-it .tx { flex: 1; min-width: 0; } .st-it .nm { font-size: 13px; font-weight: 700; } .st-it .ds { font-size: 11px; color: #5b6f73; } .st-sw { width: 22px; height: 22px; border-radius: 50%; border: 1px solid rgba(0,0,0,.2); flex: none; } .st-w { font-size: 12px; font-weight: 800; color: #0B7A82; } .stk-l { max-height: 22vh; overflow-y: auto; border: 1px solid var(--line, #d5dddf); border-radius: 10px; margin: -4px 0 10px; font-size: 12.5px; } .stk-r { display: flex; justify-content: space-between; gap: 8px; padding: 4px 10px; border-top: 1px solid var(--line, #eee); } .stk-r:first-child { border-top: 0; } .stk-r.warn { background: #FFF1CC; font-weight: 700; } .stk-r span:last-child { flex: none; color: var(--muted, #6a8a90); }
 .want { background: color-mix(in srgb, var(--signal) 20%, var(--panel)); border: 1.5px solid var(--signal); border-radius: 12px; padding: 8px 12px; }
 .pos-list { border: 1.5px solid var(--line); border-radius: 14px; overflow: hidden; background: var(--panel); }
 .pos-th { display: flex; justify-content: space-between; padding: 8px 12px; background: var(--panel-soft); font-size: 12.5px; color: var(--muted); }
@@ -694,7 +694,7 @@ img { -webkit-user-drag: none; user-drag: none; }
         <textarea id="saveCode" rows="3" hidden spellcheck="false" placeholder="存檔碼貼在這裡,再按一次「匯入存檔碼」"></textarea><div class="sub" id="saveMsg"></div></div>
       <div class="controls" id="controls"></div>
       <p class="legal">配件品牌、商品與人物都是虛構的遊戲設定。手機型號使用真實型號。</p>
-      <p class="legal" id="verLine" style="margin-top:2px;opacity:.7">版本 v261 · 2026-10-18</p>
+      <p class="legal" id="verLine" style="margin-top:2px;opacity:.7">版本 v262 · 2026-10-18</p>
     </div>
   </div>
 
@@ -802,11 +802,12 @@ img { -webkit-user-drag: none; user-drag: none; }
     <div class="ph-body">
       <div class="ph-screen">
         <div class="ph-status"><span id="phTime">11:00</span><span id="phWhere"></span></div>
-        <div id="phHome" class="ph-home"><div class="ph-clock" id="phClock">11:00</div><div class="ph-apps"><button type="button" class="ph-app" id="phAppStack"><span>📦</span>疊疊貨箱</button><button type="button" class="ph-app" id="phAppMsg"><span>💬<i class="bd" id="phBd" hidden></i></span>訊息</button><button type="button" class="ph-app" id="phAppSocial"><span>📸</span>社群</button><button type="button" class="ph-app" id="phAppDex"><span>📖</span>客人圖鑑</button><button type="button" class="ph-app" id="phAppShop"><span>🛒<i class="bd" id="phShopBd" hidden></i></span>購物</button><button type="button" class="ph-app off" disabled><span>🎵</span>音樂</button></div><div class="ph-best" id="phBestHome"></div></div>
+        <div id="phHome" class="ph-home"><div class="ph-clock" id="phClock">11:00</div><div class="ph-apps"><button type="button" class="ph-app" id="phAppStack"><span>📦</span>疊疊貨箱</button><button type="button" class="ph-app" id="phAppMsg"><span>💬<i class="bd" id="phBd" hidden></i></span>訊息</button><button type="button" class="ph-app" id="phAppSocial"><span>📸</span>社群</button><button type="button" class="ph-app" id="phAppDex"><span>📖</span>客人圖鑑</button><button type="button" class="ph-app" id="phAppShop"><span>🛒<i class="bd" id="phShopBd" hidden></i></span>購物</button><button type="button" class="ph-app" id="phAppStyle"><span>👗</span>造型</button><button type="button" class="ph-app off" disabled><span>🎵</span>音樂</button></div><div class="ph-best" id="phBestHome"></div></div>
         <div id="phGame" class="ph-game" hidden><canvas id="phCv" width="270" height="440"></canvas><div class="ph-score" id="phScore">0</div><div class="ph-over" id="phOver" hidden></div></div>
         <div id="phMsgs" class="ph-msgs" hidden><div class="pm-head"><button type="button" class="btn small" id="phMsgBack">‹ 返回</button><b>訊息</b></div><div class="pm-list" id="phMsgList"></div></div>
         <div id="phSocial" class="ph-msgs" hidden><div class="pm-head"><button type="button" class="btn small" id="phSoBack">‹ 返回</button><b>動態</b><button type="button" class="btn small" id="phSoNew" style="margin-left:auto">＋ 發文</button><button type="button" class="btn small" id="phSoMore">刷新</button></div><div id="phSoCompose" class="pm" hidden style="margin:8px 8px 0"></div><div class="pm-list" id="phSoList"></div></div>
         <div id="phShop" class="ph-msgs" hidden><div class="pm-head"><button type="button" class="btn small" id="phShBack">‹ 返回</button><b>🛒 購物</b><span class="sh-bal" id="phShBal"></span></div><div class="sh-tabs" id="phShTabs"></div><div class="pm-list" id="phShBody"></div></div>
+        <div id="phStyle" class="ph-msgs" hidden><div class="pm-head"><button type="button" class="btn small" id="phStBack">‹ 返回</button><b>👗 造型</b><span class="sh-bal" id="phStBal"></span></div><div class="sh-tabs" id="phStTabs"></div><div class="pm-list" id="phStBody"></div></div>
         <div id="phCall" class="ph-call" hidden><div class="pc-name" id="phCallName">副理</div><div class="pc-sub" id="phCallSub">來電中…</div><div class="pc-btns"><button type="button" class="btn primary" id="phAnswer">接聽</button><button type="button" class="btn danger" id="phDecline">拒接</button></div></div>
         <button type="button" class="ph-homebtn" id="phHomeBtn" aria-label="回主畫面"></button>
       </div>
@@ -1049,6 +1050,7 @@ function cleanSave(o) {
   s.wallet = o.wallet == null ? 0 : Math.max(0, Math.min(99999999, Math.floor(+o.wallet || 0)));
   { const so = o.shop && typeof o.shop === 'object' ? o.shop : {}, qmap = (m, mx) => { const r = {}; if (m && typeof m === 'object') Object.keys(m).slice(0, 80).forEach((k) => { const q = Math.max(0, Math.min(mx, Math.floor(+m[k] || 0))); if (q) r[String(k).slice(0, 24)] = q; }); return r; };
     s.shop = { cart: qmap(so.cart, 99), bag: qmap(so.bag, 999), orders: (Array.isArray(so.orders) ? so.orders : []).slice(-30).map((r) => ({ id: Math.max(1, Math.floor(+r.id || 1)), items: qmap(r.items, 99), total: Math.max(0, Math.floor(+r.total || 0)), d: Math.max(0, Math.floor(+r.d || 0)), arrive: Math.max(0, Math.floor(+r.arrive || 0)), got: !!r.got, seen: !!r.seen })).filter((r) => Object.keys(r.items).length) }; }
+  { const st = o.style && typeof o.style === 'object' ? o.style : {}, own = {}, wear = {}; Object.keys(st.own || {}).slice(0, 80).forEach((k) => { if (st.own[k]) own[String(k).slice(0, 20)] = 1; }); Object.keys(st.wear || {}).slice(0, 12).forEach((k) => { if (typeof st.wear[k] === 'string') wear[String(k).slice(0, 8)] = st.wear[k].slice(0, 20); }); s.style = { own: own, wear: wear }; }
   s.vip = cleanVip(o.vip);
   s.mgrId = typeof o.mgrId === 'string' ? o.mgrId.slice(0, 12) : null;
   s.history = (Array.isArray(o.history) ? o.history : []).slice(-30).map((r) => ({ d: Math.floor(+r.d || 0), rev: Math.max(0, Math.floor(+r.rev || 0)), n: Math.max(0, Math.floor(+r.n || 0)), stars: Math.max(0, Math.min(5, +r.stars || 0)), acc: Math.max(0, Math.min(100, Math.floor(+r.acc || 0))), sg: !!r.sg, sig: typeof r.sig === 'string' && /^[ML0-9. \-]{0,2400}$/.test(r.sig) ? r.sig : '' }));
@@ -2320,6 +2322,70 @@ function startScene() {
   scene.add(player);
   let yaw = 0, targetYaw = 0;
 
+
+  /* ---------- 造型: clothes for the clerk and looks for the shop. Every item is one row in STYLE_ITEMS (slot, name, price, colour, effect), so new ones are easy to add ----------
+     fx: fav = chance a customer's review gets +1 star, foot = more customers walking in, fast = the clerk walks faster (each total is capped at +25%) */
+  const STYLE_SLOTS = [{ k: 'top', n: '上衣', who: 'clerk' }, { k: 'pants', n: '褲子', who: 'clerk' }, { k: 'hat', n: '帽子', who: 'clerk' }, { k: 'floor', n: '地板', who: 'shop' }, { k: 'wall', n: '牆面', who: 'shop' }, { k: 'light', n: '燈光', who: 'shop' }];
+  const STYLE_ITEMS = [
+    { id: 'top0', slot: 'top', name: '店員制服(青綠)', price: 0, col: 0x0B7A82 },
+    { id: 'top1', slot: 'top', name: '白襯衫', price: 500, col: 0xF2F2F2, fx: { fav: 0.04 } },
+    { id: 'top2', slot: 'top', name: '黑色工作圍裙', price: 800, col: 0x2B2F36, fx: { fast: 0.05 } },
+    { id: 'top3', slot: 'top', name: '粉色連帽衫', price: 1200, col: 0xF4A6C0, fx: { fav: 0.06 } },
+    { id: 'top4', slot: 'top', name: '酒紅西裝背心', price: 1800, col: 0x8E2F45, fx: { fav: 0.05, foot: 0.03 } },
+    { id: 'pants0', slot: 'pants', name: '深灰工作褲', price: 0, col: 0x2F3E4A },
+    { id: 'pants1', slot: 'pants', name: '牛仔褲', price: 400, col: 0x3A5A8C, fx: { fast: 0.03 } },
+    { id: 'pants2', slot: 'pants', name: '卡其褲', price: 400, col: 0xB59A6A, fx: { fav: 0.02 } },
+    { id: 'pants3', slot: 'pants', name: '運動長褲', price: 700, col: 0x555B66, fx: { fast: 0.06 } },
+    { id: 'hat0', slot: 'hat', name: '不戴帽子', price: 0, hat: '' },
+    { id: 'hat1', slot: 'hat', name: '紅色鴨舌帽', price: 500, col: 0xC0392B, hat: 'cap', fx: { foot: 0.02 } },
+    { id: 'hat2', slot: 'hat', name: '米色毛帽', price: 700, col: 0xE8D9B8, hat: 'beanie', fx: { fav: 0.03 } },
+    { id: 'hat3', slot: 'hat', name: '黑色棒球帽', price: 900, col: 0x22262B, hat: 'cap', fx: { fast: 0.03, foot: 0.02 } },
+    { id: 'floor0', slot: 'floor', name: '原本的地板', price: 0, col: 0xFFFFFF },
+    { id: 'floor1', slot: 'floor', name: '暖木色地板', price: 1500, col: 0xFFD9A8, fx: { foot: 0.03 } },
+    { id: 'floor2', slot: 'floor', name: '粉嫩地板', price: 1800, col: 0xFFC9DC, fx: { fav: 0.03 } },
+    { id: 'floor3', slot: 'floor', name: '深色石紋地板', price: 2500, col: 0x9AA7B4, fx: { fav: 0.04 } },
+    { id: 'wall0', slot: 'wall', name: '原本的牆面', price: 0, col: 0xBCD8D4 },
+    { id: 'wall1', slot: 'wall', name: '奶油白牆面', price: 1500, col: 0xF3E8D0, fx: { foot: 0.03 } },
+    { id: 'wall2', slot: 'wall', name: '薄荷綠牆面', price: 1800, col: 0xA8E0C8, fx: { fav: 0.03 } },
+    { id: 'wall3', slot: 'wall', name: '夜藍牆面', price: 2600, col: 0x6C7FA8, fx: { fav: 0.04, foot: 0.02 } },
+    { id: 'light0', slot: 'light', name: '原本的燈光', price: 0, col: 0xFFFFFF },
+    { id: 'light1', slot: 'light', name: '暖黃燈光', price: 2000, col: 0xFFE2B0, fx: { foot: 0.04 } },
+    { id: 'light2', slot: 'light', name: '粉色氛圍燈', price: 2400, col: 0xFFD0E4, fx: { fav: 0.04 } },
+    { id: 'light3', slot: 'light', name: '薰衣草紫光', price: 3000, col: 0xD9C2FF, fx: { fav: 0.03, foot: 0.04 } }
+  ];
+  const styleItem = (id) => STYLE_ITEMS.find((x) => x.id === id);
+  const styleSave = () => { const S = SAVE.style = SAVE.style && typeof SAVE.style === 'object' ? SAVE.style : { own: {}, wear: {} }; S.own = S.own || {}; S.wear = S.wear || {}; return S; };
+  const styleOwned = (id) => { const it = styleItem(id); return !!it && (it.price === 0 || !!styleSave().own[id]); };
+  const styleWorn = (slot) => { const w = styleSave().wear[slot], it = w && styleOwned(w) ? styleItem(w) : null; return it && it.slot === slot ? it : STYLE_ITEMS.find((x) => x.slot === slot); };
+  function styleFx() {
+    const t = { fav: 0, foot: 0, fast: 0 };
+    STYLE_SLOTS.forEach((sl) => { const it = styleWorn(sl.k); if (it && it.fx) Object.keys(it.fx).forEach((k) => { t[k] += it.fx[k]; }); });
+    Object.keys(t).forEach((k) => { t[k] = Math.min(0.25, t[k]); }); return t;
+  }
+  const styleStar = (n) => (n < 5 && Math.random() < styleFx().fav ? n + 1 : n);
+  const styleMats = { top: [], pants: [] }, hatGroup = new T.Group(); hatGroup.position.set(0, 1.58, -0.02); player.add(hatGroup);
+  (function () {   // give the clerk's clothes their own materials, so the shop's teal stripe does not change colour with the shirt
+    const vm = mat(0x0B7A82), pm = mat(0x2F3E4A);
+    player.traverse((m) => { if (!m.isMesh) return; if (m.material === vm) { m.material = vm.clone(); styleMats.top.push(m.material); } else if (m.material === pm) { m.material = pm.clone(); styleMats.pants.push(m.material); } });
+  })();
+  function styleHat(it) {
+    while (hatGroup.children.length) hatGroup.remove(hatGroup.children[0]);
+    if (!it || !it.hat) return;
+    const m = new T.MeshLambertMaterial({ color: it.col });
+    if (it.hat === 'cap') { const dome = new T.Mesh(new T.SphereGeometry(0.31, 18, 12, 0, Math.PI * 2, 0, Math.PI * 0.5), m); dome.position.set(0, 0.03, 0); hatGroup.add(dome); const brim = new T.Mesh(new T.BoxGeometry(0.34, 0.03, 0.22), m); brim.position.set(0, 0.04, 0.3); hatGroup.add(brim); }
+    else { const dome = new T.Mesh(new T.SphereGeometry(0.32, 18, 12, 0, Math.PI * 2, 0, Math.PI * 0.55), m); dome.position.set(0, 0.04, 0); hatGroup.add(dome); const pom = new T.Mesh(new T.SphereGeometry(0.07, 10, 8), m); pom.position.set(0, 0.36, 0); hatGroup.add(pom); }
+  }
+  function applyStyle() {
+    try {
+      styleMats.top.forEach((x) => x.color.setHex(styleWorn('top').col)); styleMats.pants.forEach((x) => x.color.setHex(styleWorn('pants').col)); styleHat(styleWorn('hat'));
+      floor.material.color.setHex(styleWorn('floor').col); mat(WALL).color.setHex(styleWorn('wall').col);
+      const lc = styleWorn('light').col; hemi.color.setHex(lc); sun.color.setHex(lc);
+      SPEED = 4.0 * (1 + styleFx().fast);
+    } catch (e) { /* ignore */ }
+  }
+  const styleFxText = (fx) => (fx ? Object.keys(fx).map((k) => ({ fav: '好感', foot: '客流', fast: '走路' }[k] + ' +' + Math.round(fx[k] * 100) + '%')).join('、') : '沒有加成');
+  applyStyle();
+
   /* markers */
   const ring = (c, a) => { const m = new T.Mesh(new T.RingGeometry(0.3, 0.42, 32), new T.MeshBasicMaterial({ color: c, transparent: true, opacity: a })); m.rotation.x = -Math.PI / 2; m.position.y = 0.04; m.visible = false; scene.add(m); return m; };
   const hintRing = ring(0x0B7A82, 0.85), tapRing = ring(0xF2B200, 0.95);
@@ -2409,7 +2475,7 @@ function startScene() {
   /* input + movement */
   const keys = new Set();
   let path = null, pending = null, active = null;
-  const SPEED = 4.0;
+  let SPEED = 4.0;
   const typing = (e) => /^(INPUT|TEXTAREA|SELECT)$/.test((e.target && e.target.tagName) || '');
   function nearestStand(it, p) {
     let best = it.stands[0], bd = Infinity;
@@ -2750,7 +2816,7 @@ function startScene() {
   function spawnCustomer() {
     if (!db.products.length) { G.nextAt = G.gt + 8; return; }
     if (G.tutorial && primaryCount() > 0) { G.nextAt = G.gt + 5; return; }   // never replace someone who is still being served
-    G.nextAt = Math.max(G.nextAt, G.gt - 30) + Math.max(6, Math.min(expo(gapAvg() / rateMul(clockMin())), 2.5 * gapAvg() / rateMul(clockMin())));
+    G.nextAt = Math.max(G.nextAt, G.gt - 30) + Math.max(6, Math.min(expo(gapAvg() / (rateMul(clockMin()) * (1 + styleFx().foot))), 2.5 * gapAvg() / (rateMul(clockMin()) * (1 + styleFx().foot))));
     { const nth = G.nSp = (G.nSp || 0) + 1; if (G.vipPlan && G.vipPlan.length && nth >= G.vipPlan[0]) { G.vipPlan.shift(); spawnVip0(); return; } }   // a special customer walks in like anyone else and queues if the counter is busy
     const pr = buildPerson(); pr.g.position.set(0, 0, 5.9); pr.g.rotation.y = Math.PI; scene.add(pr.g); SFX.chime(); invPing('🚪 有客人走進來了');
     const r = G.tutorial && !G.tutSelf ? 0.5 : Math.random() * (G.tutorial ? 0.65 : 1); if (G.tutorial) G.tutSelf = true;
@@ -4334,7 +4400,7 @@ function startScene() {
   function startApply(c, film, base, leaveFn) {
     const ph = film.p.phone && film.p.phone !== 'all' ? phoneName(film.p.phone) : '';
     apStart({ phone: ph, done: (pen, bad) => {
-      const stars = Math.max(1, Math.min(5, Math.round(base.stars - pen - 0.001)));
+      const stars = styleStar(Math.max(1, Math.min(5, Math.round(base.stars - pen - 0.001))));
       let text = base.iss ? base.iss.text : pickOne(COMMENTS[stars]);
       if (!base.iss) { if (bad.length && pen >= 0.7) text = bad[0] + (bad.length > 1 ? ',' + bad[1] : '') + '。'; else if (!bad.length && stars >= 4) text = pickOne(AP_GOOD); }
       G.stats.reviews.push({ stars: stars, text: text });
@@ -4350,7 +4416,7 @@ function startScene() {
     let iss = shopIssues(c)[0];
     if (wait > 240) { iss = { text: '等了超久,如果可以我連一星都不想給。', say: '等這麼久…', pen: 0 }; angryFace(c); }
     const vp0 = G.vipPen || 0; G.vipPen = 0;
-    let stars = Math.max(1, Math.min(5, Math.round(5 - co.pen - waitPen - vp0 - (iss ? iss.pen : 0) - 0.001)));
+    let stars = styleStar(Math.max(1, Math.min(5, Math.round(5 - co.pen - waitPen - vp0 - (iss ? iss.pen : 0) - 0.001))));
     { const mb = moodLv(); if (mb < 0) { if (stars > 1 && Math.random() < 0.25) stars--; } else if (mb && stars < 5 && Math.random() < 0.2 * mb) stars++; }
     const st = G.stats, sh = G.shop;
     st.revenue += co.total; st.count++; st.moneyDiff += Math.abs(co.moneyDiff); st.invErr += co.invErr; st.moneyNet += co.moneyDiff;
@@ -4496,6 +4562,7 @@ function startScene() {
     foot: (m) => rateMul(m),
     stockInfo: (c) => stockInfo(c),
     closeAnnounce: () => closeAnnounce(),
+    style: { items: () => STYLE_ITEMS, fx: () => styleFx(), act: (a, v) => styleAct(a, v), owned: (id) => styleOwned(id), worn: (sl) => styleWorn(sl).id, apply: () => applyStyle(), speed: () => SPEED },
     stock: { drain: (c) => { catVariants(c).forEach((x) => { invTopK(x.k, x.p); SAVE.inv.topq[x.k] = 0; }); shelfRefresh(); }, fillTop: (c) => { catVariants(c).forEach((x) => { SAVE.inv.topq[x.k] = Math.min(invStockK(x.k, x.p), vcapK(x.k, x.p)); }); shelfRefresh(); }, topOf: (p, picks) => invTop(p, picks), info: (c) => stockInfo(c), start: (c) => startRestock(c), act: () => G.rsAct, finish: () => rsFinish(), top: (c) => invTopQty(c), under: (c) => invUnder(c), cap: (c) => invCap(c), fill: () => invAutoFill() },
     gacha: { roll: (g, rng) => packRoll(g, rng), state: () => SAVE.gacha, cards: () => SAVE.cards, all: () => CARDS, visible: () => cardsVisible(), rar: () => RAR, book: () => cardBookHtml(), pityAt: PITY_AT },
     shop: { bag: () => SAVE.shop.bag, brushLv: () => SAVE.brushLv, names: () => BRUSHES.map((b) => b.n), listed: () => shopListed(), brushName: brushName, act: (a, v) => phShopAct(a, v), render: shopRender, deliver: shopDeliver, items: () => SHOP_ITEMS, state: () => SAVE.shop, wallet: () => SAVE.wallet, setWallet: (n) => { SAVE.wallet = n; }, tab: () => SHP.tab },
@@ -5740,11 +5807,12 @@ function startScene() {
   $('#phDecline').addEventListener('click', () => { if (PH.ring) missCall(); });
   function phShow(which) {
     PH.screen = which;
-    $('#phHome').hidden = which !== 'home'; $('#phGame').hidden = which !== 'game'; $('#phCall').hidden = which !== 'call'; $('#phMsgs').hidden = which !== 'msgs'; $('#phSocial').hidden = which !== 'social'; $('#phShop').hidden = which !== 'shop';
+    $('#phHome').hidden = which !== 'home'; $('#phGame').hidden = which !== 'game'; $('#phCall').hidden = which !== 'call'; $('#phMsgs').hidden = which !== 'msgs'; $('#phSocial').hidden = which !== 'social'; $('#phShop').hidden = which !== 'shop'; $('#phStyle').hidden = which !== 'style';
     $('#phBestHome').innerHTML = topHtml();
     if (which === 'game') stackStart(); else stackStop();
     if (which === 'msgs') renderInbox();
     if (which === 'shop') shopRender();
+    if (which === 'style') styleRender();
     if (which === 'social') { PH.soReply = -1; soOpen(); $('#phSoCompose').hidden = true; }
     phWhere();
   }
@@ -5880,6 +5948,34 @@ function startScene() {
     if (n) { addMsg({ from: '快遞', text: '📦 你訂的 ' + n + ' 筆商品已送到店裡。' + (up ? '清潔刷升級了:「' + brushName(up) + '」,一次可以刷掉 ' + up + ' 點灰塵!' : '其他道具在手機「購物」→「我的道具」查看。'), sys: true }); saveGame(); }
     shopBadge();
   }
+
+  /* ---------- 造型 app ---------- */
+  const STP = { tab: 'clerk' };
+  function styleRender() {
+    $('#phStBal').textContent = '錢包 ' + fmtN(SAVE.wallet);
+    $('#phStTabs').innerHTML = [['clerk', '店員服飾'], ['shop', '店面裝潢']].map((t) => '<button type="button" data-st="tab" data-v="' + t[0] + '" class="' + (STP.tab === t[0] ? 'on' : '') + '">' + t[1] + '</button>').join('');
+    const fx = styleFx(); let h = '<div class="st-sum">目前加成:好感 +' + Math.round(fx.fav * 100) + '% · 客流 +' + Math.round(fx.foot * 100) + '% · 走路 +' + Math.round(fx.fast * 100) + '%</div>';
+    STYLE_SLOTS.filter((sl) => sl.who === STP.tab).forEach((sl) => {
+      h += '<div class="st-slot">' + esc(sl.n) + '</div>';
+      STYLE_ITEMS.filter((x) => x.slot === sl.k).forEach((it) => {
+        const own = styleOwned(it.id), worn = styleWorn(sl.k) === it, sw = it.col != null ? '#' + ('000000' + it.col.toString(16)).slice(-6) : '#ddd';
+        h += '<div class="st-it' + (worn ? ' on' : '') + '"><span class="st-sw" style="background:' + sw + '"></span><div class="tx"><div class="nm">' + esc(it.name) + '</div><div class="ds">' + esc(styleFxText(it.fx)) + '</div></div>' +
+          (worn ? '<span class="st-w">穿戴中</span>' : own ? '<button type="button" class="btn small" data-st="wear" data-v="' + it.id + '">' + (sl.who === 'clerk' ? '穿上' : '換上') + '</button>' : '<button type="button" class="btn small primary" data-st="buy" data-v="' + it.id + '"' + (SAVE.wallet < it.price ? ' disabled' : '') + '>' + fmtN(it.price) + '</button>') + '</div>';
+      });
+    });
+    $('#phStBody').innerHTML = h;
+  }
+  function styleAct(a, v) {
+    if (a === 'tab') { STP.tab = v; styleRender(); return; }
+    const it = styleItem(v); if (!it) return; const S = styleSave();
+    if (a === 'buy') { if (styleOwned(v) || SAVE.wallet < it.price) return; SAVE.wallet -= it.price; S.own[v] = 1; S.wear[it.slot] = v; toast('買了「' + it.name + '」,已經穿上/換上'); }
+    else if (a === 'wear') { if (!styleOwned(v)) return; S.wear[it.slot] = v; }
+    applyStyle(); saveGame(); styleRender();
+  }
+  $('#phAppStyle').addEventListener('click', () => phShow('style'));
+  $('#phStBack').addEventListener('click', () => phShow('home'));
+  $('#phStTabs').addEventListener('click', (e) => { const b = e.target.closest('[data-st]'); if (b) styleAct(b.dataset.st, b.dataset.v); });
+  $('#phStBody').addEventListener('click', (e) => { const b = e.target.closest('[data-st]'); if (b && !b.disabled) styleAct(b.dataset.st, b.dataset.v); });
   $('#phAppShop').addEventListener('click', () => { SHP.confirm = false; phShow('shop'); });
   $('#phShBack').addEventListener('click', () => phShow('home'));
   $('#phShTabs').addEventListener('click', (e) => { const b = e.target.closest('[data-sh]'); if (b) phShopAct(b.dataset.sh, b.dataset.v); });
