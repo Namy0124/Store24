@@ -653,6 +653,7 @@ img { -webkit-user-drag: none; user-drag: none; }
       <button class="btn" id="btnAdmin" type="button" hidden>總公司後台</button>
       <button class="btn" id="btnJump" type="button" hidden>⏩ 跳轉</button>
       <button class="btn" id="btnDeco" type="button" hidden>🎨 布置</button>
+      <button class="btn" id="btnClose" type="button" hidden>📢 告知打烊</button>
     </div>
     <div id="jumpMenu" class="jump-menu" hidden></div>
     <div class="hud-col gutter">
@@ -690,7 +691,7 @@ img { -webkit-user-drag: none; user-drag: none; }
         <textarea id="saveCode" rows="3" hidden spellcheck="false" placeholder="存檔碼貼在這裡,再按一次「匯入存檔碼」"></textarea><div class="sub" id="saveMsg"></div></div>
       <div class="controls" id="controls"></div>
       <p class="legal">配件品牌、商品與人物都是虛構的遊戲設定。手機型號使用真實型號。</p>
-      <p class="legal" id="verLine" style="margin-top:2px;opacity:.7">版本 v248 · 2026-10-18</p>
+      <p class="legal" id="verLine" style="margin-top:2px;opacity:.7">版本 v249 · 2026-10-18</p>
     </div>
   </div>
 
@@ -2888,6 +2889,22 @@ function startScene() {
     add(0.1, 0.022, 0, 1.46, 0, 0x7A1F1F);   // flat mouth
     add(0.07, 0.05, -0.17, 1.52, 0, 0xE8665A); add(0.07, 0.05, 0.17, 1.52, 0, 0xE8665A);   // flushed cheeks
   }
+  /* after closing time the clerk can tell the people still in the shop that the store is closed, so they do not drag past knock-off time */
+  const shooList = () => [G.cust].concat(G.pend, G.line, G.crowd).filter((c, i, a) => c && a.indexOf(c) === i && c.st !== 'leaving' && !(c === G.cust && (G.co || state.modal === 'checkout')) && !(c.flow === 'vip' && c.st === 'vip'));
+  function closeAnnounce() {
+    if (!G.shop || !isClosing()) { toast('還沒到打烊時間'); return 0; }
+    const list = shooList(); if (!list.length) { G.closedSaid = true; toast('店裡沒有客人了'); return 0; }
+    let waited = 0;
+    list.forEach((c) => {
+      const waiting = c === G.cust || G.line.indexOf(c) >= 0;
+      if (c === G.cust) { G.hand = []; renderCarry(); }
+      c.em = ''; c.say = pickOne(['好,那我改天再來。', '啊,已經打烊了喔,那我先走。', '好的,打擾了。']);
+      if (G.crowd.indexOf(c) >= 0 && !waiting) { c.st = 'leaving'; c.path = []; goTo(c, 0, 5.9, () => { SFX.chime(); scene.remove(c.g); const i = G.crowd.indexOf(c); if (i >= 0) G.crowd.splice(i, 1); if (c.browser) G.stats.browsers++; }); }
+      else { if (G.crowd.indexOf(c) >= 0) { const i = G.crowd.indexOf(c); G.crowd.splice(i, 1); } leave(c, true); }
+      if (waiting) { waited++; G.stats.reviews.push({ stars: 3, text: '到店時已經快打烊,被請先離開,有點可惜。' }); }
+    });
+    G.closedSaid = true; G.stats.closedOut = (G.stats.closedOut || 0) + list.length; SFX.chime(); toast('已告訴 ' + list.length + ' 位客人:本店已經打烊'); renderOrder(); updateBubble(); return list.length;
+  }
   function leave(c, mad) {
     c.st = 'leaving'; c.em = ''; c.say = mad ? c.say : pickOne(SAY.thanks); dropQ(c); if (G.exit.indexOf(c) < 0) G.exit.push(c);
     goTo(c, 0, 5.9, () => { SFX.chime(); scene.remove(c.g); { const xi = G.exit.indexOf(c); if (xi >= 0) G.exit.splice(xi, 1); } if (G.cust === c) G.cust = null; G.nextAt = Math.max(G.nextAt, G.gt + 4); updateBubble(); renderOrder(); });
@@ -4452,6 +4469,7 @@ function startScene() {
     deco: { open: decoOpen, close: decoClose, bonus: decoBonus, items: () => SAVE.deco.items, pick: (id) => { DECO.sel = { kind: 'new', id: id }; }, pickItem: (i) => { DECO.sel = { kind: 'item', i: i }; }, place: decoPlace, take: decoTake, free: decoFree, clamp: decoClamp, wall: (w) => { DECO.wall = w; }, mode: () => DECO.mode, max: DECO_MAX },
     foot: (m) => rateMul(m),
     stockInfo: (c) => stockInfo(c),
+    closeAnnounce: () => closeAnnounce(),
     stock: { info: (c) => stockInfo(c), start: (c) => startRestock(c), act: () => G.rsAct, finish: () => rsFinish(), top: (c) => invTopQty(c), under: (c) => invUnder(c), cap: (c) => invCap(c), fill: () => invAutoFill() },
     gacha: { roll: (g, rng) => packRoll(g, rng), state: () => SAVE.gacha, cards: () => SAVE.cards, all: () => CARDS, visible: () => cardsVisible(), rar: () => RAR, book: () => cardBookHtml(), pityAt: PITY_AT },
     shop: { bag: () => SAVE.shop.bag, brushLv: () => SAVE.brushLv, names: () => BRUSHES.map((b) => b.n), listed: () => shopListed(), brushName: brushName, act: (a, v) => phShopAct(a, v), render: shopRender, deliver: shopDeliver, items: () => SHOP_ITEMS, state: () => SAVE.shop, wallet: () => SAVE.wallet, setWallet: (n) => { SAVE.wallet = n; }, tab: () => SHP.tab },
@@ -4565,7 +4583,7 @@ function startScene() {
     if (!G.started) { G.started = true; newDay(); }
     stepTweens(dt);
     stepShop(dt); phoneStep(dt);
-    const sh = G.shop, open = sh.door && cartsPlaced() === 6 && !sh.countStarted && !sh.done;
+    const sh = G.shop, open = sh.door && cartsPlaced() === 6 && !sh.countStarted && !sh.done && !G.closedSaid;   // once the clerk has told everyone the store is closed, nobody new comes in
     if (open && G.gt >= G.nextAt) { if (primaryCount() < (G.tutorial ? 1 : 4)) spawnCustomer(); else G.nextAt = G.gt + 5; }
     if (open && G.gt >= G.nextBrowse) { if (G.crowd.filter((x) => x.browser).length < 3 && db.products.length) spawnBrowser(); G.nextBrowse = G.gt + 50 + Math.random() * 60; }
     updateCust(dt);
@@ -5149,6 +5167,7 @@ function startScene() {
     const out = Object.keys(I.stock).filter((k) => I.stock[k] <= 0).length;
     if (out) t.push('目前有 ' + out + ' 個規格缺貨。');
     if (st.notFound) t.push('今天有 ' + st.notFound + ' 位客人在貨架上找不到想買的東西,沒買就走了。');
+    if (st.closedOut) t.push('打烊後請 ' + st.closedOut + ' 位客人先離開。');
     if (st.oos) t.push('今天回覆客人缺貨 ' + st.oos + ' 次' + (st.lost ? ',其中 ' + st.lost + ' 位沒買就走了' : '') + '。');
     return t.length ? '<div class="day-card"><b>庫存與叫貨</b><div class="sub">' + t.join('<br>') + '</div></div>' : '';
   }
@@ -5269,7 +5288,7 @@ function startScene() {
     if (G.dayNo === 1) { G.dust = {}; ZONES.forEach((z) => { G.dust[z.id] = 0; }); G.dust[ZONES[G.zone].id] = 15; } else ZONES.forEach((z) => { G.dust[z.id] = Math.min(50, (G.dust[z.id] || 0) + (() => { const q = Math.random(); return q < 0.25 ? 1 : q < 0.65 ? 2 : 3; })()); });
     { const zid = ZONES[G.zone].id; G.dust[zid] = Math.max(G.dust[zid] || 0, 15); }
     G.shop = freshShop(); G.shop.zoneStart = Math.max(1, G.dust[ZONES[G.zone].id] || 0); G.shop.msgs = (SAVE.msgs || []).map((m) => Object.assign({}, m)); G.shop.msgSeq = G.shop.msgs.reduce((a, m) => Math.max(a, m.id || 0), 0); rollDayTarget(); if (G.tutorial) { G.target = 5; G.ticketMult = 1; } G.nextAt = 1e9; G.nextBrowse = 1e9; G.lastMin = -1;
-    G.nSp = 0; G.vipPen = 0; G.vipPlan = []; if (G.dayNo % 4 === 0) SAVE.vip.pre = Math.max(0, SAVE.vip.pre - 1);
+    G.nSp = 0; G.closedSaid = false; G.vipPen = 0; G.vipPlan = []; if (G.dayNo % 4 === 0) SAVE.vip.pre = Math.max(0, SAVE.vip.pre - 1);
     if (!G.tutorial) { const r0 = Math.random(), nv = G.dayNo <= 2 ? 1 : r0 < 0.15 ? 0 : r0 < 0.6 ? 1 : 2, hi = Math.max(4, G.target - 2); for (let k = 0; k < nv; k++) G.vipPlan.push(2 + Math.floor(Math.random() * (hi - 1))); G.vipPlan.sort((a, b) => a - b); }
     endRing(); updateBadges();
     setLights(false); setAc(false); FX.doorTarget = 0; FX.doorT = 0; invNewDay(); shelfRefresh();
@@ -5899,6 +5918,7 @@ function startScene() {
   $('#dbL').addEventListener('click', () => { const Z = DWALL[DECO.wall]; DECO.pan = Math.max(Z.u0 + 1.2, DECO.pan - 1.5); if (DECO.wall === 'b') DECO.pan = 0; });
   $('#dbR').addEventListener('click', () => { const Z = DWALL[DECO.wall]; DECO.pan = Math.min(Z.u1 - 1.2, DECO.pan + 1.5); if (DECO.wall === 'b') DECO.pan = 0; });
   $('#dbDone').addEventListener('click', decoClose);
+  $('#btnClose').addEventListener('click', () => { closeAnnounce(); });
   $('#btnDeco').addEventListener('click', () => { if (G.cust && (G.cust.st === 'asking' || G.cust.st === 'ready' || G.co)) { toast('客人在等,先招呼完再布置'); return; } if (!decoOpen()) toast('現在不能布置'); });
   window.addEventListener('keydown', (e) => { if (e.key === 'Escape' && DECO.mode) decoClose(); });
   const FEED = [['小宇','今天的手搖杯 🧋 半糖少冰','🧋'],['Amy','週末去海邊!水好藍','🌊'],['阿豪','新買的耳機音質超讚','🎧'],['Joyce','加班第三天…','💻'],['大雄','貓咪又在我鍵盤上睡著','🐱'],['小美','午餐吃什麼好,求推薦','🍜'],['Kevin','演唱會搶票失敗,崩潰','🎤'],['Sandy','今天天氣好舒服','☀️'],['阿傑','健身房打卡 💪 今天練腿','🏋️'],['Mia','新出的甜點店好好吃','🍰'],['志明','颱風天不用上班真爽','🌀'],['小琪','終於看完那部影集,結局好扯','📺'],
@@ -6179,6 +6199,7 @@ function startScene() {
       const b = $('#btnInteract');
       if (active) { b.textContent = (isTouch ? '' : '按 E ') + active.verb + active.name; b.hidden = false; } else b.hidden = true;
     }
+    { const bc = $('#btnClose'); const showC = !!(state.started && G.shop && isClosing() && !G.shop.done && !state.modal && !PH.open && shooList().length); if (bc.hidden === showC) bc.hidden = !showC; }
     { const bd = $('#btnDeco'); const showD = !!(state.started && G.shop && !state.modal && !PH.open); if (bd.hidden === showD) bd.hidden = !showD; }
     { const nearC = state.started && !state.modal && G.shop && Math.hypot(player.position.x - 7.9, player.position.z - 3.4) < 2.8; const bl = $('#btnLog'); if (bl.hidden === nearC) bl.hidden = !nearC; }
     if (ringStand) { hintRing.visible = true; hintRing.position.x = ringStand.x; hintRing.position.z = ringStand.z; const k = 1 + Math.sin(now / 250) * 0.08; hintRing.scale.set(k, k, k); } else hintRing.visible = false;
