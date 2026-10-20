@@ -691,7 +691,7 @@ img { -webkit-user-drag: none; user-drag: none; }
         <textarea id="saveCode" rows="3" hidden spellcheck="false" placeholder="存檔碼貼在這裡,再按一次「匯入存檔碼」"></textarea><div class="sub" id="saveMsg"></div></div>
       <div class="controls" id="controls"></div>
       <p class="legal">配件品牌、商品與人物都是虛構的遊戲設定。手機型號使用真實型號。</p>
-      <p class="legal" id="verLine" style="margin-top:2px;opacity:.7">版本 v253 · 2026-10-18</p>
+      <p class="legal" id="verLine" style="margin-top:2px;opacity:.7">版本 v254 · 2026-10-18</p>
     </div>
   </div>
 
@@ -3150,11 +3150,12 @@ function startScene() {
       ], 3) };
     },
     nonelec() {
-      const e = retEntry(false, 1, 6), sealed = Math.random() < 0.5, rude = Math.random() < rudeP(e) * 0.6, why = pickOne(BAD_ANY), wrongM = why === '我買錯型號了';
-      return { say: retOpen(e, rude, why), inv: invCard(e), note: sealed ? '商品狀態:未拆封,包裝完整。' : '商品狀態:已拆封,有使用痕跡。', mgr: mgPre() + '非帶電的原則上不退換。沒拆封的話,同款可以換,買錯型號的話可以換成別的型號,要重開發票、庫存跟著動,貴的補差價;拆過的就不行。', choices: chs([
-        C('婉拒:「非帶電商品不退換喔」', () => DONE({ say: rude ? '你們這什麼規定!' : '好吧…我知道了。', stars: sealed ? (rude ? 2 : 3) : (rude ? 3 : 4), fav: sealed ? -1 : 0 }), !sealed),
+      const e = retEntry(false, 1, 20), cr = Math.random(), cond = cr < 0.4 ? 'new' : cr < 0.75 ? 'ok' : 'bad', sealed = cond !== 'bad', rude = Math.random() < rudeP(e) * 0.6, why = pickOne(BAD_ANY), wrongM = why === '我買錯型號了';
+      return { say: retOpen(e, rude, why), inv: invCard(e), note: (cond === 'new' ? '商品狀態:未拆封,包裝完整。' : cond === 'ok' ? '商品狀態:拆封過,但幾乎全新,配件包裝都在,可以再上架。' : '商品狀態:明顯使用過,有髒污折損,不可能再擺回架上。') + (e.d < G.dayNo - 7 ? '(已經超過七天)' : ''), mgr: mgPre() + '檯面上的規定是非帶電不退換,目的是減少退換貨。實際上看狀況:東西還能再上架、沒有人為損壞,就算超過七天也可以處理;狀況很糟、不可能擺回架上的就婉拒;客人態度差也可以不用幫。買錯型號的話換成別的型號,要重開發票、庫存跟著動,貴的補差價。', choices: chs([
+        C(sealed ? '婉拒:「非帶電商品不退換喔」' : '婉拒:「這個狀況沒辦法再賣,不好意思沒辦法換」', () => DONE({ say: rude ? '你們這什麼規定!' : '好吧…我知道了。', stars: sealed ? (rude ? 2 : 3) : (rude ? 3 : 4), fav: sealed ? -1 : 0, note: !sealed ? '狀況太差,拒絕是對的。' : rude ? '態度很差,不幫他是可以的。' : '東西還能再賣,其實可以處理。' }), !sealed || rude),
         wrongM ? C('核對發票,幫他換成對的型號', () => {
-          if (!sealed) return DONE({ say: '耶,謝謝!', stars: 5, fav: 1, cost: e.price, msg: '拆封、有使用痕跡的非帶電商品不能換貨,下次要注意。', note: '用過的商品被換走了,損失 ' + fmtN(e.price) + ' 要你補。' });
+          if (rude && sealed) return DONE({ say: '早點換不就好了。', stars: 3, fav: -1, note: '態度這麼差,其實可以不用幫他換。' });
+          if (!sealed) return DONE({ say: '耶,謝謝!', stars: 5, fav: 1, cost: e.price, msg: '狀況很糟、不可能再擺回架上的商品不該換,下次要注意。', note: '狀況很糟的商品被換走了,賣不掉,損失 ' + fmtN(e.price) + ' 要你補。' });
           const it2 = rItem((p) => !isElec(p) && dispName(p) !== e.name.split('・')[0] && invStock(p, makeItem(p).picks) > 0);
           if (!it2 || invStock(it2.p, it2.picks) <= 0) return DONE({ say: '那個型號剛好沒貨…那我再看看。', stars: 3, fav: 0, time: 6, note: '要換的型號沒庫存。' });
           const p2 = itemPrice(it2), diff = p2 - e.price, nm = itemText(it2);
@@ -3165,7 +3166,7 @@ function startScene() {
           return { say: '那我換「' + nm + '」(' + fmtN(p2) + ')。', inv: invCard(e), mgr: mgPre() + '同價位直接換,換貨要重開發票,庫存也會跟著動。便宜的不能退差額,可以請他挑等值的。', choices: chs([
             C(diff === 0 ? '「好,幫你重開發票換貨」' : '「換貨不能退差額,這樣可以嗎?」', () => { ex(); return DONE({ say: '好,謝謝!', stars: rn(4, 5), fav: 1, note: '重開發票,庫存:退回 1 件、換出「' + nm + '」1 件。' }); }, true),
             C('「好,差額退你 ' + fmtN(-diff) + '」', () => { ex(); return DONE({ say: '謝啦!', stars: 5, fav: 1, cost: Math.max(0, -diff), msg: SCOLD, note: '退出去的差額要你補。' }); })], 2) };
-        }, sealed) : C('看狀況,幫他換同款', () => sealed ? DONE({ say: '太好了,謝謝!', stars: 5, fav: 2, note: '未拆封的同款,你決定幫他換。' }) : DONE({ say: '耶,謝謝!', stars: 5, fav: 1, cost: e.price, msg: '拆封、有使用痕跡的非帶電商品不能換貨,下次要注意。', note: '用過的商品被換走了,損失 ' + fmtN(e.price) + ' 要你補。' }), sealed),
+        }, sealed && !rude) : C('看狀況,幫他換同款', () => sealed && rude ? DONE({ say: '早點換不就好了。', stars: 3, fav: -1, note: '態度這麼差,其實可以不用幫他換。' }) : sealed ? DONE({ say: '太好了,謝謝!', stars: 5, fav: 2, note: '未拆封的同款,你決定幫他換。' }) : DONE({ say: '耶,謝謝!', stars: 5, fav: 1, cost: e.price, msg: '狀況很糟、不可能再擺回架上的商品不該換,下次要注意。', note: '狀況很糟的商品被換走了,賣不掉,損失 ' + fmtN(e.price) + ' 要你補。' }), sealed && !rude),
         C('什麼都不說,請他自己想辦法', () => DONE({ say: '服務態度真差。', stars: 2, fav: -2 }))
       ], 3) };
     }
