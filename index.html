@@ -417,7 +417,7 @@ button, .btn, [data-co] { touch-action: manipulation; -webkit-tap-highlight-colo
 .pos-right { background: var(--panel-soft); border: 1.5px solid var(--line); border-radius: 14px; padding: 12px; }
 .shelfwant .wg { margin-top: 4px; } .shelfwant .wl { font-size: 14px; line-height: 1.4; } .shelfwant { max-height: 24vh; overflow-y: auto; } @media (orientation: landscape) and (max-height: 640px) { .shelfwant { max-height: 30vh; } }
 .shelfwant { position: sticky; top: 0; z-index: 2; margin-bottom: 8px; }
-.stk { display: flex; align-items: center; justify-content: space-between; gap: 10px; background: var(--panel-soft, #eef3f4); border: 1px solid var(--line, #d5dddf); border-radius: 12px; padding: 8px 12px; margin-bottom: 10px; font-size: 14px; line-height: 1.5; } .stk .btn { flex: none; min-width: 88px; } .stk-l { max-height: 22vh; overflow-y: auto; border: 1px solid var(--line, #d5dddf); border-radius: 10px; margin: -4px 0 10px; font-size: 12.5px; } .stk-r { display: flex; justify-content: space-between; gap: 8px; padding: 4px 10px; border-top: 1px solid var(--line, #eee); } .stk-r:first-child { border-top: 0; } .stk-r.warn { background: #FFF1CC; font-weight: 700; } .stk-r span:last-child { flex: none; color: var(--muted, #6a8a90); }
+.stk { display: flex; align-items: center; justify-content: space-between; gap: 10px; background: var(--panel-soft, #eef3f4); border: 1px solid var(--line, #d5dddf); border-radius: 12px; padding: 8px 12px; margin-bottom: 10px; font-size: 14px; line-height: 1.5; } .stk .btn { flex: none; min-width: 88px; } .inv-tbl .d { padding-left: 3px; padding-right: 3px; font-size: 12px; min-width: 20px; text-align: center; } .stk-l { max-height: 22vh; overflow-y: auto; border: 1px solid var(--line, #d5dddf); border-radius: 10px; margin: -4px 0 10px; font-size: 12.5px; } .stk-r { display: flex; justify-content: space-between; gap: 8px; padding: 4px 10px; border-top: 1px solid var(--line, #eee); } .stk-r:first-child { border-top: 0; } .stk-r.warn { background: #FFF1CC; font-weight: 700; } .stk-r span:last-child { flex: none; color: var(--muted, #6a8a90); }
 .want { background: color-mix(in srgb, var(--signal) 20%, var(--panel)); border: 1.5px solid var(--signal); border-radius: 12px; padding: 8px 12px; }
 .pos-list { border: 1.5px solid var(--line); border-radius: 14px; overflow: hidden; background: var(--panel); }
 .pos-th { display: flex; justify-content: space-between; padding: 8px 12px; background: var(--panel-soft); font-size: 12.5px; color: var(--muted); }
@@ -691,7 +691,7 @@ img { -webkit-user-drag: none; user-drag: none; }
         <textarea id="saveCode" rows="3" hidden spellcheck="false" placeholder="存檔碼貼在這裡,再按一次「匯入存檔碼」"></textarea><div class="sub" id="saveMsg"></div></div>
       <div class="controls" id="controls"></div>
       <p class="legal">配件品牌、商品與人物都是虛構的遊戲設定。手機型號使用真實型號。</p>
-      <p class="legal" id="verLine" style="margin-top:2px;opacity:.7">版本 v255 · 2026-10-18</p>
+      <p class="legal" id="verLine" style="margin-top:2px;opacity:.7">版本 v256 · 2026-10-18</p>
     </div>
   </div>
 
@@ -1112,6 +1112,10 @@ function whQty(p, key, week) {
     base = cap <= 0 ? 0 : Math.max(1, Math.round(cap * (0.3 + 0.7 * hrand(key + '#a' + week))));
   }
   return base + whAdded(key);
+}
+function salesOn(key, day, curDay) {   // units sold on one given day (null = that day has not happened yet)
+  const I = SAVE.inv; if (day > curDay) return null; if (day === curDay) return I.today[key] || 0;
+  const h = I.hist.find((x) => x.d === day); return h ? (h.s[key] || 0) : 0;
 }
 function salesIn(key, days, curDay) {   // units sold in the last `days` days, today included
   const I = SAVE.inv; let n = I.today[key] || 0;
@@ -4774,13 +4778,13 @@ function startScene() {
     const el = $('#invRows'); if (!el) return;
     const all = invRowsData(); INV.rows = all.slice(0, 80);
     const I = SAVE.inv, wk = invWeek();
-    let h = '<table class="inv-tbl"><thead><tr><th>商品</th><th class="n">庫存</th><th class="n">近' + INV.range + '天銷量</th>' + (INV.tab === 'order' ? '<th class="n">本週銷售</th><th class="n">公司倉庫</th><th class="n">叫貨數量</th>' : '') + '</tr></thead><tbody>';
+    let h = '<table class="inv-tbl"><thead><tr><th>商品</th><th class="n">庫存</th>' + ['一', '二', '三', '四', '五', '六'].map((x) => '<th class="n d">' + x + '</th>').join('') + ''  + (INV.tab === 'order' ? '<th class="n">公司倉庫</th><th class="n">叫貨數量</th>' : '') + '</tr></thead><tbody>';
     INV.rows.forEach((r, i) => {
       const st = invStockK(r.key, r.p);
-      h += '<tr><td>' + esc(r.lab) + '</td><td class="n ' + qCls(st) + '">' + (st <= 0 ? '缺貨' : st) + '</td><td class="n">' + salesIn(r.key, INV.range, G.dayNo) + '</td>';
+      h += '<tr><td>' + esc(r.lab) + '</td><td class="n ' + qCls(st) + '">' + (st <= 0 ? '缺貨' : st) + '</td>' + [1, 2, 3, 4, 5, 6].map((k) => { const v = salesOn(r.key, wk * 7 + k, G.dayNo); return '<td class="n d">' + (v === null ? '–' : v) + '</td>'; }).join('');
       if (INV.tab === 'order') {
-        const wh = whQty(r.p, r.key, wk), q = ordQty(r.key), sold = I.sold[r.key] || 0;
-        h += '<td class="n">' + sold + '</td><td class="n">' + (wh <= 0 ? '<span class="inv-out">無貨</span>' : wh) + '</td><td class="n"><span class="inv-q"><button class="btn small" type="button" data-ia="dec" data-i="' + i + '">−</button><b>' + q + '</b><button class="btn small" type="button" data-ia="inc" data-i="' + i + '">+1</button><button class="btn small" type="button" data-ia="inc5" data-i="' + i + '">+5</button><button class="btn small" type="button" data-ia="zero" data-i="' + i + '">刪除</button></span></td>';
+        const wh = whQty(r.p, r.key, wk), q = ordQty(r.key);
+        h += '<td class="n">' + (wh <= 0 ? '<span class="inv-out">無貨</span>' : wh) + '</td><td class="n"><span class="inv-q"><button class="btn small" type="button" data-ia="dec" data-i="' + i + '">−</button><b>' + q + '</b><button class="btn small" type="button" data-ia="inc" data-i="' + i + '">+1</button><button class="btn small" type="button" data-ia="inc5" data-i="' + i + '">+5</button><button class="btn small" type="button" data-ia="zero" data-i="' + i + '">刪除</button></span></td>';
       }
       h += '</tr>';
     });
@@ -4809,7 +4813,7 @@ function startScene() {
       h += '<div class="inv-hint">' + (isOrderDay() ? '今天是叫貨日(週日)。填好數量後按「送出叫貨單」,週二到貨。<b>沒送出就不會到貨。</b>' : '叫貨單可以先填,但只有週日才能送出(下個叫貨日:週日)。送出後週二到貨。') + ' 叫貨單預設是這週有賣出的商品,賣幾個先叫幾個,不管公司倉庫有沒有貨;公司沒貨的要自己刪掉。公司倉庫的量有限,出貨時也可能刪減。</div>';
       h += '<div class="inv-bar"><span>叫貨單:' + t.kinds + ' 種 / ' + t.qty + ' 件</span><button class="btn primary small" type="button" data-ia="send"' + (isOrderDay() && t.qty > 0 ? '' : ' disabled') + '>送出叫貨單</button><button class="btn small" type="button" data-ia="clear"' + (t.qty ? '' : ' disabled') + '>全部刪除</button><button class="btn small" type="button" data-ia="reset">恢復預設(本週銷售)</button><label class="chk"><input type="checkbox" id="invOnly"' + (INV.only ? ' checked' : '') + '> 只看叫貨單上的</label></div>';
     }
-    h += '<div class="inv-bar"><input id="invQ" type="search" placeholder="搜尋商品、品牌、型號、顏色" value="' + esc(INV.q) + '"><select id="invRange" aria-label="銷量期間">' + [[7, '近 7 天'], [30, '近 30 天'], [90, '近 90 天']].map((x) => '<option value="' + x[0] + '"' + (INV.range === x[0] ? ' selected' : '') + '>' + x[1] + '</option>').join('') + '</select><select id="invCat"><option value="all">全部分類</option>' + CATS.map((c) => '<option value="' + c.id + '"' + (INV.cat === c.id ? ' selected' : '') + '>' + esc(c.name) + '</option>').join('') + '</select></div><div id="invRows"></div>';
+    h += '<div class="inv-bar"><input id="invQ" type="search" placeholder="搜尋商品、品牌、型號、顏色" value="' + esc(INV.q) + '"><select id="invCat"><option value="all">全部分類</option>' + CATS.map((c) => '<option value="' + c.id + '"' + (INV.cat === c.id ? ' selected' : '') + '>' + esc(c.name) + '</option>').join('') + '</select></div><div id="invRows"></div>';
     invBody.innerHTML = h; renderInvRows();
   }
   $('#invTabs').addEventListener('click', (e) => { const b = e.target.closest && e.target.closest('[data-itab]'); if (b) { INV.tab = b.dataset.itab; renderInv(); } });
