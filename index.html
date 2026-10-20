@@ -689,7 +689,7 @@ img { -webkit-user-drag: none; user-drag: none; }
         <textarea id="saveCode" rows="3" hidden spellcheck="false" placeholder="存檔碼貼在這裡,再按一次「匯入存檔碼」"></textarea><div class="sub" id="saveMsg"></div></div>
       <div class="controls" id="controls"></div>
       <p class="legal">配件品牌、商品與人物都是虛構的遊戲設定。手機型號使用真實型號。</p>
-      <p class="legal" id="verLine" style="margin-top:2px;opacity:.7">版本 v242 · 2026-10-18</p>
+      <p class="legal" id="verLine" style="margin-top:2px;opacity:.7">版本 v243 · 2026-10-18</p>
     </div>
   </div>
 
@@ -2620,11 +2620,11 @@ function startScene() {
     c.then = then || null;
   }
   const face = (c, x, z) => { c.yaw = Math.atan2(x - c.g.position.x, z - c.g.position.z); };
-  /* buyers per day: about 20 on a normal day, 30-something on a good one, under 20 on a slow one */
+  /* buyers per day: about 14 on a normal day, low 20s on a good one, ~10 on a slow one */
   const DAY_SEC = 800;
   function rollDayTarget() {
     const g = (Math.random() + Math.random() + Math.random() - 1.5) * 2;   // roughly bell-shaped, -3..3
-    G.target = Math.max(11, Math.min(36, Math.round(20 + g * 6.5)));
+    G.target = Math.max(8, Math.min(24, Math.round(14 + g * 4.5)));
     G.ticketMult = Math.exp(0.16 * gauss() * 0.8) * (Math.random() < 0.1 ? 1.3 : 1);   // some days run richer than others
   }
   const gapAvg = () => DAY_SEC / G.target;
