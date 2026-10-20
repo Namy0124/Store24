@@ -571,7 +571,13 @@ img { -webkit-user-drag: none; user-drag: none; }
   .pos-right .sub, .pos-right > p { display: none; }
   .cash-row { margin: 0; min-height: 0; gap: 4px; } .cash-row .cash { padding: 3px 8px; font-size: 12px; }
   .kp-disp { font-size: 18px; min-height: 30px; padding: 2px 8px; }
-  .keypad { grid-template-columns: repeat(6, 1fr); gap: 5px; } .keypad .btn { min-height: 38px; font-size: 16px; padding: 0; }
+  .keypad { grid-template-columns: repeat(3, 1fr); gap: 4px; } .keypad .btn { min-height: 32px; font-size: 16px; padding: 0; }   /* 3 x 4 calculator layout, same as portrait */
+  .pos.st-pay .pos-right { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr); grid-template-rows: auto auto 1fr; gap: 4px 8px; align-content: start; }   /* pay step: amount + buttons on the left, the 3 x 4 keypad on the right */
+  .pos.st-pay .pos-right .cash-row { grid-column: 1 / -1; }
+  .pos.st-pay .pos-right .kp-disp { grid-column: 1; grid-row: 2; align-self: start; }
+  .pos.st-pay .pos-right .keypad { grid-column: 2; grid-row: 2 / span 2; }
+  .pos.st-pay .pos-right .btn-row { grid-column: 1; grid-row: 3; align-self: start; flex-direction: column; }
+  .pos.st-pay .pos-right .btn-row .btn { flex: 0 0 auto; }
   .co-sum { gap: 4px; } .co-sum div { padding: 4px 8px; flex-direction: row; align-items: baseline; justify-content: space-between; gap: 4px; } .co-sum b, .co-given b { font-size: 16px; } .co-sum span { font-size: 11px; }
   .co-given { margin: 0; padding: 4px 8px; } .co-given span { font-size: 12px; }
   .dn-grid { grid-template-columns: repeat(4, 1fr); gap: 4px; } .dn, .dn.c50, .dn.c10, .dn.c5, .dn.c1 { min-height: 0; height: 32px; aspect-ratio: auto; font-size: 13px; padding: 2px; border-radius: 8px; }
@@ -717,7 +723,7 @@ img { -webkit-user-drag: none; user-drag: none; }
         <textarea id="saveCode" rows="3" hidden spellcheck="false" placeholder="存檔碼貼在這裡,再按一次「匯入存檔碼」"></textarea><div class="sub" id="saveMsg"></div></div>
       <div class="controls" id="controls"></div>
       <p class="legal">配件品牌、商品與人物都是虛構的遊戲設定。手機型號使用真實型號。</p>
-      <p class="legal" id="verLine" style="margin-top:2px;opacity:.7">版本 v273 · 2026-10-18</p>
+      <p class="legal" id="verLine" style="margin-top:2px;opacity:.7">版本 v274 · 2026-10-18</p>
     </div>
   </div>
 
