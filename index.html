@@ -705,7 +705,7 @@ img { -webkit-user-drag: none; user-drag: none; }
         <textarea id="saveCode" rows="3" hidden spellcheck="false" placeholder="存檔碼貼在這裡,再按一次「匯入存檔碼」"></textarea><div class="sub" id="saveMsg"></div></div>
       <div class="controls" id="controls"></div>
       <p class="legal">配件品牌、商品與人物都是虛構的遊戲設定。手機型號使用真實型號。</p>
-      <p class="legal" id="verLine" style="margin-top:2px;opacity:.7">版本 v270 · 2026-10-18</p>
+      <p class="legal" id="verLine" style="margin-top:2px;opacity:.7">版本 v271 · 2026-10-18</p>
     </div>
   </div>
 
@@ -1103,18 +1103,34 @@ const invInit = (p) => { const cap = p.price >= 1000 ? 4 : p.price >= 500 ? 8 : 
 function invStockK(key, p) { const I = SAVE.inv; if (!(key in I.stock)) I.stock[key] = p ? invInit(p) : 0; return I.stock[key]; }
 const invStock = (p, picks) => invStockK(invKey(p, picks), p);
 /* two layers, per product variant: the top of the display (what customers see) and the stock stored underneath; total = top + under */
-function vcapK(key, p) { const I = SAVE.inv; I.vcap = I.vcap || {}; I.vcap[key] = Math.max(I.vcap[key] || 0, invStockK(key, p)); return I.vcap[key] <= 0 ? 0 : Math.max(1, Math.round(I.vcap[key] * 0.6)); }   // items that were never stocked take no room, so a full display really reads as full   // how many of this item fit on top
-function invTopK(key, p) { const I = SAVE.inv; I.topq = I.topq || {}; const st = invStockK(key, p); if (I.topq[key] === undefined) I.topq[key] = Math.min(st, vcapK(key, p)); I.topq[key] = Math.max(0, Math.min(I.topq[key], st)); return I.topq[key]; }
+function invTopK(key, p) {
+  const I = SAVE.inv; I.topq = I.topq || {};
+  if (I.topq[key] === undefined) { catVariants(p.cat).forEach((x) => { if (I.topq[x.k] === undefined) I.topq[x.k] = 0; }); invFillTop(p.cat); }   // first time: lay the display out evenly
+  I.topq[key] = Math.max(0, Math.min(I.topq[key] || 0, invStockK(key, p))); return I.topq[key];
+}
 const invTop = (p, picks) => invTopK(invKey(p, picks), p);
 const invUnderOf = (p, picks) => { const k = invKey(p, picks); return Math.max(0, invStockK(k, p) - invTopK(k, p)); };
 function catVariants(cat) { const r = []; db.products.forEach((p) => { if (p.cat === cat) variantsOf(p).forEach((v) => r.push({ p: p, picks: v, k: invKey(p, v) })); }); return r; }
 function invTotal(cat) { return catVariants(cat).reduce((a, x) => a + invStockK(x.k, x.p), 0); }
-function invCap(cat) { return Math.max(1, catVariants(cat).reduce((a, x) => a + vcapK(x.k, x.p), 0)); }
+function invCap(cat) { const I = SAVE.inv; I.ccap = I.ccap || {}; I.ccap[cat] = Math.max(I.ccap[cat] || 0, invTotal(cat)); return Math.max(1, Math.round(I.ccap[cat] * 0.6)); }   // how many fit on the display, for the whole category
 function invTopQty(cat) { return catVariants(cat).reduce((a, x) => a + invTopK(x.k, x.p), 0); }
 function invUnder(cat) { return catVariants(cat).reduce((a, x) => a + Math.max(0, invStockK(x.k, x.p) - invTopK(x.k, x.p)), 0); }
-function invAutoFill(only) {   // stocking a delivered category: fill every item's top first, what is left stays underneath
-  const I = SAVE.inv; I.topq = I.topq || {}; let moved = 0; const cats = {}; db.products.forEach((p) => { if (!only || p.cat === only) cats[p.cat] = 1; });
-  Object.keys(cats).forEach((c) => catVariants(c).forEach((x) => { const top = invTopK(x.k, x.p), add = Math.min(Math.max(0, vcapK(x.k, x.p) - top), invStockK(x.k, x.p) - top); if (add > 0) { I.topq[x.k] = top + add; moved += add; } }));
+/* stocking a display: the room on top is shared out evenly over the items that have stock (always topping up the emptiest item first). An item with nothing left is skipped, so the others get its share; once it is back in stock it is part of the average again. dry = only count. */
+function invFillTop(cat, dry) {
+  const I = SAVE.inv; I.topq = I.topq || {};
+  const vs = catVariants(cat).map((x) => { const st = invStockK(x.k, x.p), t0 = Math.max(0, Math.min(I.topq[x.k] || 0, st)); return { x: x, st: st, t0: t0, t: t0 }; });
+  let total = vs.reduce((a, v) => a + v.t, 0); const capC = invCap(cat), cand = vs.filter((v) => v.st > v.t);
+  while (total < capC && cand.length) {
+    let bi = -1; for (let i = 0; i < cand.length; i++) { if (cand[i].st > cand[i].t && (bi < 0 || cand[i].t < cand[bi].t)) bi = i; }
+    if (bi < 0) break; cand[bi].t++; total++;
+  }
+  const plan = vs.filter((v) => v.t > v.t0).map((v) => ({ k: v.x.k, p: v.x.p, n: v.t - v.t0 }));
+  if (!dry) vs.forEach((v) => { I.topq[v.x.k] = v.t; });
+  return plan;
+}
+function invAutoFill(only) {
+  let moved = 0; const cats = {}; db.products.forEach((p) => { if (!only || p.cat === only) cats[p.cat] = 1; });
+  Object.keys(cats).forEach((c) => { moved += invFillTop(c).reduce((a, x) => a + x.n, 0); });
   return moved;
 }
 function invAdd(p, picks, n) { const k = invKey(p, picks), topBefore = n < 0 ? invTopK(k, p) : 0, cur = invStockK(k, p); SAVE.inv.stock[k] = Math.max(0, cur + n); if (n < 0) SAVE.inv.topq[k] = Math.max(0, topBefore + n); }
@@ -4580,7 +4596,7 @@ function startScene() {
     closeAnnounce: () => closeAnnounce(),
     mood: { bonus: () => moodTimeBonus(), card: () => cardMoodBonus(), set: (sc) => moodSet(sc), lv: () => moodLv() },
     style: { items: () => STYLE_ITEMS, fx: () => styleFx(), act: (a, v) => styleAct(a, v), owned: (id) => styleOwned(id), worn: (sl) => styleWorn(sl).id, apply: () => applyStyle(), speed: () => SPEED },
-    stock: { drain: (c) => { catVariants(c).forEach((x) => { invTopK(x.k, x.p); SAVE.inv.topq[x.k] = 0; }); shelfRefresh(); }, fillTop: (c) => { catVariants(c).forEach((x) => { SAVE.inv.topq[x.k] = Math.min(invStockK(x.k, x.p), vcapK(x.k, x.p)); }); shelfRefresh(); }, topOf: (p, picks) => invTop(p, picks), info: (c) => stockInfo(c), start: (c) => startRestock(c), act: () => G.rsAct, finish: () => rsFinish(), top: (c) => invTopQty(c), under: (c) => invUnder(c), cap: (c) => invCap(c), fill: () => invAutoFill() },
+    stock: { vs: (c) => catVariants(c).map((x) => ({ k: x.k, top: invTopK(x.k, x.p), st: invStockK(x.k, x.p) })), drain: (c) => { catVariants(c).forEach((x) => { invTopK(x.k, x.p); SAVE.inv.topq[x.k] = 0; }); shelfRefresh(); }, fillTop: (c) => { invFillTop(c); shelfRefresh(); }, topOf: (p, picks) => invTop(p, picks), info: (c) => stockInfo(c), start: (c) => startRestock(c), act: () => G.rsAct, finish: () => rsFinish(), top: (c) => invTopQty(c), under: (c) => invUnder(c), cap: (c) => invCap(c), fill: () => invAutoFill() },
     gacha: { roll: (g, rng) => packRoll(g, rng), state: () => SAVE.gacha, cards: () => SAVE.cards, all: () => CARDS, visible: () => cardsVisible(), rar: () => RAR, book: () => cardBookHtml(), pityAt: PITY_AT },
     shop: { bag: () => SAVE.shop.bag, brushLv: () => SAVE.brushLv, names: () => BRUSHES.map((b) => b.n), listed: () => shopListed(), brushName: brushName, act: (a, v) => phShopAct(a, v), render: shopRender, deliver: shopDeliver, items: () => SHOP_ITEMS, state: () => SAVE.shop, wallet: () => SAVE.wallet, setWallet: (n) => { SAVE.wallet = n; }, tab: () => SHP.tab },
     vip: { dex: dexOpen, dexClose: dexClose, open: spawnVip, state: () => VP, pick: vipPick, call: vipCall, callNow: vipCallNow, end: vipClose, data: () => SAVE.vip, plan: () => G.vipPlan, pen: () => G.vipPen, build: (t, k) => { const m = { haggle: HG, ret: RT, ask: AS, reg: RG }[t]; return k === 'intro' || t === 'reg' ? m[k](regOf(V())) : m[k](); }, kinds: () => ({ haggle: Object.keys(HG), ret: Object.keys(RT), ask: Object.keys(AS), reg: Object.keys(RG) }) },
@@ -5237,9 +5253,8 @@ function startScene() {
   const autoFillApi = () => invAutoFill();
   const stockInfo = (cat) => {
     if (!SHELVES[cat]) return null;
-    const vs = catVariants(cat).map((x) => { const top = invTopK(x.k, x.p), cap = vcapK(x.k, x.p), under = Math.max(0, invStockK(x.k, x.p) - top); return { lab: invLabel(x.p, x.picks), top: top, cap: cap, under: under, mv: Math.min(Math.max(0, cap - top), under) }; });
-    const rows = vs.filter((v) => v.under > 0 || v.top === 0).sort((a, b) => (a.top === 0 && a.under > 0 ? 0 : 1) - (b.top === 0 && b.under > 0 ? 0 : 1) || b.mv - a.mv);
-    return { top: vs.reduce((a, v) => a + v.top, 0), cap: vs.reduce((a, v) => a + v.cap, 0), under: vs.reduce((a, v) => a + v.under, 0), move: vs.reduce((a, v) => a + v.mv, 0), rows: rows };
+    const mv = invFillTop(cat, true).reduce((a, x) => a + x.n, 0);
+    return { top: invTopQty(cat), cap: invCap(cat), under: invUnder(cat), move: mv, rows: [] };
   };
   function startRestock(cat) {
     if (G.rsAct || !SHELVES[cat]) return false;
@@ -5247,14 +5262,14 @@ function startScene() {
     if (upPending(cat)) { toast('這區的新到貨還在箱子裡,先拆箱整理、提籃子補貨'); return false; }
     if (info.under <= 0) { toast('下層庫存也沒有了,要叫貨'); return false; }
     if (info.move <= 0) { toast('上層已經是滿的'); return false; }
-    const plan = catVariants(cat).map((x) => ({ k: x.k, p: x.p, n: Math.min(Math.max(0, vcapK(x.k, x.p) - invTopK(x.k, x.p)), Math.max(0, invStockK(x.k, x.p) - invTopK(x.k, x.p))) })).filter((x) => x.n > 0);
+    const plan = invFillTop(cat, true);
     const n = plan.reduce((a, x) => a + x.n, 0);
     closeShelf(); state.modal = 'stocking';
     G.rsAct = { cat: cat, n: n, plan: plan, t: 0, dur: 2.8 + Math.min(1.6, n * 0.05), done: false };
     const it = byId['disp-' + cat]; if (it) targetYaw = Math.atan2(it.cx - player.position.x, it.cz - player.position.z);
     SFX.knock(); return true;
   }
-  function rsApply(A) { if (A.done) return; A.done = true; const I = SAVE.inv; I.topq = I.topq || {}; let moved = 0; A.plan.forEach((x) => { const top = invTopK(x.k, x.p), add = Math.min(x.n, Math.max(0, invStockK(x.k, x.p) - top)); if (add > 0) { I.topq[x.k] = top + add; moved += add; } }); shelfRefresh(); saveGame(); SFX.knock(); toast(catName(A.cat) + ':從下層補了 ' + moved + ' 件到上層(' + A.plan.length + ' 種商品)'); }
+  function rsApply(A) { if (A.done) return; A.done = true; const moved = invFillTop(A.cat).reduce((a, x) => a + x.n, 0); shelfRefresh(); saveGame(); SFX.knock(); toast(catName(A.cat) + ':從下層補了 ' + moved + ' 件到上層(' + A.plan.length + ' 種商品,平均補)'); }
   function rsFinish() { const A = G.rsAct; if (!A) return; rsApply(A); G.rsAct = null; if (state.modal === 'stocking') state.modal = null; renderTodo(); }
   const smooth = (x) => { x = Math.max(0, Math.min(1, x)); return x * x * (3 - 2 * x); };
   function rsActPose(dt) {

@@ -897,18 +897,34 @@ const invInit = (p) => { const cap = p.price >= 1000 ? 4 : p.price >= 500 ? 8 : 
 function invStockK(key, p) { const I = SAVE.inv; if (!(key in I.stock)) I.stock[key] = p ? invInit(p) : 0; return I.stock[key]; }
 const invStock = (p, picks) => invStockK(invKey(p, picks), p);
 /* two layers, per product variant: the top of the display (what customers see) and the stock stored underneath; total = top + under */
-function vcapK(key, p) { const I = SAVE.inv; I.vcap = I.vcap || {}; I.vcap[key] = Math.max(I.vcap[key] || 0, invStockK(key, p)); return I.vcap[key] <= 0 ? 0 : Math.max(1, Math.round(I.vcap[key] * 0.6)); }   // items that were never stocked take no room, so a full display really reads as full   // how many of this item fit on top
-function invTopK(key, p) { const I = SAVE.inv; I.topq = I.topq || {}; const st = invStockK(key, p); if (I.topq[key] === undefined) I.topq[key] = Math.min(st, vcapK(key, p)); I.topq[key] = Math.max(0, Math.min(I.topq[key], st)); return I.topq[key]; }
+function invTopK(key, p) {
+  const I = SAVE.inv; I.topq = I.topq || {};
+  if (I.topq[key] === undefined) { catVariants(p.cat).forEach((x) => { if (I.topq[x.k] === undefined) I.topq[x.k] = 0; }); invFillTop(p.cat); }   // first time: lay the display out evenly
+  I.topq[key] = Math.max(0, Math.min(I.topq[key] || 0, invStockK(key, p))); return I.topq[key];
+}
 const invTop = (p, picks) => invTopK(invKey(p, picks), p);
 const invUnderOf = (p, picks) => { const k = invKey(p, picks); return Math.max(0, invStockK(k, p) - invTopK(k, p)); };
 function catVariants(cat) { const r = []; db.products.forEach((p) => { if (p.cat === cat) variantsOf(p).forEach((v) => r.push({ p: p, picks: v, k: invKey(p, v) })); }); return r; }
 function invTotal(cat) { return catVariants(cat).reduce((a, x) => a + invStockK(x.k, x.p), 0); }
-function invCap(cat) { return Math.max(1, catVariants(cat).reduce((a, x) => a + vcapK(x.k, x.p), 0)); }
+function invCap(cat) { const I = SAVE.inv; I.ccap = I.ccap || {}; I.ccap[cat] = Math.max(I.ccap[cat] || 0, invTotal(cat)); return Math.max(1, Math.round(I.ccap[cat] * 0.6)); }   // how many fit on the display, for the whole category
 function invTopQty(cat) { return catVariants(cat).reduce((a, x) => a + invTopK(x.k, x.p), 0); }
 function invUnder(cat) { return catVariants(cat).reduce((a, x) => a + Math.max(0, invStockK(x.k, x.p) - invTopK(x.k, x.p)), 0); }
-function invAutoFill(only) {   // stocking a delivered category: fill every item's top first, what is left stays underneath
-  const I = SAVE.inv; I.topq = I.topq || {}; let moved = 0; const cats = {}; db.products.forEach((p) => { if (!only || p.cat === only) cats[p.cat] = 1; });
-  Object.keys(cats).forEach((c) => catVariants(c).forEach((x) => { const top = invTopK(x.k, x.p), add = Math.min(Math.max(0, vcapK(x.k, x.p) - top), invStockK(x.k, x.p) - top); if (add > 0) { I.topq[x.k] = top + add; moved += add; } }));
+/* stocking a display: the room on top is shared out evenly over the items that have stock (always topping up the emptiest item first). An item with nothing left is skipped, so the others get its share; once it is back in stock it is part of the average again. dry = only count. */
+function invFillTop(cat, dry) {
+  const I = SAVE.inv; I.topq = I.topq || {};
+  const vs = catVariants(cat).map((x) => { const st = invStockK(x.k, x.p), t0 = Math.max(0, Math.min(I.topq[x.k] || 0, st)); return { x: x, st: st, t0: t0, t: t0 }; });
+  let total = vs.reduce((a, v) => a + v.t, 0); const capC = invCap(cat), cand = vs.filter((v) => v.st > v.t);
+  while (total < capC && cand.length) {
+    let bi = -1; for (let i = 0; i < cand.length; i++) { if (cand[i].st > cand[i].t && (bi < 0 || cand[i].t < cand[bi].t)) bi = i; }
+    if (bi < 0) break; cand[bi].t++; total++;
+  }
+  const plan = vs.filter((v) => v.t > v.t0).map((v) => ({ k: v.x.k, p: v.x.p, n: v.t - v.t0 }));
+  if (!dry) vs.forEach((v) => { I.topq[v.x.k] = v.t; });
+  return plan;
+}
+function invAutoFill(only) {
+  let moved = 0; const cats = {}; db.products.forEach((p) => { if (!only || p.cat === only) cats[p.cat] = 1; });
+  Object.keys(cats).forEach((c) => { moved += invFillTop(c).reduce((a, x) => a + x.n, 0); });
   return moved;
 }
 function invAdd(p, picks, n) { const k = invKey(p, picks), topBefore = n < 0 ? invTopK(k, p) : 0, cur = invStockK(k, p); SAVE.inv.stock[k] = Math.max(0, cur + n); if (n < 0) SAVE.inv.topq[k] = Math.max(0, topBefore + n); }
