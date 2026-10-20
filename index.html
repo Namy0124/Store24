@@ -690,7 +690,7 @@ img { -webkit-user-drag: none; user-drag: none; }
         <textarea id="saveCode" rows="3" hidden spellcheck="false" placeholder="存檔碼貼在這裡,再按一次「匯入存檔碼」"></textarea><div class="sub" id="saveMsg"></div></div>
       <div class="controls" id="controls"></div>
       <p class="legal">配件品牌、商品與人物都是虛構的遊戲設定。手機型號使用真實型號。</p>
-      <p class="legal" id="verLine" style="margin-top:2px;opacity:.7">版本 v246 · 2026-10-18</p>
+      <p class="legal" id="verLine" style="margin-top:2px;opacity:.7">版本 v247 · 2026-10-18</p>
     </div>
   </div>
 
@@ -822,7 +822,7 @@ img { -webkit-user-drag: none; user-drag: none; }
     <div class="sheet-box">
       <div class="sheet-head gutter"><h2 id="apTitle">代貼保護貼</h2></div>
       <div class="sheet-body gutter" style="text-align:center"><div id="apHint" class="sub" style="min-height:44px;margin-bottom:8px"></div>
-        <canvas id="apCv" width="300" height="420" style="touch-action:none;width:min(300px,100%);max-height:50vh;border-radius:14px;display:block;margin:0 auto 10px"></canvas>
+        <canvas id="apCv" width="300" height="420" style="touch-action:none;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;width:min(300px,100%,calc(50vh * 0.714));border-radius:14px;display:block;margin:0 auto 10px"></canvas>
         <div class="btn-row" id="apBtns" style="justify-content:center"></div></div>
     </div>
   </div>
@@ -4198,13 +4198,17 @@ function startScene() {
   }
   function apPoint(e) { const r = apCv.getBoundingClientRect(); const w = r.width || AW; return { x: (e.clientX - r.left) * AW / w, y: (e.clientY - r.top) * AH / (r.height || AH) }; }
   apCv.addEventListener('pointerdown', (e) => {
-    if (!AP.on) return; const p = apPoint(e); AP.drag = p; apMove(p, p);
+    if (!AP.on) return; e.preventDefault(); const p = apPoint(e); AP.drag = p; AP.pad = p; apMove(p, p);   // the tool shows up right under the finger as soon as it touches
     if (AP.stage === 'dust') { apPick(p.x, p.y, 16); }
     if (AP.stage === 'fish' && AP.gap) apPick(p.x, p.y, 16);
     try { apCv.setPointerCapture(e.pointerId); } catch (er) { /* ignore */ }
   });
-  apCv.addEventListener('pointermove', (e) => { if (!AP.on) return; const p = apPoint(e); AP.pad = p; if (AP.drag) { apMove(AP.drag, p); AP.drag = p; } });
-  const apUp = () => { AP.drag = null; };
+  apCv.addEventListener('pointermove', (e) => {
+    if (!AP.on) return; e.preventDefault();
+    const evs = AP.drag && e.getCoalescedEvents ? e.getCoalescedEvents() : null;   // phones report many small moves between frames: use them all so the tool follows the finger smoothly
+    (evs && evs.length ? evs : [e]).forEach((ev) => { const p = apPoint(ev); AP.pad = p; if (AP.drag) { apMove(AP.drag, p); AP.drag = p; } });
+  });
+  const apUp = (e) => { AP.drag = null; if (e && e.pointerType && e.pointerType !== 'mouse') AP.pad = null; };   // on a touch screen the tool goes away when the finger lifts
   apCv.addEventListener('pointerup', apUp); apCv.addEventListener('pointercancel', apUp);
   function apPick(x, y, rad) {
     const i = AP.specks.findIndex((s) => Math.hypot(s.x - x, s.y - y) < rad + s.r);
