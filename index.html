@@ -2,7 +2,7 @@
 <html lang="zh-Hant">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <meta name="theme-color" content="#0B7A82">
 <title>24HR門市店員</title>
 <meta name="claude:viewport-fit-sides" content="cover">
@@ -44,7 +44,9 @@
   color-scheme: dark;
 }
 * { box-sizing: border-box; }
-html, body { height: 100%; }
+html, body { height: 100%; overscroll-behavior: none; -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
+html { touch-action: manipulation; }
+@media (pointer: coarse) { input, textarea, select { font-size: 16px !important; } }   /* iOS zooms the page when a field smaller than 16px gets focus */
 body { margin: 0; background: var(--bg); color: var(--fg); font-family: var(--font-body); font-size: 15px; line-height: 1.5; overflow: hidden; }
 button, input, select, textarea { font: inherit; color: inherit; }
 button { cursor: pointer; }
@@ -694,7 +696,7 @@ img { -webkit-user-drag: none; user-drag: none; }
         <textarea id="saveCode" rows="3" hidden spellcheck="false" placeholder="存檔碼貼在這裡,再按一次「匯入存檔碼」"></textarea><div class="sub" id="saveMsg"></div></div>
       <div class="controls" id="controls"></div>
       <p class="legal">配件品牌、商品與人物都是虛構的遊戲設定。手機型號使用真實型號。</p>
-      <p class="legal" id="verLine" style="margin-top:2px;opacity:.7">版本 v264 · 2026-10-18</p>
+      <p class="legal" id="verLine" style="margin-top:2px;opacity:.7">版本 v265 · 2026-10-18</p>
     </div>
   </div>
 
@@ -6233,6 +6235,10 @@ function startScene() {
   }
   $('#btnPhone').addEventListener('click', () => (PH.open ? (PH.ring && PH.call ? null : closePhone()) : openPhone()));
   $('#phClose').addEventListener('click', () => { if (!(PH.ring && PH.call)) closePhone(); });
+  /* keep the page from zooming: iOS pinch gestures and two-finger touches are ignored (the game has its own camera controls) */
+  ['gesturestart', 'gesturechange', 'gestureend'].forEach((n) => document.addEventListener(n, (e) => e.preventDefault(), { passive: false }));
+  document.addEventListener('touchmove', (e) => { if (e.touches && e.touches.length > 1 && e.scale !== undefined && e.scale !== 1) e.preventDefault(); }, { passive: false });
+  window.addEventListener('scroll', () => { if (window.scrollX || window.scrollY) window.scrollTo(0, 0); }, { passive: true });
   $('#phHomeBtn').addEventListener('click', () => { if (!PH.call) phShow('home'); });
   $('#phAppStack').addEventListener('click', () => phShow('game'));
   $('#phAppMsg').addEventListener('click', () => phShow('msgs'));
