@@ -705,7 +705,7 @@ img { -webkit-user-drag: none; user-drag: none; }
         <textarea id="saveCode" rows="3" hidden spellcheck="false" placeholder="存檔碼貼在這裡,再按一次「匯入存檔碼」"></textarea><div class="sub" id="saveMsg"></div></div>
       <div class="controls" id="controls"></div>
       <p class="legal">配件品牌、商品與人物都是虛構的遊戲設定。手機型號使用真實型號。</p>
-      <p class="legal" id="verLine" style="margin-top:2px;opacity:.7">版本 v267 · 2026-10-18</p>
+      <p class="legal" id="verLine" style="margin-top:2px;opacity:.7">版本 v268 · 2026-10-18</p>
     </div>
   </div>
 
@@ -2260,6 +2260,9 @@ function startScene() {
     DECO.meshes.forEach((m) => decoGroup.remove(m)); DECO.meshes = []; DECO.fx = [];
     SAVE.deco.items.forEach((it, i) => { if (!cardById(it.id)) return; const g = cardMesh(it.id, DECO.sel && DECO.sel.kind === 'item' && DECO.sel.i === i); placeAt(g, it.w, it.u, it.y); decoGroup.add(g); DECO.meshes.push(g); });
   }
+  const CARD_MOOD = { N: 0, R: 0.03, SR: 0.06, SSR: 0.1 };   // pasted cards of rarity R and up make the clerk's good mood last longer
+  const cardMoodBonus = () => SAVE.deco.items.reduce((a, it) => a + (cardById(it.id) ? CARD_MOOD[cardById(it.id).r] || 0 : 0), 0);
+  const moodTimeBonus = () => Math.min(0.8, cardMoodBonus() + styleFx().mood);
   const decoBonus = () => Math.min(0.6, SAVE.deco.items.reduce((a, it) => a + (cardById(it.id) ? cardById(it.id).appeal : 0), 0));
   const decoSnap = (v) => Math.round(v * 20) / 20;
   function decoClamp(w, u, y) { const Z = DWALL[w]; return { u: decoSnap(Math.max(Z.u0 + CW / 2, Math.min(Z.u1 - CW / 2, u))), y: decoSnap(Math.max(Z.y0 + CH / 2, Math.min(Z.y1 - CH / 2, y))) }; }
@@ -2339,21 +2342,21 @@ function startScene() {
   const STYLE_SLOTS = [{ k: 'top', n: '上衣', who: 'clerk' }, { k: 'pants', n: '褲子', who: 'clerk' }, { k: 'hat', n: '帽子', who: 'clerk' }, { k: 'floor', n: '地板', who: 'shop' }, { k: 'wall', n: '牆面', who: 'shop' }, { k: 'light', n: '燈光', who: 'shop' }];
   const STYLE_ITEMS = [
     { id: 'top0', slot: 'top', name: '店員制服(青綠)', price: 0, col: 0x0B7A82 },
-    { id: 'top1', slot: 'top', name: '白襯衫', price: 500, col: 0xF2F2F2, fx: { fav: 0.04 } },
+    { id: 'top1', slot: 'top', name: '白襯衫', price: 500, col: 0xF2F2F2, fx: { fav: 0.04, mood: 0.1 } },
     { id: 'top2', slot: 'top', name: '黑色工作圍裙', price: 800, col: 0x2B2F36, fx: { fast: 0.05 } },
-    { id: 'top3', slot: 'top', name: '粉色連帽衫', price: 1200, col: 0xF4A6C0, fx: { fav: 0.06 } },
-    { id: 'top4', slot: 'top', name: '酒紅西裝背心', price: 1800, col: 0x8E2F45, fx: { fav: 0.05, foot: 0.03 } },
+    { id: 'top3', slot: 'top', name: '粉色連帽衫', price: 1200, col: 0xF4A6C0, fx: { fav: 0.06, mood: 0.15 } },
+    { id: 'top4', slot: 'top', name: '酒紅西裝背心', price: 1800, col: 0x8E2F45, fx: { fav: 0.05, foot: 0.03, mood: 0.1 } },
     { id: 'pants0', slot: 'pants', name: '深灰工作褲', price: 0, col: 0x2F3E4A },
     { id: 'pants1', slot: 'pants', name: '牛仔褲', price: 400, col: 0x3A5A8C, fx: { fast: 0.03 } },
     { id: 'pants2', slot: 'pants', name: '卡其褲', price: 400, col: 0xB59A6A, fx: { fav: 0.02 } },
     { id: 'pants3', slot: 'pants', name: '運動長褲', price: 700, col: 0x555B66, fx: { fast: 0.06 } },
     { id: 'hat0', slot: 'hat', name: '不戴帽子', price: 0, hat: '' },
     { id: 'hat1', slot: 'hat', name: '紅色鴨舌帽', price: 500, col: 0xC0392B, hat: 'cap', fx: { foot: 0.02 } },
-    { id: 'hat2', slot: 'hat', name: '米色毛帽', price: 700, col: 0xE8D9B8, hat: 'beanie', fx: { fav: 0.03 } },
+    { id: 'hat2', slot: 'hat', name: '米色毛帽', price: 700, col: 0xE8D9B8, hat: 'beanie', fx: { fav: 0.03, mood: 0.15 } },
     { id: 'hat3', slot: 'hat', name: '黑色棒球帽', price: 900, col: 0x22262B, hat: 'cap', fx: { fast: 0.03, foot: 0.02 } },
     { id: 'floor0', slot: 'floor', name: '原本的地板', price: 0, col: 0xFFFFFF },
     { id: 'floor1', slot: 'floor', name: '暖木色地板', price: 1500, col: 0xFFD9A8, fx: { foot: 0.03 } },
-    { id: 'floor2', slot: 'floor', name: '粉嫩地板', price: 1800, col: 0xFFC9DC, fx: { fav: 0.03 } },
+    { id: 'floor2', slot: 'floor', name: '粉嫩地板', price: 1800, col: 0xFFC9DC, fx: { fav: 0.03, mood: 0.1 } },
     { id: 'floor3', slot: 'floor', name: '深色石紋地板', price: 2500, col: 0x9AA7B4, fx: { fav: 0.04 } },
     { id: 'wall0', slot: 'wall', name: '原本的牆面', price: 0, col: 0xBCD8D4 },
     { id: 'wall1', slot: 'wall', name: '奶油白牆面', price: 1500, col: 0xF3E8D0, fx: { foot: 0.03 } },
@@ -2361,17 +2364,17 @@ function startScene() {
     { id: 'wall3', slot: 'wall', name: '夜藍牆面', price: 2600, col: 0x6C7FA8, fx: { fav: 0.04, foot: 0.02 } },
     { id: 'light0', slot: 'light', name: '原本的燈光', price: 0, col: 0xFFFFFF },
     { id: 'light1', slot: 'light', name: '暖黃燈光', price: 2000, col: 0xFFE2B0, fx: { foot: 0.04 } },
-    { id: 'light2', slot: 'light', name: '粉色氛圍燈', price: 2400, col: 0xFFD0E4, fx: { fav: 0.04 } },
-    { id: 'light3', slot: 'light', name: '薰衣草紫光', price: 3000, col: 0xD9C2FF, fx: { fav: 0.03, foot: 0.04 } }
+    { id: 'light2', slot: 'light', name: '粉色氛圍燈', price: 2400, col: 0xFFD0E4, fx: { fav: 0.04, mood: 0.1 } },
+    { id: 'light3', slot: 'light', name: '薰衣草紫光', price: 3000, col: 0xD9C2FF, fx: { fav: 0.03, foot: 0.04, mood: 0.2 } }
   ];
   const styleItem = (id) => STYLE_ITEMS.find((x) => x.id === id);
   const styleSave = () => { const S = SAVE.style = SAVE.style && typeof SAVE.style === 'object' ? SAVE.style : { own: {}, wear: {} }; S.own = S.own || {}; S.wear = S.wear || {}; return S; };
   const styleOwned = (id) => { const it = styleItem(id); return !!it && (it.price === 0 || !!styleSave().own[id]); };
   const styleWorn = (slot) => { const w = styleSave().wear[slot], it = w && styleOwned(w) ? styleItem(w) : null; return it && it.slot === slot ? it : STYLE_ITEMS.find((x) => x.slot === slot); };
   function styleFx() {
-    const t = { fav: 0, foot: 0, fast: 0 };
+    const t = { fav: 0, foot: 0, fast: 0, mood: 0 };
     STYLE_SLOTS.forEach((sl) => { const it = styleWorn(sl.k); if (it && it.fx) Object.keys(it.fx).forEach((k) => { t[k] += it.fx[k]; }); });
-    Object.keys(t).forEach((k) => { t[k] = Math.min(0.25, t[k]); }); return t;
+    Object.keys(t).forEach((k) => { t[k] = Math.min(k === 'mood' ? 0.6 : 0.25, t[k]); }); return t;
   }
   const styleStar = (n) => (n < 5 && Math.random() < styleFx().fav ? n + 1 : n);
   const styleMats = { top: [], pants: [] }, hatGroup = new T.Group(); hatGroup.position.set(0, 1.58, -0.02); player.add(hatGroup);
@@ -2394,7 +2397,7 @@ function startScene() {
       SPEED = 4.0 * (1 + styleFx().fast);
     } catch (e) { /* ignore */ }
   }
-  const styleFxText = (fx) => (fx ? Object.keys(fx).map((k) => ({ fav: '好感', foot: '客流', fast: '走路' }[k] + ' +' + Math.round(fx[k] * 100) + '%')).join('、') : '沒有加成');
+  const styleFxText = (fx) => (fx ? Object.keys(fx).map((k) => ({ fav: '好感', foot: '客流', fast: '走路', mood: '好心情時間' }[k] + ' +' + Math.round(fx[k] * 100) + '%')).join('、') : '沒有加成');
   applyStyle();
 
   /* markers */
@@ -4576,6 +4579,7 @@ function startScene() {
     foot: (m) => rateMul(m),
     stockInfo: (c) => stockInfo(c),
     closeAnnounce: () => closeAnnounce(),
+    mood: { bonus: () => moodTimeBonus(), card: () => cardMoodBonus(), set: (sc) => moodSet(sc), lv: () => moodLv() },
     style: { items: () => STYLE_ITEMS, fx: () => styleFx(), act: (a, v) => styleAct(a, v), owned: (id) => styleOwned(id), worn: (sl) => styleWorn(sl).id, apply: () => applyStyle(), speed: () => SPEED },
     stock: { drain: (c) => { catVariants(c).forEach((x) => { invTopK(x.k, x.p); SAVE.inv.topq[x.k] = 0; }); shelfRefresh(); }, fillTop: (c) => { catVariants(c).forEach((x) => { SAVE.inv.topq[x.k] = Math.min(invStockK(x.k, x.p), vcapK(x.k, x.p)); }); shelfRefresh(); }, topOf: (p, picks) => invTop(p, picks), info: (c) => stockInfo(c), start: (c) => startRestock(c), act: () => G.rsAct, finish: () => rsFinish(), top: (c) => invTopQty(c), under: (c) => invUnder(c), cap: (c) => invCap(c), fill: () => invAutoFill() },
     gacha: { roll: (g, rng) => packRoll(g, rng), state: () => SAVE.gacha, cards: () => SAVE.cards, all: () => CARDS, visible: () => cardsVisible(), rar: () => RAR, book: () => cardBookHtml(), pityAt: PITY_AT },
@@ -4591,7 +4595,7 @@ function startScene() {
   const moodLv = () => (G.mood && G.gt < G.mood.until ? G.mood.lv : 0);
   function moodSet(score) {
     if (!G.shop || score < 8) return 0;
-    const lv = score >= 15 ? 2 : 1, dur = lv === 2 ? 160 : 110, keep = moodLv();
+    const lv = score >= 15 ? 2 : 1, dur = (lv === 2 ? 160 : 110) * (1 + moodTimeBonus()), keep = moodLv();
     G.mood = { lv: Math.max(lv, keep), until: Math.max(G.gt + dur, G.mood ? G.mood.until : 0) }; renderStat(); return lv;
   }
   /* getting scolded by the assistant manager (phone call, caught slacking, dirty-store visit) puts the clerk in a bad mood for a while: customers lose patience faster, reviews drop a little, no tips */
@@ -5977,12 +5981,12 @@ function startScene() {
       '<circle cx="60" cy="38" r="17" fill="#F2C9A0"/><path d="M43 36 Q60 16 77 36 Q60 28 43 36Z" fill="#2B2420"/><circle cx="54" cy="40" r="2" fill="#1B1F23"/><circle cx="66" cy="40" r="2" fill="#1B1F23"/>' + hat +
       '<rect width="120" height="150" fill="' + hex6(lt.col) + '" opacity="' + (lt.col === 0xFFFFFF ? 0 : 0.22) + '"/></svg>';
   }
-  function styleTryFx() { const t = { fav: 0, foot: 0, fast: 0 }; STYLE_SLOTS.forEach((sl) => { const it = STP.tr[sl.k] ? styleItem(STP.tr[sl.k]) : styleWorn(sl.k); if (it && it.fx) Object.keys(it.fx).forEach((k) => { t[k] += it.fx[k]; }); }); Object.keys(t).forEach((k) => { t[k] = Math.min(0.25, t[k]); }); return t; }
+  function styleTryFx() { const t = { fav: 0, foot: 0, fast: 0, mood: 0 }; STYLE_SLOTS.forEach((sl) => { const it = STP.tr[sl.k] ? styleItem(STP.tr[sl.k]) : styleWorn(sl.k); if (it && it.fx) Object.keys(it.fx).forEach((k) => { t[k] += it.fx[k]; }); }); Object.keys(t).forEach((k) => { t[k] = Math.min(k === 'mood' ? 0.6 : 0.25, t[k]); }); return t; }
   function styleRender() {
     $('#phStBal').textContent = '錢包 ' + fmtN(SAVE.wallet);
     $('#phStTabs').innerHTML = [['clerk', '店員服飾'], ['shop', '店面裝潢']].map((t) => '<button type="button" data-st="tab" data-v="' + t[0] + '" class="' + (STP.tab === t[0] ? 'on' : '') + '">' + t[1] + '</button>').join('');
     const fx = styleTryFx(), trying = Object.keys(STP.tr).length > 0;
-    let h = '<div class="st-pv">' + styleFigure() + '<div class="st-pvt"><b>' + (trying ? '試穿中(還沒買/穿上)' : '目前的造型') + '</b><div>好感 +' + Math.round(fx.fav * 100) + '% · 客流 +' + Math.round(fx.foot * 100) + '% · 走路 +' + Math.round(fx.fast * 100) + '%</div>' + (trying ? '<button type="button" class="btn small" data-st="untry" data-v="x">清除試穿</button>' : '<div class="sub">點項目旁的「試穿」可以先看看。</div>') + '</div></div>';
+    let h = '<div class="st-pv">' + styleFigure() + '<div class="st-pvt"><b>' + (trying ? '試穿中(還沒買/穿上)' : '目前的造型') + '</b><div>好感 +' + Math.round(fx.fav * 100) + '% · 客流 +' + Math.round(fx.foot * 100) + '% · 走路 +' + Math.round(fx.fast * 100) + '% · 好心情 +' + Math.round(fx.mood * 100) + '%</div>' + (trying ? '<button type="button" class="btn small" data-st="untry" data-v="x">清除試穿</button>' : '<div class="sub">點項目旁的「試穿」可以先看看。</div>') + '</div></div>';
     STYLE_SLOTS.filter((sl) => sl.who === STP.tab).forEach((sl) => {
       h += '<div class="st-slot">' + esc(sl.n) + '</div>';
       STYLE_ITEMS.filter((x) => x.slot === sl.k).forEach((it) => {
@@ -6017,7 +6021,7 @@ function startScene() {
   const decoView = () => { const Z = DWALL[DECO.wall], c = Z.cam(DECO.pan); return c; };
   function decoRender() {
     const D = SAVE.deco, bag = SAVE.shop.bag, own = CARDS.filter((c) => (bag[c.id] || 0) > 0).sort((a, b) => rarIdx(b.r) - rarIdx(a.r));
-    $('#dbBonus').textContent = '客人多買一件的機率 +' + Math.round(decoBonus() * 100) + '%(' + D.items.length + '/' + DECO_MAX + ' 張)';
+    $('#dbBonus').textContent = '多買一件 +' + Math.round(decoBonus() * 100) + '% · 好心情時間 +' + Math.round(cardMoodBonus() * 100) + '%(' + D.items.length + '/' + DECO_MAX + ' 張)';
     { const pn = $('#dbL').parentNode; if (pn && pn.style) pn.style.display = DECO.wall === 'b' ? 'none' : ''; }
     $('#dbWalls').innerHTML = Object.keys(DWALL).map((k) => '<button type="button" data-db="wall" data-v="' + k + '" class="' + (DECO.wall === k ? 'on' : '') + '">' + DWALL[k].name + '</button>').join('');
     $('#dbStrip').innerHTML = own.length ? own.map((c) => '<button type="button" class="db-card cf cf-' + c.r + (DECO.sel && DECO.sel.kind === 'new' && DECO.sel.id === c.id ? ' on' : '') + '" data-db="pick" data-v="' + esc(c.id) + '"><img src="' + c.img + '" alt=""><b class="rb rb-' + c.r + '">' + c.r + '</b><i>×' + bag[c.id] + '</i></button>').join('') : '<div class="db-empty">背包裡沒有小卡。到手機「購物」買卡包,拆開就有小卡可以貼。</div>';
