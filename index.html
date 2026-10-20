@@ -696,7 +696,7 @@ img { -webkit-user-drag: none; user-drag: none; }
         <textarea id="saveCode" rows="3" hidden spellcheck="false" placeholder="存檔碼貼在這裡,再按一次「匯入存檔碼」"></textarea><div class="sub" id="saveMsg"></div></div>
       <div class="controls" id="controls"></div>
       <p class="legal">配件品牌、商品與人物都是虛構的遊戲設定。手機型號使用真實型號。</p>
-      <p class="legal" id="verLine" style="margin-top:2px;opacity:.7">版本 v265 · 2026-10-18</p>
+      <p class="legal" id="verLine" style="margin-top:2px;opacity:.7">版本 v266 · 2026-10-18</p>
     </div>
   </div>
 
@@ -4203,12 +4203,11 @@ function startScene() {
         if (inv.done) h += '<div class="btn-row"><button class="btn primary" type="button" data-co="finish">完成交易</button></div>';
         else if (inv.type === 'paper') h += '<p class="sub">點桌上的發票,或按下方按鈕交給客人。</p><div class="recpt"><div>電子發票證明聯</div><b>' + esc(inv.no) + '</b><div>' + fmtN(co.total) + '</div></div><div class="btn-row"><button class="btn primary" type="button" data-co="hand">把發票交給客人</button></div>';
         else if (inv.type === 'carrier') h += '<p class="sub">點桌上客人的手機,或按下方按鈕掃描條碼。</p><div class="recpt bar"><div>客人手機載具條碼</div><b class="bc">' + esc(inv.code) + '</b></div><div class="btn-row"><button class="btn primary" type="button" data-co="scanBar">掃描條碼</button></div>';
-        else h += '<label class="field" for="coTax">輸入客人說的統編(8 碼)<input id="coTax" inputmode="numeric" maxlength="8" autocomplete="off" value="' + esc(co.taxVal || '') + '"></label><div class="btn-row" style="margin-top:10px"><button class="btn primary" type="button" data-co="tax">輸入統編並列印</button></div>';
+        else h += '<div class="co-l">輸入客人說的統編(8 碼)</div><div class="kp-disp" id="coTaxDisp">' + (co.taxVal ? esc(co.taxVal) : '<span style="opacity:.4">00000000</span>') + '</div><div class="keypad">' + ['7', '8', '9', '4', '5', '6', '1', '2', '3', '0'].map((k) => '<button class="btn" type="button" data-co="tk" data-v="' + k + '">' + k + '</button>').join('') + '<button class="btn" type="button" data-co="tkc" aria-label="清除">C</button><button class="btn" type="button" data-co="tkb" aria-label="退格">⌫</button></div><div class="btn-row" style="margin-top:10px"><button class="btn primary" type="button" data-co="tax">輸入統編並列印</button></div>';
       }
     }
     h += '</div></div></div>';
     const keepTop = co._seen !== co.step, prevTop = coBody.scrollTop; coBody.innerHTML = h; co._seen = co.step; coBody.scrollTop = keepTop ? 0 : prevTop;
-    const tx = $('#coTax'); if (tx) tx.focus();
     fitCo(); requestAnimationFrame(fitCo); setTimeout(fitCo, 350); syncProps();
   }
   /* desktop / tablet: if the checkout window is still taller than its room, shrink the whole POS a little instead of making the player scroll */
@@ -4225,7 +4224,8 @@ function startScene() {
   window.addEventListener('resize', () => { if (G.co) fitCo(); });
   /* desktop: type the received amount on the keyboard (digits / numpad, Backspace to erase, Enter to confirm, Delete to clear) */
   window.addEventListener('keydown', (e) => {
-    if (!G.co || G.co.step !== 'pay' || $('#checkout').hidden || e.ctrlKey || e.metaKey || e.altKey || /^(INPUT|TEXTAREA|SELECT)$/.test((e.target && e.target.tagName) || '')) return;
+    if (!G.co || (G.co.step !== 'pay' && G.co.step !== 'invoice') || $('#checkout').hidden || e.ctrlKey || e.metaKey || e.altKey || /^(INPUT|TEXTAREA|SELECT)$/.test((e.target && e.target.tagName) || '')) return;
+    if (G.co.step === 'invoice') { let sl = null; if (/^[0-9]$/.test(e.key)) sl = '[data-co="tk"][data-v="' + e.key + '"]'; else if (e.key === 'Backspace') sl = '[data-co="tkb"]'; else if (e.key === 'Delete') sl = '[data-co="tkc"]'; else if (e.key === 'Enter') sl = '[data-co="tax"]'; const bt = sl && coBody.querySelector(sl); if (bt) { e.preventDefault(); if (!e.repeat || e.key === 'Backspace') bt.click(); } return; }
     let sel = null;
     if (/^[0-9]$/.test(e.key)) sel = '[data-co="k"][data-v="' + e.key + '"]';
     else if (e.key === 'Backspace') sel = '[data-co="kb"]';
@@ -4508,8 +4508,11 @@ function startScene() {
       iv.done = true; toast(a === 'hand' ? '發票交給客人了' : '嗶!載具已歸戶');
       if (a === 'scanBar') { scanFx(6.58, 1.1, 3.55); beep(1800, 0.09); PR.exit = exitToHand(/^phone$/); } else PR.exit = exitToHand(/^rcpt$/);
     }
+    else if (a === 'tk') { if (co.step === 'invoice') co.taxVal = (String(co.taxVal || '') + data.v).replace(/\D/g, '').slice(0, 8); }
+    else if (a === 'tkb') co.taxVal = String(co.taxVal || '').slice(0, -1);
+    else if (a === 'tkc') co.taxVal = '';
     else if (a === 'tax') {
-      const v = ($('#coTax').value || '').trim(); co.taxVal = v;
+      const v = String(co.taxVal || '').trim();
       if (!/^\d{8}$/.test(v)) co.msg = '統編要輸入 8 位數字。';
       else if (v !== co.inv.num) {
         if (co.inv.tries || Math.random() < 0.7) { if (!co.inv.tries) co.pen += 1; co.inv.tries = (co.inv.tries || 0) + 1; co.msg = '客人:統編好像不對耶,請再確認一下。'; }
