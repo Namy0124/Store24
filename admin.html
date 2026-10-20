@@ -413,6 +413,7 @@ button, .btn, [data-co] { touch-action: manipulation; -webkit-tap-highlight-colo
 .pos-right { background: var(--panel-soft); border: 1.5px solid var(--line); border-radius: 14px; padding: 12px; }
 .shelfwant .wg { margin-top: 4px; } .shelfwant .wl { font-size: 14px; line-height: 1.4; } .shelfwant { max-height: 34vh; overflow-y: auto; }
 .shelfwant { position: sticky; top: 0; z-index: 2; margin-bottom: 8px; }
+.stk { display: flex; align-items: center; justify-content: space-between; gap: 10px; background: var(--panel-soft, #eef3f4); border: 1px solid var(--line, #d5dddf); border-radius: 12px; padding: 8px 12px; margin-bottom: 10px; font-size: 14px; line-height: 1.5; } .stk .btn { flex: none; min-width: 88px; }
 .want { background: color-mix(in srgb, var(--signal) 20%, var(--panel)); border: 1.5px solid var(--signal); border-radius: 12px; padding: 8px 12px; }
 .pos-list { border: 1.5px solid var(--line); border-radius: 14px; overflow: hidden; background: var(--panel); }
 .pos-th { display: flex; justify-content: space-between; padding: 8px 12px; background: var(--panel-soft); font-size: 12.5px; color: var(--muted); }
@@ -880,7 +881,17 @@ function invDemand(p) {
 const invInit = (p) => { const cap = p.price >= 1000 ? 4 : p.price >= 500 ? 8 : 14; return Math.max(2, Math.min(cap, Math.round(invDemand(p) * (0.9 + Math.random() * 0.7)))); };   // new items: the company allocates about a week of stock
 function invStockK(key, p) { const I = SAVE.inv; if (!(key in I.stock)) I.stock[key] = p ? invInit(p) : 0; return I.stock[key]; }
 const invStock = (p, picks) => invStockK(invKey(p, picks), p);
-function invAdd(p, picks, n) { const k = invKey(p, picks), cur = invStockK(k, p); SAVE.inv.stock[k] = Math.max(0, cur + n); }
+/* two layers: the top of each display (what customers see) and the stock stored underneath; total = top + under */
+function invTotal(cat) { let t = 0; db.products.forEach((p) => { if (p.cat === cat) variantsOf(p).forEach((v) => { t += invStock(p, v); }); }); return t; }
+function invCap(cat) { const I = SAVE.inv; I.cap = I.cap || {}; I.cap[cat] = Math.max(I.cap[cat] || 0, invTotal(cat)); return Math.max(1, Math.round(I.cap[cat] * 0.6)); }   // how much fits on top of the display
+function invTopQty(cat) { const I = SAVE.inv; I.top = I.top || {}; const t = invTotal(cat); if (I.top[cat] === undefined) I.top[cat] = Math.min(t, invCap(cat)); I.top[cat] = Math.max(0, Math.min(I.top[cat], t)); return I.top[cat]; }
+const invUnder = (cat) => Math.max(0, invTotal(cat) - invTopQty(cat));
+function invAutoFill() {   // a delivery: fill the tops first, what is left goes underneath
+  const I = SAVE.inv; I.top = I.top || {}; let moved = 0; const cats = {}; db.products.forEach((p) => { cats[p.cat] = 1; });
+  Object.keys(cats).forEach((c) => { const top = invTopQty(c), add = Math.min(Math.max(0, invCap(c) - top), invUnder(c)); if (add > 0) { I.top[c] = top + add; moved += add; } });
+  return moved;
+}
+function invAdd(p, picks, n) { const k = invKey(p, picks), topBefore = n < 0 ? invTopQty(p.cat) : 0, cur = invStockK(k, p); SAVE.inv.stock[k] = Math.max(0, cur + n); if (n < 0) SAVE.inv.top[p.cat] = Math.max(0, topBefore + n); }
 const hrand = (str) => { let h = 2166136261; for (let i = 0; i < str.length; i++) { h ^= str.charCodeAt(i); h = Math.imul(h, 16777619); } h ^= h >>> 13; h = Math.imul(h, 0x5bd1e995); h ^= h >>> 15; return (h >>> 0) / 4294967296; };
 /* the company warehouse is simulated: what is left this week after all the other branches ordered */
 const whAdded = (key) => (db.wh && db.wh[key]) || 0;   // stock the owner added to the company warehouse by hand (part of the published shop data, so every player gets it)
@@ -992,7 +1003,8 @@ function openShelf(catId) {
   shelf.cat = catId; shelf.q = ''; shelf.groups = buildGroups(catId);
   $('#shelfTitle').innerHTML = '<span class="dot" style="background:' + cat.css + '"></span>' + esc(cat.name) + (cat.kind === 'wall' ? '陳列牆' : '花車') + ' <span class="sub">共 ' + shelf.groups.length + ' 款</span>';
   let want = ''; try { want = shelfWantFn ? shelfWantFn() : ''; } catch (e) { want = ''; }
-  $('#shelfBody').innerHTML = (want ? '<div class="want shelfwant"><span class="co-l">客人要找</span><div>' + want + '</div></div>' : '') + '<label class="field shelfq" for="shelfSearch"><span class="sr">查詢商品</span><input id="shelfSearch" type="search" placeholder="查詢:品名、品牌、型號、顏色" autocomplete="off"></label><div id="shelfGrid"></div><p class="sheet-foot">客人來了之後,在這裡選出客人要的商品。先選型號,再選款式或顏色。</p>';
+  let stk = ''; try { const si = gameApi && gameApi.stockInfo ? gameApi.stockInfo(catId) : null; if (si) stk = '<div class="stk"><div class="stk-i"><b>上層陳列</b> ' + si.top + ' / ' + si.cap + '<br><b>下層庫存</b> ' + si.under + '</div><button class="btn primary" type="button" data-stk="' + catId + '"' + (si.under <= 0 || si.top >= si.cap ? ' disabled' : '') + '>' + (si.under <= 0 ? '下層沒貨' : si.top >= si.cap ? '上層已滿' : '補貨') + '</button></div>'; } catch (e) { stk = ''; }
+  $('#shelfBody').innerHTML = stk + (want ? '<div class="want shelfwant"><span class="co-l">客人要找</span><div>' + want + '</div></div>' : '') + '<label class="field shelfq" for="shelfSearch"><span class="sr">查詢商品</span><input id="shelfSearch" type="search" placeholder="查詢:品名、品牌、型號、顏色" autocomplete="off"></label><div id="shelfGrid"></div><p class="sheet-foot">客人來了之後,在這裡選出客人要的商品。先選型號,再選款式或顏色。</p>';
   renderShelfGrid();
   $('#shelf').hidden = false;
   state.modal = 'shelf';
