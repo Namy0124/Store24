@@ -694,7 +694,7 @@ img { -webkit-user-drag: none; user-drag: none; }
         <textarea id="saveCode" rows="3" hidden spellcheck="false" placeholder="存檔碼貼在這裡,再按一次「匯入存檔碼」"></textarea><div class="sub" id="saveMsg"></div></div>
       <div class="controls" id="controls"></div>
       <p class="legal">配件品牌、商品與人物都是虛構的遊戲設定。手機型號使用真實型號。</p>
-      <p class="legal" id="verLine" style="margin-top:2px;opacity:.7">版本 v263 · 2026-10-18</p>
+      <p class="legal" id="verLine" style="margin-top:2px;opacity:.7">版本 v264 · 2026-10-18</p>
     </div>
   </div>
 
@@ -5999,6 +5999,7 @@ function startScene() {
 
   /* ---------- 布置模式: pick a card, then tap a blank spot on the wall (the game shows the wall from the front); tap a pasted card to move or take it off ---------- */
   const dbBar = $('#decoBar');
+  const decoCenter = (w) => (w === 'b' ? 0 : (DWALL[w].u0 + DWALL[w].u1) / 2);   // start each wall looking at its middle (the right wall only exists for z -5.6..-1.2, so looking at z=0 showed the doorway instead)
   const decoView = () => { const Z = DWALL[DECO.wall], c = Z.cam(DECO.pan); return c; };
   function decoRender() {
     const D = SAVE.deco, bag = SAVE.shop.bag, own = CARDS.filter((c) => (bag[c.id] || 0) > 0).sort((a, b) => rarIdx(b.r) - rarIdx(a.r));
@@ -6022,7 +6023,7 @@ function startScene() {
   };
   function decoOpen() {
     if (!state.started || state.modal || !G.shop) return false;
-    DECO.mode = true; DECO.sel = null; DECO.pan = DWALL[DECO.wall].pan[0] ? 0 : 0; state.modal = 'deco'; dbBar.hidden = false; decoRender(); refreshDeco3D(); return true;
+    DECO.mode = true; DECO.sel = null; DECO.pan = decoCenter(DECO.wall); state.modal = 'deco'; dbBar.hidden = false; decoRender(); refreshDeco3D(); return true;
   }
   function decoClose() { if (!DECO.mode) return; DECO.mode = false; DECO.sel = null; dbBar.hidden = true; if (DECO.ghost) DECO.ghost.visible = false; decoGhostOn = false; if (state.modal === 'deco') state.modal = null; refreshDeco3D(); }
   function decoPlace(w, u, y) {   // paste the picked card / move the picked card; returns true when done
@@ -6055,14 +6056,14 @@ function startScene() {
   });
   dbBar.addEventListener('click', (e) => {
     const b = e.target.closest('[data-db]'); if (!b) return; const a = b.dataset.db;
-    if (a === 'wall') { DECO.wall = b.dataset.v; DECO.pan = 0; }
+    if (a === 'wall') { DECO.wall = b.dataset.v; DECO.pan = decoCenter(DECO.wall); }
     else if (a === 'pick') { DECO.sel = DECO.sel && DECO.sel.kind === 'new' && DECO.sel.id === b.dataset.v ? null : { kind: 'new', id: b.dataset.v }; }
     else if (a === 'take') { decoTake(); return; }
     else if (a === 'none') { DECO.sel = null; refreshDeco3D(); }
     decoRender();
   });
-  $('#dbL').addEventListener('click', () => { const Z = DWALL[DECO.wall]; DECO.pan = Math.max(Z.u0 + 1.2, DECO.pan - 1.5); if (DECO.wall === 'b') DECO.pan = 0; });
-  $('#dbR').addEventListener('click', () => { const Z = DWALL[DECO.wall]; DECO.pan = Math.min(Z.u1 - 1.2, DECO.pan + 1.5); if (DECO.wall === 'b') DECO.pan = 0; });
+  $('#dbL').addEventListener('click', () => { const Z = DWALL[DECO.wall]; DECO.pan = Math.max(Z.u0 + 1.2, Math.min(Z.u1 - 1.2, DECO.pan + (DECO.wall === 'l' ? 1.5 : -1.5))); if (DECO.wall === 'b') DECO.pan = 0; });
+  $('#dbR').addEventListener('click', () => { const Z = DWALL[DECO.wall]; DECO.pan = Math.max(Z.u0 + 1.2, Math.min(Z.u1 - 1.2, DECO.pan + (DECO.wall === 'l' ? -1.5 : 1.5))); if (DECO.wall === 'b') DECO.pan = 0; });
   $('#dbDone').addEventListener('click', decoClose);
   $('#btnClose').addEventListener('click', () => { closeAnnounce(); });
   $('#btnDeco').addEventListener('click', () => { if (G.cust && (G.cust.st === 'asking' || G.cust.st === 'ready' || G.co)) { toast('客人在等,先招呼完再布置'); return; } if (!decoOpen()) toast('現在不能布置'); });
