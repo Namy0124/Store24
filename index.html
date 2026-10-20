@@ -322,6 +322,7 @@ button, .btn, [data-co] { touch-action: manipulation; -webkit-tap-highlight-colo
 #stat { font-size: 14px; font-family: var(--font-body); font-weight: 700; flex: none; }
 .order { position: static; width: auto; max-width: min(420px, 100%); background: var(--panel); border: 2px solid var(--signal); border-radius: 16px; padding: 10px 14px; box-shadow: var(--shadow); pointer-events: none; }
 .o-h { font-size: 12px; color: var(--muted); font-weight: 700; letter-spacing: .08em; }
+.o-chips { display: flex; flex-wrap: wrap; gap: 4px 5px; max-height: 5.6em; overflow-y: auto; margin-top: 2px; } .o-chip { font-size: 13px; font-weight: 700; line-height: 1.25; padding: 2px 7px; border-radius: 9px; background: var(--panel-soft, #eef3f4); border: 1px solid var(--line, #d5dddf); } .o-chip.done { opacity: .5; text-decoration: line-through; }
 .o-t { font-size: 17px; font-weight: 700; line-height: 1.35; margin: 2px 0; overflow-wrap: anywhere; }
 .o-s { font-size: 12.5px; color: var(--muted); }
 .carry { pointer-events: auto; display: flex; align-items: center; gap: 10px; background: var(--panel); border: 1.5px solid var(--accent); border-radius: 999px; padding: 6px 8px 6px 16px; box-shadow: var(--shadow); max-width: calc(100% - 32px); font-size: 14px; }
@@ -540,7 +541,7 @@ img { -webkit-user-drag: none; user-drag: none; }
   .hud-col { top: 52px; padding-left: max(12px, env(safe-area-inset-left, 0px)); }
   .nexth { font-size: 12px; padding: 4px 8px; max-width: 46vw; margin-top: 4px; }
   .todo #todoList { padding: 6px 10px; min-width: 170px; max-height: 52vh; overflow-y: auto; font-size: 12.5px; }
-  .order { padding: 4px 10px; border-radius: 10px; } .order .o-s { display: none; } .order .o-t { font-size: 13px; margin: 0; } .order .o-h { font-size: 10.5px; }
+  .order { padding: 4px 10px; border-radius: 10px; } .order .o-s { display: none; } .order .o-t { font-size: 13px; margin: 0; } .order .o-chips { max-height: 3.4em; } .order .o-chip { font-size: 11.5px; padding: 1px 6px; } .order .o-h { font-size: 10.5px; }
   .greet { position: fixed; left: auto; right: max(12px, env(safe-area-inset-right, 0px)); top: calc(50vh - 96px); bottom: auto; z-index: 6; flex-direction: column !important; gap: 8px; }
   .greet .btn { width: 40px; height: 40px; min-height: 40px; padding: 0; font-size: 18px; border-radius: 50%; opacity: .88; }
   .greet .lb { display: none; }
@@ -688,7 +689,7 @@ img { -webkit-user-drag: none; user-drag: none; }
         <textarea id="saveCode" rows="3" hidden spellcheck="false" placeholder="存檔碼貼在這裡,再按一次「匯入存檔碼」"></textarea><div class="sub" id="saveMsg"></div></div>
       <div class="controls" id="controls"></div>
       <p class="legal">配件品牌、商品與人物都是虛構的遊戲設定。手機型號使用真實型號。</p>
-      <p class="legal" id="verLine" style="margin-top:2px;opacity:.7">版本 v236 · 2026-10-18</p>
+      <p class="legal" id="verLine" style="margin-top:2px;opacity:.7">版本 v237 · 2026-10-18</p>
     </div>
   </div>
 
@@ -3499,13 +3500,15 @@ function startScene() {
     renderOrder();
   }
   $('#order').addEventListener('click', (e) => { if (e.target && e.target.id === 'btnOos') tellOos(); });
+  /* a long shopping list is shown as small chips (found ones struck through) so the card stays short on a phone */
+  const orderChips = (items, got) => '<div class="o-chips">' + items.map((it, i) => '<span class="o-chip' + (got.indexOf(i) >= 0 ? ' done' : '') + '">' + (got.indexOf(i) >= 0 ? '✓ ' : '') + esc(itemText(it)) + '</span>').join('') + '</div>';
   function renderOrder() {
     const el = $('#order'), c = G.cust;
     if (!c || (c.st !== 'asking' && c.st !== 'ready') || state.modal === 'checkout') { el.hidden = true; return; }
     el.hidden = false;
     el.innerHTML = c.flow === 'ask'
-      ? '<div class="o-h">客人要找' + (c.askIdx && !c.upfront ? '(加購)' : '') + '</div><div class="o-t">' + (c.upfront && c.items.length > 1 ? c.items.map((it, i) => (c.got.indexOf(i) >= 0 ? '✓ ' : '・ ') + esc(itemText(it))).join('<br>') : esc(itemText(c.items[c.askIdx || 0]))) + '</div><div class="o-s">到貨架挑出這項商品,拿回收銀台結帳。</div>' + (oosWanted(c) >= 0 ? '<div class="btn-row" style="margin-top:6px"><button class="btn small" type="button" id="btnOos" style="pointer-events:auto">系統顯示缺貨:告訴客人</button></div>' : '')
-      : '<div class="o-h">客人自己挑好了</div><div class="o-t">' + c.items.map((i) => esc(itemText(i))).join('<br>') + '</div><div class="o-s">到收銀台幫客人結帳。</div>';
+      ? '<div class="o-h">客人要找' + (c.askIdx && !c.upfront ? '(加購)' : '') + '</div><div class="o-t">' + (c.upfront && c.items.length > 1 ? orderChips(c.items, c.got) : esc(itemText(c.items[c.askIdx || 0]))) + '</div><div class="o-s">到貨架挑出這項商品,拿回收銀台結帳。</div>' + (oosWanted(c) >= 0 ? '<div class="btn-row" style="margin-top:6px"><button class="btn small" type="button" id="btnOos" style="pointer-events:auto">系統顯示缺貨:告訴客人</button></div>' : '')
+      : '<div class="o-h">客人自己挑好了</div><div class="o-t">' + (c.items.length > 1 ? orderChips(c.items, []) : esc(itemText(c.items[0]))) + '</div><div class="o-s">到收銀台幫客人結帳。</div>';
   }
   function renderCarry() {
     const el = $('#carry');
@@ -5676,6 +5679,7 @@ function startScene() {
     $('#phShBody').innerHTML = h;
   }
   function phShopAct(a, v) {
+    let openNow = null;
     const S = SAVE.shop;
     if (a !== 'pay') SHP.confirm = false;
     if (a === 'tab') { SHP.tab = v; }
@@ -5686,14 +5690,17 @@ function startScene() {
       const tot = shopCartTotal(); if (!tot || tot > SAVE.wallet) return;
       if (!SHP.confirm) { SHP.confirm = true; shopRender(); return; }
       SHP.confirm = false; SAVE.wallet -= tot;
-      const items = {}; Object.keys(S.cart).forEach((k) => { if (shopItem(k)) items[k] = S.cart[k]; });
-      const id = S.orders.reduce((m, o) => Math.max(m, o.id), 0) + 1; S.orders.push({ id: id, items: items, total: tot, d: G.dayNo, arrive: G.dayNo + 1, got: false });
-      S.orders = S.orders.slice(-30); S.cart = {}; SHP.tab = 'orders'; beep(1200, 0.08); toast('下單成功,明天會送到店裡');
+      const items = {}, packs = []; let itemsTot = 0;
+      Object.keys(S.cart).forEach((k) => { const it = shopItem(k); if (!it) return; if (it.pack) { S.bag[k] = Math.min(999, (S.bag[k] || 0) + S.cart[k]); packs.push(k); } else { items[k] = S.cart[k]; itemsTot += it.price * S.cart[k]; } });   // card packs are opened on the spot; everything else is delivered tomorrow
+      if (Object.keys(items).length) { const id = S.orders.reduce((m, o) => Math.max(m, o.id), 0) + 1; S.orders.push({ id: id, items: items, total: itemsTot, d: G.dayNo, arrive: G.dayNo + 1, got: false }); S.orders = S.orders.slice(-30); }
+      S.cart = {}; SHP.tab = packs.length && !Object.keys(items).length ? 'bag' : 'orders'; beep(1200, 0.08); toast(packs.length ? (Object.keys(items).length ? '卡包馬上拆,其他商品明天送到店裡' : '付款成功,馬上拆卡包!') : '下單成功,明天會送到店裡');
+      if (packs.length) openNow = packs[0];
     }
     else if (a === 'open') { const it = shopItem(v); if (!it || !it.pack || !(S.bag[v] > 0)) return; S.bag[v]--; if (S.bag[v] <= 0) delete S.bag[v]; const res = packRoll(it.pack); saveGame(); try { packShow(it, res); } catch (e) { /* the cards are already in the bag */ } }
     else if (a === 'deco') { closePhone(); setTimeout(() => { if (!decoOpen()) toast('現在不能布置'); }, 560); return; }
     else if (a === 'use') { const it = shopItem(v); if (!it || !it.use || !(S.bag[v] > 0)) return; if (it.use() !== false) { S.bag[v]--; if (S.bag[v] <= 0) delete S.bag[v]; } }
     saveGame(); shopRender();
+    if (openNow) phShopAct('open', openNow);
   }
   /* ---------- 拆卡包: tear the top of the pack open with a swipe, then flip the cards one by one ---------- */
   const PKE = { el: $('#packSheet'), stage: $('#pkStage'), title: $('#pkTitle'), btns: $('#pkBtns'), flash: $('#pkFlash') };

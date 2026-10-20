@@ -318,6 +318,7 @@ button, .btn, [data-co] { touch-action: manipulation; -webkit-tap-highlight-colo
 #stat { font-size: 14px; font-family: var(--font-body); font-weight: 700; flex: none; }
 .order { position: static; width: auto; max-width: min(420px, 100%); background: var(--panel); border: 2px solid var(--signal); border-radius: 16px; padding: 10px 14px; box-shadow: var(--shadow); pointer-events: none; }
 .o-h { font-size: 12px; color: var(--muted); font-weight: 700; letter-spacing: .08em; }
+.o-chips { display: flex; flex-wrap: wrap; gap: 4px 5px; max-height: 5.6em; overflow-y: auto; margin-top: 2px; } .o-chip { font-size: 13px; font-weight: 700; line-height: 1.25; padding: 2px 7px; border-radius: 9px; background: var(--panel-soft, #eef3f4); border: 1px solid var(--line, #d5dddf); } .o-chip.done { opacity: .5; text-decoration: line-through; }
 .o-t { font-size: 17px; font-weight: 700; line-height: 1.35; margin: 2px 0; overflow-wrap: anywhere; }
 .o-s { font-size: 12.5px; color: var(--muted); }
 .carry { pointer-events: auto; display: flex; align-items: center; gap: 10px; background: var(--panel); border: 1.5px solid var(--accent); border-radius: 999px; padding: 6px 8px 6px 16px; box-shadow: var(--shadow); max-width: calc(100% - 32px); font-size: 14px; }
@@ -536,7 +537,7 @@ img { -webkit-user-drag: none; user-drag: none; }
   .hud-col { top: 52px; padding-left: max(12px, env(safe-area-inset-left, 0px)); }
   .nexth { font-size: 12px; padding: 4px 8px; max-width: 46vw; margin-top: 4px; }
   .todo #todoList { padding: 6px 10px; min-width: 170px; max-height: 52vh; overflow-y: auto; font-size: 12.5px; }
-  .order { padding: 4px 10px; border-radius: 10px; } .order .o-s { display: none; } .order .o-t { font-size: 13px; margin: 0; } .order .o-h { font-size: 10.5px; }
+  .order { padding: 4px 10px; border-radius: 10px; } .order .o-s { display: none; } .order .o-t { font-size: 13px; margin: 0; } .order .o-chips { max-height: 3.4em; } .order .o-chip { font-size: 11.5px; padding: 1px 6px; } .order .o-h { font-size: 10.5px; }
   .greet { position: fixed; left: auto; right: max(12px, env(safe-area-inset-right, 0px)); top: calc(50vh - 96px); bottom: auto; z-index: 6; flex-direction: column !important; gap: 8px; }
   .greet .btn { width: 40px; height: 40px; min-height: 40px; padding: 0; font-size: 18px; border-radius: 50%; opacity: .88; }
   .greet .lb { display: none; }
