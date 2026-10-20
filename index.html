@@ -581,6 +581,18 @@ img { -webkit-user-drag: none; user-drag: none; }
   .btn-row { gap: 4px; margin-top: 0 !important; } .btn-row .btn { flex: 1 1 64px; min-height: 32px; padding: 4px 6px; font-size: 12.5px; }
   .pos-right > .btn-row:last-child, .pos-left > .btn-row:last-child { padding: 2px 0 0; box-shadow: none; position: static; }
 }
+/* landscape phones, the in-game phone: wider and shorter, so the home screen (7 apps) is not cut off */
+@media (orientation: landscape) and (max-height: 560px) {
+  .phone { width: min(560px, 78vw); }
+  .ph-body { padding: 8px 8px 0; border-radius: 26px 26px 0 0; transform: none; }
+  .ph-screen { height: calc(100vh - 44px); height: calc(100dvh - 44px); max-height: 330px; }
+  .ph-home { padding: 8px 10px; overflow-y: auto; }
+  .ph-clock { font-size: 30px; margin-bottom: 6px; }
+  .ph-apps { gap: 6px 8px; } .ph-app { width: 58px; font-size: 11px; } .ph-app span { width: 44px; height: 44px; font-size: 22px; border-radius: 12px; }
+  .ph-best { font-size: 11px; }
+  .ph-msgs { padding-top: 14px; }
+  .ph-homebtn { margin: 4px 0; }
+}
 /* landscape phones, screen-protector minigame: the film fills the height on the left, hint and buttons sit on the right */
 @media (orientation: landscape) and (max-height: 640px) {
   #applySheet .sheet-box { width: 100%; height: 100%; max-height: 100%; border-radius: 0; }
@@ -705,7 +717,7 @@ img { -webkit-user-drag: none; user-drag: none; }
         <textarea id="saveCode" rows="3" hidden spellcheck="false" placeholder="存檔碼貼在這裡,再按一次「匯入存檔碼」"></textarea><div class="sub" id="saveMsg"></div></div>
       <div class="controls" id="controls"></div>
       <p class="legal">配件品牌、商品與人物都是虛構的遊戲設定。手機型號使用真實型號。</p>
-      <p class="legal" id="verLine" style="margin-top:2px;opacity:.7">版本 v272 · 2026-10-18</p>
+      <p class="legal" id="verLine" style="margin-top:2px;opacity:.7">版本 v273 · 2026-10-18</p>
     </div>
   </div>
 
