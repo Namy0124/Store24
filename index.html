@@ -705,7 +705,7 @@ img { -webkit-user-drag: none; user-drag: none; }
         <textarea id="saveCode" rows="3" hidden spellcheck="false" placeholder="存檔碼貼在這裡,再按一次「匯入存檔碼」"></textarea><div class="sub" id="saveMsg"></div></div>
       <div class="controls" id="controls"></div>
       <p class="legal">配件品牌、商品與人物都是虛構的遊戲設定。手機型號使用真實型號。</p>
-      <p class="legal" id="verLine" style="margin-top:2px;opacity:.7">版本 v268 · 2026-10-18</p>
+      <p class="legal" id="verLine" style="margin-top:2px;opacity:.7">版本 v270 · 2026-10-18</p>
     </div>
   </div>
 
@@ -1021,7 +1021,7 @@ function cleanInv(o) {
   inv.hist = (Array.isArray(o.hist) ? o.hist : []).slice(-90).map((h) => ({ d: invNum(h && h.d, 99999), s: map(h && h.s, 999) })).filter((h) => h.d > 0);
   inv.stock = map(o.stock, 9999); inv.draft = map(o.draft, 999);
   const lines = (a) => (Array.isArray(a) ? a : []).slice(0, 600).map((l) => ({ k: String(l.k || '').slice(0, 80), lab: String(l.lab || '').slice(0, 70), ord: invNum(l.ord, 999), got: invNum(l.got, 999), why: String(l.why || '').slice(0, 20) })).filter((l) => l.k);
-  if (o.up && typeof o.up === 'object') inv.up = { lines: (Array.isArray(o.up.lines) ? o.up.lines : []).slice(0, 200).map((l) => ({ lab: String(l.lab || '').slice(0, 60), qty: invNum(l.qty, 9999), cat: String(l.cat || '').slice(0, 12), s: !!l.s, d: !!l.d })).filter((l) => l.lab && l.qty > 0) };
+  if (o.up && typeof o.up === 'object') inv.up = { lines: (Array.isArray(o.up.lines) ? o.up.lines : []).slice(0, 200).map((l) => ({ lab: String(l.lab || '').slice(0, 60), qty: invNum(l.qty, 9999), cat: String(l.cat || '').slice(0, 12), s: !!l.s, d: !!l.d, f: !!l.f })).filter((l) => l.lab && l.qty > 0) };
   if (inv.up && !inv.up.lines.length) inv.up = null;
   if (o.sent && typeof o.sent === 'object') inv.sent = { sd: invNum(o.sent.sd, 99999), arrive: invNum(o.sent.arrive, 99999), lines: lines(o.sent.lines), here: !!o.sent.here };
   if (o.slip && typeof o.slip === 'object') inv.slip = { sd: invNum(o.slip.sd, 99999), lines: lines(o.slip.lines) };
@@ -1103,7 +1103,7 @@ const invInit = (p) => { const cap = p.price >= 1000 ? 4 : p.price >= 500 ? 8 : 
 function invStockK(key, p) { const I = SAVE.inv; if (!(key in I.stock)) I.stock[key] = p ? invInit(p) : 0; return I.stock[key]; }
 const invStock = (p, picks) => invStockK(invKey(p, picks), p);
 /* two layers, per product variant: the top of the display (what customers see) and the stock stored underneath; total = top + under */
-function vcapK(key, p) { const I = SAVE.inv; I.vcap = I.vcap || {}; I.vcap[key] = Math.max(I.vcap[key] || 0, invStockK(key, p)); return Math.max(1, Math.round(I.vcap[key] * 0.6)); }   // how many of this item fit on top
+function vcapK(key, p) { const I = SAVE.inv; I.vcap = I.vcap || {}; I.vcap[key] = Math.max(I.vcap[key] || 0, invStockK(key, p)); return I.vcap[key] <= 0 ? 0 : Math.max(1, Math.round(I.vcap[key] * 0.6)); }   // items that were never stocked take no room, so a full display really reads as full   // how many of this item fit on top
 function invTopK(key, p) { const I = SAVE.inv; I.topq = I.topq || {}; const st = invStockK(key, p); if (I.topq[key] === undefined) I.topq[key] = Math.min(st, vcapK(key, p)); I.topq[key] = Math.max(0, Math.min(I.topq[key], st)); return I.topq[key]; }
 const invTop = (p, picks) => invTopK(invKey(p, picks), p);
 const invUnderOf = (p, picks) => { const k = invKey(p, picks); return Math.max(0, invStockK(k, p) - invTopK(k, p)); };
@@ -1112,8 +1112,8 @@ function invTotal(cat) { return catVariants(cat).reduce((a, x) => a + invStockK(
 function invCap(cat) { return Math.max(1, catVariants(cat).reduce((a, x) => a + vcapK(x.k, x.p), 0)); }
 function invTopQty(cat) { return catVariants(cat).reduce((a, x) => a + invTopK(x.k, x.p), 0); }
 function invUnder(cat) { return catVariants(cat).reduce((a, x) => a + Math.max(0, invStockK(x.k, x.p) - invTopK(x.k, x.p)), 0); }
-function invAutoFill() {   // a delivery: fill every item's top first, what is left goes underneath
-  const I = SAVE.inv; I.topq = I.topq || {}; let moved = 0; const cats = {}; db.products.forEach((p) => { cats[p.cat] = 1; });
+function invAutoFill(only) {   // stocking a delivered category: fill every item's top first, what is left stays underneath
+  const I = SAVE.inv; I.topq = I.topq || {}; let moved = 0; const cats = {}; db.products.forEach((p) => { if (!only || p.cat === only) cats[p.cat] = 1; });
   Object.keys(cats).forEach((c) => catVariants(c).forEach((x) => { const top = invTopK(x.k, x.p), add = Math.min(Math.max(0, vcapK(x.k, x.p) - top), invStockK(x.k, x.p) - top); if (add > 0) { I.topq[x.k] = top + add; moved += add; } }));
   return moved;
 }
@@ -2192,7 +2192,6 @@ function startScene() {
   const cardPool = (g, r) => { const p = CARDS.filter((c) => c.g === g && c.r === r), real = p.filter((c) => c.real); return real.length ? real : p; };
   const cardsVisible = () => CARDS.filter((c) => cardPool(c.g, c.r).indexOf(c) >= 0);
   const cardById = (id) => CARDS.find((c) => c.id === id);
-  { if (SAVE.inv) SAVE.inv.up = null; }   // the old unpacking job no longer exists: goods are placed automatically
   { SAVE.cards = SAVE.cards || {}; SAVE.gacha = SAVE.gacha || { pity: 0, opened: 0 };
     Object.keys(SAVE.shop.bag).concat(SAVE.deco.items.map((it) => it.id)).forEach((id) => { if (cardById(id) && !SAVE.cards[id]) SAVE.cards[id] = 1; }); }
   const PACK_N = 3, PITY_AT = 15, PACK_PRICE = 250;
@@ -4928,7 +4927,9 @@ function startScene() {
   function invReceive() {
     const I = SAVE.inv; if (!I.slip) return false;
     I.slip.lines.forEach((l) => { const p = prodOfKey(l.k); if (p) { invStockK(l.k, p); I.stock[l.k] = Math.min(9999, I.stock[l.k] + l.got); } else if (l.k in I.stock) I.stock[l.k] += l.got; });
-    I.slip = null; const moved = invAutoFill(); shelfRefresh(); saveGame(); SFX.paper(); toast('已點收入庫' + (moved ? ':貨先補滿花車上層,剩下的放在下層庫存' : ':貨都放進下層庫存')); renderInv(); renderTodo(); return true;
+    { const m = {}; I.slip.lines.forEach((l) => { const p = prodOfKey(l.k); if (!p || l.got <= 0) return; const e = m[p.id] || (m[p.id] = { lab: dispName(p), qty: 0, cat: p.cat, s: false, d: false }); e.qty += l.got; });
+      const add = Object.keys(m).map((k) => m[k]); if (add.length) { I.up = { lines: ((I.up && I.up.lines) || []).concat(add) }; } }
+    I.slip = null; shelfRefresh(); saveGame(); SFX.paper(); toast(I.up ? '已點收入庫,貨品在箱子裡,到賣場把箱子打開整理' : '已點收入庫'); spawnBoxes(); renderInv(); renderTodo(); return true;
   }
   invBody.addEventListener('click', (e) => {
     const b = e.target.closest && e.target.closest('[data-ia]'); if (!b || b.disabled) return;
@@ -4963,7 +4964,12 @@ function startScene() {
   $('#upClose').addEventListener('click', closeUp);
   let UA = null;
   const upUI = () => { if (RS && !rsEl.hidden) renderRs(); else renderUp('restock'); };
-  function upFinishNow() { if (!UA) return; const left = UA.left; UA = null; left.forEach((l) => { l.d = true; }); shelfRefresh(); saveGame(); }
+  function upSettle() {   // when every box of a category has been carried to its cart, the goods go on top (what does not fit stays underneath)
+    const L = upLines(), cats = {}; L.forEach((l) => { cats[l.cat] = 1; });
+    Object.keys(cats).forEach((c) => { const ls = L.filter((l) => l.cat === c); if (ls.length && ls.every((l) => l.d) && !ls.every((l) => l.f)) { invAutoFill(c); ls.forEach((l) => { l.f = true; }); } });
+  }
+  const upPending = (cat) => upLines().some((l) => l.cat === cat && !l.d);
+  function upFinishNow() { if (!UA) return; const left = UA.left; UA = null; left.forEach((l) => { l.d = true; }); upSettle(); shelfRefresh(); saveGame(); }
   function upAnimate() {
     if (UA || !G.basket || (upEl.hidden && !(RS && !rsEl.hidden))) return;
     const left = upLines().filter((l) => l.cat === G.basket && l.s && !l.d); if (!left.length) return;
@@ -4973,7 +4979,7 @@ function startScene() {
       if (!UA) return;
       const l = UA.left[UA.i];
       if (!l) { UA = null; saveGame(); upUI(); return; }
-      l.d = true; UA.last = l; UA.i++; SFX.knock(); shelfRefresh(); upUI(); setTimeout(step, gap);
+      l.d = true; UA.last = l; UA.i++; SFX.knock(); upSettle(); shelfRefresh(); upUI(); setTimeout(step, gap);
     };
     step();
   }
@@ -5012,7 +5018,7 @@ function startScene() {
       if (cur.cat === b.dataset.c) { cur.s = true; SFX.paper(); saveGame(); if (upStage() === 'carry') { toast('全部分好類了,拿籃子去補貨'); } renderUp(); }
       else { const el = $('#upCard'); if (el) { el.classList.remove('up-shake'); void el.offsetWidth; el.classList.add('up-shake'); } SFX.dull(); toast('放錯籃子了,這是「' + catName(cur.cat) + '」'); }
     } else if (a === 'take') { G.basket = b.dataset.c; renderCarry(); closeUp(); toast('提起「' + catName(G.basket) + '」的籃子,到對應的花車補貨'); }
-    else if (a === 'put') { const l = L.find((x) => x.lab === b.dataset.lab && x.cat === G.basket && x.s && !x.d); if (l) { l.d = true; l.m = true; SFX.knock(); shelfRefresh(); saveGame(); renderUp('restock'); const mine = L.filter((x) => x.cat === G.basket && x.s); if (mine.filter((x) => x.m).length >= Math.min(3, mine.length) && mine.some((x) => !x.d)) setTimeout(upAnimate, 450); } }
+    else if (a === 'put') { const l = L.find((x) => x.lab === b.dataset.lab && x.cat === G.basket && x.s && !x.d); if (l) { l.d = true; l.m = true; SFX.knock(); upSettle(); shelfRefresh(); saveGame(); renderUp('restock'); const mine = L.filter((x) => x.cat === G.basket && x.s); if (mine.filter((x) => x.m).length >= Math.min(3, mine.length) && mine.some((x) => !x.d)) setTimeout(upAnimate, 450); } }
     else if (a === 'auto') upAnimate();
     else if (a === 'restockdone') {
       G.basket = null; renderCarry(); saveGame(); closeUp(); toast(upStage() === 'clean' ? '所有貨都上架了,回箱子那邊整理空箱子' : '這一類補好了,再提下一個籃子');
@@ -5191,7 +5197,7 @@ function startScene() {
   }
   function rsPlace(lab) {
     const l = rsLines().find((x) => x.lab === lab && !x.d); if (!l) return false;
-    l.d = true; l.m = true; SFX.knock(); shelfRefresh(); saveGame();
+    l.d = true; l.m = true; SFX.knock(); upSettle(); shelfRefresh(); saveGame();
     const mine = rsLines(); if (mine.filter((x) => x.m).length >= Math.min(3, mine.length) && mine.some((x) => !x.d)) setTimeout(upAnimate, 500);
     renderRs(); return true;
   }
@@ -5238,6 +5244,7 @@ function startScene() {
   function startRestock(cat) {
     if (G.rsAct || !SHELVES[cat]) return false;
     const info = stockInfo(cat);
+    if (upPending(cat)) { toast('這區的新到貨還在箱子裡,先拆箱整理、提籃子補貨'); return false; }
     if (info.under <= 0) { toast('下層庫存也沒有了,要叫貨'); return false; }
     if (info.move <= 0) { toast('上層已經是滿的'); return false; }
     const plan = catVariants(cat).map((x) => ({ k: x.k, p: x.p, n: Math.min(Math.max(0, vcapK(x.k, x.p) - invTopK(x.k, x.p)), Math.max(0, invStockK(x.k, x.p) - invTopK(x.k, x.p))) })).filter((x) => x.n > 0);
@@ -5269,7 +5276,7 @@ function startScene() {
   $('#shelfBody').addEventListener('click', (e) => { const b = e.target.closest && e.target.closest('[data-stk]'); if (b && !b.disabled) startRestock(b.dataset.stk); });
   /* day hooks */
   function invNewDay() {
-    const I = SAVE.inv; G.basket = null; G.rsAct = null; I.up = null; spawnBoxes();
+    const I = SAVE.inv; G.basket = null; G.rsAct = null; spawnBoxes();
     if (wdOf(G.dayNo) === 0) { I.sold = {}; I.draft = {}; }   // a new week: the sales count and order form start over
     dlvReset();
     if (I.sent && G.dayNo >= I.sent.arrive) {
@@ -5282,6 +5289,7 @@ function startScene() {
     if (isOrderDay()) t.push(I.sent && I.sent.sd === G.dayNo ? '叫貨單已送出,週二到貨。' : '今天是叫貨日,但叫貨單沒有送出,週二不會到貨。');
     if (I.sent && I.sent.here) t.push('貨運送來的箱子還沒點貨。');
     if (I.slip) t.push('有一張到貨單還沒點收入庫。');
+    if (I.up) t.push('到貨的貨還沒整理完(' + ({ sort: '還沒拆箱分類', carry: '還沒補到花車', clean: '空箱子還沒整理' })[upStage()] + ')。');
     { const em = Object.keys(SHELVES).map((c) => [c, catVariants(c).filter((x) => invTopK(x.k, x.p) <= 0 && invStockK(x.k, x.p) > 0).length]).filter((x) => x[1] > 0).map((x) => catName(x[0]) + ' ' + x[1] + ' 種'); if (em.length) t.push('上層已空但下層還有貨:' + em.join('、') + '。'); }
     const out = Object.keys(I.stock).filter((k) => I.stock[k] <= 0).length;
     if (out) t.push('目前有 ' + out + ' 個規格缺貨。');

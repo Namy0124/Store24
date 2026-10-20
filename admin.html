@@ -815,7 +815,7 @@ function cleanInv(o) {
   inv.hist = (Array.isArray(o.hist) ? o.hist : []).slice(-90).map((h) => ({ d: invNum(h && h.d, 99999), s: map(h && h.s, 999) })).filter((h) => h.d > 0);
   inv.stock = map(o.stock, 9999); inv.draft = map(o.draft, 999);
   const lines = (a) => (Array.isArray(a) ? a : []).slice(0, 600).map((l) => ({ k: String(l.k || '').slice(0, 80), lab: String(l.lab || '').slice(0, 70), ord: invNum(l.ord, 999), got: invNum(l.got, 999), why: String(l.why || '').slice(0, 20) })).filter((l) => l.k);
-  if (o.up && typeof o.up === 'object') inv.up = { lines: (Array.isArray(o.up.lines) ? o.up.lines : []).slice(0, 200).map((l) => ({ lab: String(l.lab || '').slice(0, 60), qty: invNum(l.qty, 9999), cat: String(l.cat || '').slice(0, 12), s: !!l.s, d: !!l.d })).filter((l) => l.lab && l.qty > 0) };
+  if (o.up && typeof o.up === 'object') inv.up = { lines: (Array.isArray(o.up.lines) ? o.up.lines : []).slice(0, 200).map((l) => ({ lab: String(l.lab || '').slice(0, 60), qty: invNum(l.qty, 9999), cat: String(l.cat || '').slice(0, 12), s: !!l.s, d: !!l.d, f: !!l.f })).filter((l) => l.lab && l.qty > 0) };
   if (inv.up && !inv.up.lines.length) inv.up = null;
   if (o.sent && typeof o.sent === 'object') inv.sent = { sd: invNum(o.sent.sd, 99999), arrive: invNum(o.sent.arrive, 99999), lines: lines(o.sent.lines), here: !!o.sent.here };
   if (o.slip && typeof o.slip === 'object') inv.slip = { sd: invNum(o.slip.sd, 99999), lines: lines(o.slip.lines) };
@@ -897,7 +897,7 @@ const invInit = (p) => { const cap = p.price >= 1000 ? 4 : p.price >= 500 ? 8 : 
 function invStockK(key, p) { const I = SAVE.inv; if (!(key in I.stock)) I.stock[key] = p ? invInit(p) : 0; return I.stock[key]; }
 const invStock = (p, picks) => invStockK(invKey(p, picks), p);
 /* two layers, per product variant: the top of the display (what customers see) and the stock stored underneath; total = top + under */
-function vcapK(key, p) { const I = SAVE.inv; I.vcap = I.vcap || {}; I.vcap[key] = Math.max(I.vcap[key] || 0, invStockK(key, p)); return Math.max(1, Math.round(I.vcap[key] * 0.6)); }   // how many of this item fit on top
+function vcapK(key, p) { const I = SAVE.inv; I.vcap = I.vcap || {}; I.vcap[key] = Math.max(I.vcap[key] || 0, invStockK(key, p)); return I.vcap[key] <= 0 ? 0 : Math.max(1, Math.round(I.vcap[key] * 0.6)); }   // items that were never stocked take no room, so a full display really reads as full   // how many of this item fit on top
 function invTopK(key, p) { const I = SAVE.inv; I.topq = I.topq || {}; const st = invStockK(key, p); if (I.topq[key] === undefined) I.topq[key] = Math.min(st, vcapK(key, p)); I.topq[key] = Math.max(0, Math.min(I.topq[key], st)); return I.topq[key]; }
 const invTop = (p, picks) => invTopK(invKey(p, picks), p);
 const invUnderOf = (p, picks) => { const k = invKey(p, picks); return Math.max(0, invStockK(k, p) - invTopK(k, p)); };
@@ -906,8 +906,8 @@ function invTotal(cat) { return catVariants(cat).reduce((a, x) => a + invStockK(
 function invCap(cat) { return Math.max(1, catVariants(cat).reduce((a, x) => a + vcapK(x.k, x.p), 0)); }
 function invTopQty(cat) { return catVariants(cat).reduce((a, x) => a + invTopK(x.k, x.p), 0); }
 function invUnder(cat) { return catVariants(cat).reduce((a, x) => a + Math.max(0, invStockK(x.k, x.p) - invTopK(x.k, x.p)), 0); }
-function invAutoFill() {   // a delivery: fill every item's top first, what is left goes underneath
-  const I = SAVE.inv; I.topq = I.topq || {}; let moved = 0; const cats = {}; db.products.forEach((p) => { cats[p.cat] = 1; });
+function invAutoFill(only) {   // stocking a delivered category: fill every item's top first, what is left stays underneath
+  const I = SAVE.inv; I.topq = I.topq || {}; let moved = 0; const cats = {}; db.products.forEach((p) => { if (!only || p.cat === only) cats[p.cat] = 1; });
   Object.keys(cats).forEach((c) => catVariants(c).forEach((x) => { const top = invTopK(x.k, x.p), add = Math.min(Math.max(0, vcapK(x.k, x.p) - top), invStockK(x.k, x.p) - top); if (add > 0) { I.topq[x.k] = top + add; moved += add; } }));
   return moved;
 }
