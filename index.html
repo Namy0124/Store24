@@ -691,7 +691,7 @@ img { -webkit-user-drag: none; user-drag: none; }
         <textarea id="saveCode" rows="3" hidden spellcheck="false" placeholder="存檔碼貼在這裡,再按一次「匯入存檔碼」"></textarea><div class="sub" id="saveMsg"></div></div>
       <div class="controls" id="controls"></div>
       <p class="legal">配件品牌、商品與人物都是虛構的遊戲設定。手機型號使用真實型號。</p>
-      <p class="legal" id="verLine" style="margin-top:2px;opacity:.7">版本 v251 · 2026-10-18</p>
+      <p class="legal" id="verLine" style="margin-top:2px;opacity:.7">版本 v252 · 2026-10-18</p>
     </div>
   </div>
 
@@ -3150,12 +3150,13 @@ function startScene() {
       ], 3) };
     },
     nonelec() {
-      const e = retEntry(false, 1, 6), sealed = Math.random() < 0.5, rude = Math.random() < rudeP(e) * 0.6;
-      return { say: retOpen(e, rude, pickOne(BAD_ANY)), inv: invCard(e), note: sealed ? '商品狀態:未拆封,包裝完整。' : '商品狀態:已拆封,有使用痕跡。', mgr: mgPre() + '非帶電的原則上不退換。沒拆封的話,同款可以換;拆過的就不行。', choices: chs([
+      const e = retEntry(false, 1, 6), sealed = Math.random() < 0.5, rude = Math.random() < rudeP(e) * 0.6, why = pickOne(BAD_ANY), wrongM = why === '我買錯型號了';
+      return { say: retOpen(e, rude, why), inv: invCard(e), note: sealed ? '商品狀態:未拆封,包裝完整。' : '商品狀態:已拆封,有使用痕跡。', mgr: mgPre() + '非帶電的原則上不退換。沒拆封的話,同款可以換,買錯型號的話可以換成對的型號(同價位);拆過的就不行。', choices: chs([
         C('婉拒:「非帶電商品不退換喔」', () => DONE({ say: rude ? '你們這什麼規定!' : '好吧…我知道了。', stars: sealed ? (rude ? 2 : 3) : (rude ? 3 : 4), fav: sealed ? -1 : 0 }), !sealed),
-        C('看狀況,幫他換同款', () => sealed ? DONE({ say: '太好了,謝謝!', stars: 5, fav: 2, note: '未拆封的同款,你決定幫他換。' }) : DONE({ say: '耶,謝謝!', stars: 5, fav: 1, cost: e.price, msg: '拆封、有使用痕跡的非帶電商品不能換貨,下次要注意。', note: '用過的商品被換走了,損失 ' + fmtN(e.price) + ' 要你補。' }), sealed),
+        C('看狀況,幫他換同款', () => wrongM ? DONE({ say: '我就是買錯型號才要換,換同款有什麼用?', stars: 3, fav: 0, time: 6 }) : sealed ? DONE({ say: '太好了,謝謝!', stars: 5, fav: 2, note: '未拆封的同款,你決定幫他換。' }) : DONE({ say: '耶,謝謝!', stars: 5, fav: 1, cost: e.price, msg: '拆封、有使用痕跡的非帶電商品不能換貨,下次要注意。', note: '用過的商品被換走了,損失 ' + fmtN(e.price) + ' 要你補。' }), sealed && !wrongM),
+        C('未拆封的話,幫他換成對的型號(同價位)', () => sealed ? DONE({ say: wrongM ? '對對對,就是要換型號!謝謝!' : '好,那我換別款,謝謝!', stars: 5, fav: 2, note: '未拆封,幫他換成對的型號,價位相同。' }) : DONE({ say: '耶,謝謝!', stars: 5, fav: 1, cost: e.price, msg: '拆封、有使用痕跡的非帶電商品不能換貨,下次要注意。', note: '用過的商品被換走了,損失 ' + fmtN(e.price) + ' 要你補。' }), sealed && wrongM),
         C('什麼都不說,請他自己想辦法', () => DONE({ say: '服務態度真差。', stars: 2, fav: -2 }))
-      ], 3) };
+      ], 4) };
     }
   };
   /* ---------- window-shopper ---------- */
