@@ -417,7 +417,7 @@ button, .btn, [data-co] { touch-action: manipulation; -webkit-tap-highlight-colo
 .pos-right { background: var(--panel-soft); border: 1.5px solid var(--line); border-radius: 14px; padding: 12px; }
 .shelfwant .wg { margin-top: 4px; } .shelfwant .wl { font-size: 14px; line-height: 1.4; } .shelfwant { max-height: 24vh; overflow-y: auto; } @media (orientation: landscape) and (max-height: 640px) { .shelfwant { max-height: 30vh; } }
 .shelfwant { position: sticky; top: 0; z-index: 2; margin-bottom: 8px; }
-.stk { display: flex; align-items: center; justify-content: space-between; gap: 10px; background: var(--panel-soft, #eef3f4); border: 1px solid var(--line, #d5dddf); border-radius: 12px; padding: 8px 12px; margin-bottom: 10px; font-size: 14px; line-height: 1.5; } .stk .btn { flex: none; min-width: 88px; }
+.stk { display: flex; align-items: center; justify-content: space-between; gap: 10px; background: var(--panel-soft, #eef3f4); border: 1px solid var(--line, #d5dddf); border-radius: 12px; padding: 8px 12px; margin-bottom: 10px; font-size: 14px; line-height: 1.5; } .stk .btn { flex: none; min-width: 88px; } .stk-l { max-height: 22vh; overflow-y: auto; border: 1px solid var(--line, #d5dddf); border-radius: 10px; margin: -4px 0 10px; font-size: 12.5px; } .stk-r { display: flex; justify-content: space-between; gap: 8px; padding: 4px 10px; border-top: 1px solid var(--line, #eee); } .stk-r:first-child { border-top: 0; } .stk-r.warn { background: #FFF1CC; font-weight: 700; } .stk-r span:last-child { flex: none; color: var(--muted, #6a8a90); }
 .want { background: color-mix(in srgb, var(--signal) 20%, var(--panel)); border: 1.5px solid var(--signal); border-radius: 12px; padding: 8px 12px; }
 .pos-list { border: 1.5px solid var(--line); border-radius: 14px; overflow: hidden; background: var(--panel); }
 .pos-th { display: flex; justify-content: space-between; padding: 8px 12px; background: var(--panel-soft); font-size: 12.5px; color: var(--muted); }
@@ -691,7 +691,7 @@ img { -webkit-user-drag: none; user-drag: none; }
         <textarea id="saveCode" rows="3" hidden spellcheck="false" placeholder="存檔碼貼在這裡,再按一次「匯入存檔碼」"></textarea><div class="sub" id="saveMsg"></div></div>
       <div class="controls" id="controls"></div>
       <p class="legal">配件品牌、商品與人物都是虛構的遊戲設定。手機型號使用真實型號。</p>
-      <p class="legal" id="verLine" style="margin-top:2px;opacity:.7">版本 v249 · 2026-10-18</p>
+      <p class="legal" id="verLine" style="margin-top:2px;opacity:.7">版本 v250 · 2026-10-18</p>
     </div>
   </div>
 
@@ -1085,17 +1085,22 @@ function invDemand(p) {
 const invInit = (p) => { const cap = p.price >= 1000 ? 4 : p.price >= 500 ? 8 : 14; return Math.max(2, Math.min(cap, Math.round(invDemand(p) * (0.9 + Math.random() * 0.7)))); };   // new items: the company allocates about a week of stock
 function invStockK(key, p) { const I = SAVE.inv; if (!(key in I.stock)) I.stock[key] = p ? invInit(p) : 0; return I.stock[key]; }
 const invStock = (p, picks) => invStockK(invKey(p, picks), p);
-/* two layers: the top of each display (what customers see) and the stock stored underneath; total = top + under */
-function invTotal(cat) { let t = 0; db.products.forEach((p) => { if (p.cat === cat) variantsOf(p).forEach((v) => { t += invStock(p, v); }); }); return t; }
-function invCap(cat) { const I = SAVE.inv; I.cap = I.cap || {}; I.cap[cat] = Math.max(I.cap[cat] || 0, invTotal(cat)); return Math.max(1, Math.round(I.cap[cat] * 0.6)); }   // how much fits on top of the display
-function invTopQty(cat) { const I = SAVE.inv; I.top = I.top || {}; const t = invTotal(cat); if (I.top[cat] === undefined) I.top[cat] = Math.min(t, invCap(cat)); I.top[cat] = Math.max(0, Math.min(I.top[cat], t)); return I.top[cat]; }
-const invUnder = (cat) => Math.max(0, invTotal(cat) - invTopQty(cat));
-function invAutoFill() {   // a delivery: fill the tops first, what is left goes underneath
-  const I = SAVE.inv; I.top = I.top || {}; let moved = 0; const cats = {}; db.products.forEach((p) => { cats[p.cat] = 1; });
-  Object.keys(cats).forEach((c) => { const top = invTopQty(c), add = Math.min(Math.max(0, invCap(c) - top), invUnder(c)); if (add > 0) { I.top[c] = top + add; moved += add; } });
+/* two layers, per product variant: the top of the display (what customers see) and the stock stored underneath; total = top + under */
+function vcapK(key, p) { const I = SAVE.inv; I.vcap = I.vcap || {}; I.vcap[key] = Math.max(I.vcap[key] || 0, invStockK(key, p)); return Math.max(1, Math.round(I.vcap[key] * 0.6)); }   // how many of this item fit on top
+function invTopK(key, p) { const I = SAVE.inv; I.topq = I.topq || {}; const st = invStockK(key, p); if (I.topq[key] === undefined) I.topq[key] = Math.min(st, vcapK(key, p)); I.topq[key] = Math.max(0, Math.min(I.topq[key], st)); return I.topq[key]; }
+const invTop = (p, picks) => invTopK(invKey(p, picks), p);
+const invUnderOf = (p, picks) => { const k = invKey(p, picks); return Math.max(0, invStockK(k, p) - invTopK(k, p)); };
+function catVariants(cat) { const r = []; db.products.forEach((p) => { if (p.cat === cat) variantsOf(p).forEach((v) => r.push({ p: p, picks: v, k: invKey(p, v) })); }); return r; }
+function invTotal(cat) { return catVariants(cat).reduce((a, x) => a + invStockK(x.k, x.p), 0); }
+function invCap(cat) { return Math.max(1, catVariants(cat).reduce((a, x) => a + vcapK(x.k, x.p), 0)); }
+function invTopQty(cat) { return catVariants(cat).reduce((a, x) => a + invTopK(x.k, x.p), 0); }
+function invUnder(cat) { return catVariants(cat).reduce((a, x) => a + Math.max(0, invStockK(x.k, x.p) - invTopK(x.k, x.p)), 0); }
+function invAutoFill() {   // a delivery: fill every item's top first, what is left goes underneath
+  const I = SAVE.inv; I.topq = I.topq || {}; let moved = 0; const cats = {}; db.products.forEach((p) => { cats[p.cat] = 1; });
+  Object.keys(cats).forEach((c) => catVariants(c).forEach((x) => { const top = invTopK(x.k, x.p), add = Math.min(Math.max(0, vcapK(x.k, x.p) - top), invStockK(x.k, x.p) - top); if (add > 0) { I.topq[x.k] = top + add; moved += add; } }));
   return moved;
 }
-function invAdd(p, picks, n) { const k = invKey(p, picks), topBefore = n < 0 ? invTopQty(p.cat) : 0, cur = invStockK(k, p); SAVE.inv.stock[k] = Math.max(0, cur + n); if (n < 0) SAVE.inv.top[p.cat] = Math.max(0, topBefore + n); }
+function invAdd(p, picks, n) { const k = invKey(p, picks), topBefore = n < 0 ? invTopK(k, p) : 0, cur = invStockK(k, p); SAVE.inv.stock[k] = Math.max(0, cur + n); if (n < 0) SAVE.inv.topq[k] = Math.max(0, topBefore + n); }
 const hrand = (str) => { let h = 2166136261; for (let i = 0; i < str.length; i++) { h ^= str.charCodeAt(i); h = Math.imul(h, 16777619); } h ^= h >>> 13; h = Math.imul(h, 0x5bd1e995); h ^= h >>> 15; return (h >>> 0) / 4294967296; };
 /* the company warehouse is simulated: what is left this week after all the other branches ordered */
 const whAdded = (key) => (db.wh && db.wh[key]) || 0;   // stock the owner added to the company warehouse by hand (part of the published shop data, so every player gets it)
@@ -1207,7 +1212,7 @@ function openShelf(catId) {
   shelf.cat = catId; shelf.q = ''; shelf.groups = buildGroups(catId);
   $('#shelfTitle').innerHTML = '<span class="dot" style="background:' + cat.css + '"></span>' + esc(cat.name) + (cat.kind === 'wall' ? '陳列牆' : '花車') + ' <span class="sub">共 ' + shelf.groups.length + ' 款</span>';
   let want = ''; try { want = shelfWantFn ? shelfWantFn() : ''; } catch (e) { want = ''; }
-  let stk = ''; try { const si = gameApi && gameApi.stockInfo ? gameApi.stockInfo(catId) : null; if (si) stk = '<div class="stk"><div class="stk-i"><b>上層陳列</b> ' + si.top + ' / ' + si.cap + '<br><b>下層庫存</b> ' + si.under + '</div><button class="btn primary" type="button" data-stk="' + catId + '"' + (si.under <= 0 || si.top >= si.cap ? ' disabled' : '') + '>' + (si.under <= 0 ? '下層沒貨' : si.top >= si.cap ? '上層已滿' : '補貨') + '</button></div>'; } catch (e) { stk = ''; }
+  let stk = ''; try { const si = gameApi && gameApi.stockInfo ? gameApi.stockInfo(catId) : null; if (si) { const lab = si.under <= 0 ? '下層沒貨' : si.move <= 0 ? '上層已滿' : '補貨(' + si.move + ' 件)'; stk = '<div class="stk"><div class="stk-i"><b>上層陳列</b> ' + si.top + ' / ' + si.cap + ' · <b>下層庫存</b> ' + si.under + '</div><button class="btn primary" type="button" data-stk="' + catId + '"' + (si.under <= 0 || si.move <= 0 ? ' disabled' : '') + '>' + lab + '</button></div>' + (si.rows.length ? '<div class="stk-l">' + si.rows.slice(0, 40).map((v) => '<div class="stk-r' + (v.top === 0 && v.under > 0 ? ' warn' : '') + '"><span>' + esc(v.lab) + '</span><span>上 ' + v.top + '/' + v.cap + ' · 下 ' + v.under + '</span></div>').join('') + (si.rows.length > 40 ? '<div class="stk-r"><span>…還有 ' + (si.rows.length - 40) + ' 項</span></div>' : '') + '</div>' : ''); } } catch (e) { stk = ''; }
   $('#shelfBody').innerHTML = stk + (want ? '<div class="want shelfwant"><span class="co-l">客人要找</span><div>' + want + '</div></div>' : '') + '<label class="field shelfq" for="shelfSearch"><span class="sr">查詢商品</span><input id="shelfSearch" type="search" placeholder="查詢:品名、品牌、型號、顏色" autocomplete="off"></label><div id="shelfGrid"></div><p class="sheet-foot">客人來了之後,在這裡選出客人要的商品。先選型號,再選款式或顏色。</p>';
   renderShelfGrid();
   $('#shelf').hidden = false;
@@ -2730,7 +2735,7 @@ function startScene() {
       if (cc.flow === 'vip') { cc.st = 'vip'; cc.readyAt = G.gt; cc.say = ''; vipOpen(cc); return; }
       cc.st = cc.flow === 'ask' ? 'asking' : 'ready';
       cc.say = cc.flow === 'ask' ? (cc.askIdx ? pickOne(SAY.ask).replace('{item}', itemText(cc.items[cc.askIdx])) : (cc.lineTxt || askLine(cc))) : pickOne(SAY.self);
-      if (cc.flow === 'ask') { const ei = (cc.upfront ? cc.items.map((_, i) => i) : [cc.askIdx || 0]).find((i) => cc.items[i] && invStock(cc.items[i].p, cc.items[i].picks) > 0 && invTopQty(cc.items[i].p.cat) <= 0); if (ei !== undefined) cc.say = '請問「' + itemText(cc.items[ei]) + '」還有貨嗎?'; }   // the display is empty but the back has some
+      if (cc.flow === 'ask') { const ei = (cc.upfront ? cc.items.map((_, i) => i) : [cc.askIdx || 0]).find((i) => cc.items[i] && invStock(cc.items[i].p, cc.items[i].picks) > 0 && invTop(cc.items[i].p, cc.items[i].picks) <= 0); if (ei !== undefined) cc.say = '請問「' + itemText(cc.items[ei]) + '」還有貨嗎?'; }   // the display is empty but the back has some
       renderOrder();
     });
   }
@@ -3536,7 +3541,7 @@ function startScene() {
   /* a long shopping list is shown as small chips (found ones struck through) so the card stays short on a phone */
   const orderChips = (items, got) => { const rest = items.map((it, i) => ({ it: it, i: i })).filter((x) => got.indexOf(x.i) < 0);   // everything still to find; found ones fold into one chip; the card scrolls when the list is long
     return '<div class="o-chips">' + (got.length ? '<span class="o-chip done">✓ 已找到 ' + got.length + ' 項</span>' : '') + rest.map((x) => '<span class="o-chip">' + esc(itemText(x.it)) + '</span>').join('') + '</div>'; };
-  const emptyTopNote = (c) => { const idx = wantedIdx(c).find((i) => c.items[i] && invStock(c.items[i].p, c.items[i].picks) > 0 && invTopQty(c.items[i].p.cat) <= 0); return idx === undefined ? '' : '「' + esc(catName(c.items[idx].p.cat)) + '」上層沒貨了,下層還有:到那區按「補貨」再拿給客人。'; };
+  const emptyTopNote = (c) => { const idx = wantedIdx(c).find((i) => c.items[i] && invStock(c.items[i].p, c.items[i].picks) > 0 && invTop(c.items[i].p, c.items[i].picks) <= 0); return idx === undefined ? '' : '「' + esc(catName(c.items[idx].p.cat)) + '」上層沒貨了,下層還有:到那區按「補貨」再拿給客人。'; };
   function renderOrder() {
     const el = $('#order'), c = G.cust;
     if (!c || (c.st !== 'asking' && c.st !== 'ready') || state.modal === 'checkout') { el.hidden = true; return; }
@@ -4431,7 +4436,7 @@ function startScene() {
       if (!(p.options || []).every((o, i) => g.sel[i])) { toast('請先選好所有選項'); return; }
       const it = { p: p, picks: (p.options || []).map((o, i) => g.sel[i]) };
       if (invStock(p, it.picks) <= 0) { toast('系統顯示這個規格已經缺貨了,貨架上找不到'); return; }
-      if (invTopQty(p.cat) <= 0) { toast('這區上層已經空了,先按「補貨」從下層補上來'); return; }
+      if (invTop(p, it.picks) <= 0) { toast('這個商品上層沒貨了(下層還有 ' + invUnderOf(p, it.picks) + ' 件),先到貨架按「補貨」'); return; }
       G.hand.push(it);
       renderCarry(); closeShelf(); toast('拿了:' + itemText(it) + (G.hand.length > 1 ? '(手上 ' + G.hand.length + ' 樣)' : ''));
     },
@@ -4470,7 +4475,7 @@ function startScene() {
     foot: (m) => rateMul(m),
     stockInfo: (c) => stockInfo(c),
     closeAnnounce: () => closeAnnounce(),
-    stock: { info: (c) => stockInfo(c), start: (c) => startRestock(c), act: () => G.rsAct, finish: () => rsFinish(), top: (c) => invTopQty(c), under: (c) => invUnder(c), cap: (c) => invCap(c), fill: () => invAutoFill() },
+    stock: { drain: (c) => { catVariants(c).forEach((x) => { invTopK(x.k, x.p); SAVE.inv.topq[x.k] = 0; }); shelfRefresh(); }, fillTop: (c) => { catVariants(c).forEach((x) => { SAVE.inv.topq[x.k] = Math.min(invStockK(x.k, x.p), vcapK(x.k, x.p)); }); shelfRefresh(); }, topOf: (p, picks) => invTop(p, picks), info: (c) => stockInfo(c), start: (c) => startRestock(c), act: () => G.rsAct, finish: () => rsFinish(), top: (c) => invTopQty(c), under: (c) => invUnder(c), cap: (c) => invCap(c), fill: () => invAutoFill() },
     gacha: { roll: (g, rng) => packRoll(g, rng), state: () => SAVE.gacha, cards: () => SAVE.cards, all: () => CARDS, visible: () => cardsVisible(), rar: () => RAR, book: () => cardBookHtml(), pityAt: PITY_AT },
     shop: { bag: () => SAVE.shop.bag, brushLv: () => SAVE.brushLv, names: () => BRUSHES.map((b) => b.n), listed: () => shopListed(), brushName: brushName, act: (a, v) => phShopAct(a, v), render: shopRender, deliver: shopDeliver, items: () => SHOP_ITEMS, state: () => SAVE.shop, wallet: () => SAVE.wallet, setWallet: (n) => { SAVE.wallet = n; }, tab: () => SHP.tab },
     vip: { dex: dexOpen, dexClose: dexClose, open: spawnVip, state: () => VP, pick: vipPick, call: vipCall, callNow: vipCallNow, end: vipClose, data: () => SAVE.vip, plan: () => G.vipPlan, pen: () => G.vipPen, build: (t, k) => { const m = { haggle: HG, ret: RT, ask: AS, reg: RG }[t]; return k === 'intro' || t === 'reg' ? m[k](regOf(V())) : m[k](); }, kinds: () => ({ haggle: Object.keys(HG), ret: Object.keys(RT), ask: Object.keys(AS), reg: Object.keys(RG) }) },
@@ -4759,7 +4764,7 @@ function startScene() {
     let h = '<table class="inv-tbl"><thead><tr><th>商品</th><th class="n">庫存</th><th class="n">近' + INV.range + '天銷量</th>' + (INV.tab === 'order' ? '<th class="n">本週銷售</th><th class="n">公司倉庫</th><th class="n">叫貨數量</th>' : '') + '</tr></thead><tbody>';
     INV.rows.forEach((r, i) => {
       const st = invStockK(r.key, r.p);
-      h += '<tr><td>' + esc(r.lab) + '</td><td class="n ' + qCls(st) + '">' + (st <= 0 ? '缺貨' : st) + '</td><td class="n">' + salesIn(r.key, INV.range, G.dayNo) + '</td>';
+      h += '<tr><td>' + esc(r.lab) + '</td><td class="n ' + qCls(st) + '">' + (st <= 0 ? '缺貨' : st + '<br><small>上 ' + invTopK(r.key, r.p) + ' / 下 ' + (st - invTopK(r.key, r.p)) + '</small>') + '</td><td class="n">' + salesIn(r.key, INV.range, G.dayNo) + '</td>';
       if (INV.tab === 'order') {
         const wh = whQty(r.p, r.key, wk), q = ordQty(r.key), sold = I.sold[r.key] || 0;
         h += '<td class="n">' + sold + '</td><td class="n">' + (wh <= 0 ? '<span class="inv-out">無貨</span>' : wh) + '</td><td class="n"><span class="inv-q"><button class="btn small" type="button" data-ia="dec" data-i="' + i + '">−</button><b>' + q + '</b><button class="btn small" type="button" data-ia="inc" data-i="' + i + '">+1</button><button class="btn small" type="button" data-ia="inc5" data-i="' + i + '">+5</button><button class="btn small" type="button" data-ia="zero" data-i="' + i + '">刪除</button></span></td>';
@@ -5116,19 +5121,25 @@ function startScene() {
     const g = new T.Group(); box(0.4, 0.26, 0.3, 0xC9A06A, 0, 0, 0, g); box(0.42, 0.03, 0.1, 0xE3C898, 0, 0.14, 0, g); g.visible = false; player.add(g); RSC = { g: g }; return RSC;
   }
   const autoFillApi = () => invAutoFill();
-  const stockInfo = (cat) => (SHELVES[cat] ? { top: invTopQty(cat), cap: invCap(cat), under: invUnder(cat) } : null);
+  const stockInfo = (cat) => {
+    if (!SHELVES[cat]) return null;
+    const vs = catVariants(cat).map((x) => { const top = invTopK(x.k, x.p), cap = vcapK(x.k, x.p), under = Math.max(0, invStockK(x.k, x.p) - top); return { lab: invLabel(x.p, x.picks), top: top, cap: cap, under: under, mv: Math.min(Math.max(0, cap - top), under) }; });
+    const rows = vs.filter((v) => v.under > 0 || v.top === 0).sort((a, b) => (a.top === 0 && a.under > 0 ? 0 : 1) - (b.top === 0 && b.under > 0 ? 0 : 1) || b.mv - a.mv);
+    return { top: vs.reduce((a, v) => a + v.top, 0), cap: vs.reduce((a, v) => a + v.cap, 0), under: vs.reduce((a, v) => a + v.under, 0), move: vs.reduce((a, v) => a + v.mv, 0), rows: rows };
+  };
   function startRestock(cat) {
     if (G.rsAct || !SHELVES[cat]) return false;
-    const top = invTopQty(cat), cap = invCap(cat), under = invUnder(cat);
-    if (under <= 0) { toast('下層庫存也沒有了,要叫貨'); return false; }
-    if (top >= cap) { toast('上層已經是滿的'); return false; }
-    const n = Math.min(cap - top, under);
+    const info = stockInfo(cat);
+    if (info.under <= 0) { toast('下層庫存也沒有了,要叫貨'); return false; }
+    if (info.move <= 0) { toast('上層已經是滿的'); return false; }
+    const plan = catVariants(cat).map((x) => ({ k: x.k, p: x.p, n: Math.min(Math.max(0, vcapK(x.k, x.p) - invTopK(x.k, x.p)), Math.max(0, invStockK(x.k, x.p) - invTopK(x.k, x.p))) })).filter((x) => x.n > 0);
+    const n = plan.reduce((a, x) => a + x.n, 0);
     closeShelf(); state.modal = 'stocking';
-    G.rsAct = { cat: cat, n: n, t: 0, dur: 2.8 + Math.min(1.6, n * 0.05), done: false };
+    G.rsAct = { cat: cat, n: n, plan: plan, t: 0, dur: 2.8 + Math.min(1.6, n * 0.05), done: false };
     const it = byId['disp-' + cat]; if (it) targetYaw = Math.atan2(it.cx - player.position.x, it.cz - player.position.z);
     SFX.knock(); return true;
   }
-  function rsApply(A) { if (A.done) return; A.done = true; const I = SAVE.inv; I.top = I.top || {}; I.top[A.cat] = invTopQty(A.cat) + Math.min(A.n, invUnder(A.cat)); shelfRefresh(); saveGame(); SFX.knock(); toast(catName(A.cat) + ':從下層補了 ' + A.n + ' 件到上層'); }
+  function rsApply(A) { if (A.done) return; A.done = true; const I = SAVE.inv; I.topq = I.topq || {}; let moved = 0; A.plan.forEach((x) => { const top = invTopK(x.k, x.p), add = Math.min(x.n, Math.max(0, invStockK(x.k, x.p) - top)); if (add > 0) { I.topq[x.k] = top + add; moved += add; } }); shelfRefresh(); saveGame(); SFX.knock(); toast(catName(A.cat) + ':從下層補了 ' + moved + ' 件到上層(' + A.plan.length + ' 種商品)'); }
   function rsFinish() { const A = G.rsAct; if (!A) return; rsApply(A); G.rsAct = null; if (state.modal === 'stocking') state.modal = null; renderTodo(); }
   const smooth = (x) => { x = Math.max(0, Math.min(1, x)); return x * x * (3 - 2 * x); };
   function rsActPose(dt) {
@@ -5163,7 +5174,7 @@ function startScene() {
     if (isOrderDay()) t.push(I.sent && I.sent.sd === G.dayNo ? '叫貨單已送出,週二到貨。' : '今天是叫貨日,但叫貨單沒有送出,週二不會到貨。');
     if (I.sent && I.sent.here) t.push('貨運送來的箱子還沒點貨。');
     if (I.slip) t.push('有一張到貨單還沒點收入庫。');
-    { const em = Object.keys(SHELVES).filter((c) => invTopQty(c) <= 0 && invUnder(c) > 0).map(catName); if (em.length) t.push('上層已空但下層還有貨:' + em.join('、') + '。'); }
+    { const em = Object.keys(SHELVES).map((c) => [c, catVariants(c).filter((x) => invTopK(x.k, x.p) <= 0 && invStockK(x.k, x.p) > 0).length]).filter((x) => x[1] > 0).map((x) => catName(x[0]) + ' ' + x[1] + ' 種'); if (em.length) t.push('上層已空但下層還有貨:' + em.join('、') + '。'); }
     const out = Object.keys(I.stock).filter((k) => I.stock[k] <= 0).length;
     if (out) t.push('目前有 ' + out + ' 個規格缺貨。');
     if (st.notFound) t.push('今天有 ' + st.notFound + ' 位客人在貨架上找不到想買的東西,沒買就走了。');
